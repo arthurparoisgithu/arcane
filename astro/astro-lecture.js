@@ -117,6 +117,64 @@ window.AstroLecture = H => {
       <p class="help">Correspondances de la Golden Dawn, reprises dans le Waite-Smith. Dans le Tarot de Marseille, La Justice porte le VIII et La Force le XI : c'est la carte qui compte ici, pas son numéro. Touche une carte pour lire sa fiche.</p>`;
   }
 
+  /* ---------- les maisons, en clair ---------- */
+  const MAISON = [
+    {quoi:"Ta personne : ton corps, ton allure, ta façon d'entrer dans une pièce et de commencer les choses.", vie:"C'est ce que les autres voient de toi en premier, avant de te connaître. C'est aussi ta manière de réagir spontanément à ce qui est nouveau.", q:"Comment les gens te décrivent-ils la première fois qu'ils te rencontrent ?"},
+    {quoi:"Ton argent, ce que tu possèdes, et ce qui te donne le sentiment d'avoir de la valeur.", vie:"Elle dit comment tu gagnes, dépenses et gardes, mais aussi quelles ressources personnelles, quels talents, peuvent te faire vivre, et ce qui te sécurise matériellement.", q:"Qu'est-ce qui te donne le sentiment d'être en sécurité matériellement ?"},
+    {quoi:"Ton quotidien proche : tes échanges, tes messages, tes petits trajets, tes frères et sœurs, ton quartier, ce que tu apprends au jour le jour.", vie:"Elle décrit ta façon de communiquer et d'apprendre dans la vie de tous les jours, et ta relation avec ton entourage proche.", q:"Comment parles-tu avec tes proches quand tout va bien ? Et quand ça se tend ?"},
+    {quoi:"Tes racines : ta famille, ta maison, ton enfance, l'endroit où tu te sens chez toi.", vie:"C'est le fond de toi, ce qu'on voit le moins mais qui porte tout le reste. La tradition y lit aussi le rapport à l'un de tes parents, et la fin de la vie.", q:"À quel endroit, ou avec qui, te sens-tu vraiment chez toi ?"},
+    {quoi:"Ce qui te fait plaisir : tes loisirs, tes créations, tes amours naissantes, tes enfants, le jeu.", vie:"C'est la maison de ce que tu fais par plaisir et non par devoir : là où tu t'exprimes, où tu prends des risques pour le plaisir, où tu donnes naissance à quelque chose.", q:"Quelle activité te donne de la joie, sans autre but qu'elle-même ?"},
+    {quoi:"Ton travail au quotidien et ta santé : tes habitudes, tes tâches, ton organisation, ton corps jour après jour.", vie:"Elle dit comment tu travailles concrètement (ta carrière, elle, est en maison X), comment tu prends soin de toi, et ton rapport aux collègues et au service rendu.", q:"Quelle habitude quotidienne te fait du bien ? Laquelle t'use ?"},
+    {quoi:"Les autres en face de toi : le couple, les associés, les contrats, et aussi les adversaires déclarés.", vie:"C'est la maison opposée à la première : elle décrit ce que tu cherches chez l'autre, souvent ce qui te manque. Elle parle des relations d'égal à égal, en amour comme en affaires.", q:"Qu'est-ce qui t'attire chez les personnes avec qui tu fais équipe ?"},
+    {quoi:"Ce qui se partage et ce qui se transforme : l'intimité, l'argent des autres (héritage, prêt, argent du couple), les crises, les deuils.", vie:"C'est une maison profonde : elle dit comment tu traverses les crises, ce que tu lâches et ce qui renaît, et ta façon de faire assez confiance pour partager.", q:"Qu'est-ce qu'une épreuve t'a appris sur toi ?"},
+    {quoi:"Ce qui t'élargit : les grands voyages, les études longues, les croyances, la philosophie, l'étranger.", vie:"Elle décrit ta quête de sens : ce qui te fait grandir l'esprit, les horizons qui t'attirent, ta façon de te faire une idée du monde.", q:"Quel voyage, quel livre ou quelle rencontre a changé ta façon de voir le monde ?"},
+    {quoi:"Ta place dans le monde : ton métier, ta vocation, ta réputation, ce que tu veux accomplir.", vie:"C'est le point le plus haut du thème : ce que tu montres publiquement, ce pour quoi on te connaît, la trace que tu veux laisser. La tradition y lit aussi l'autre parent.", q:"Dans dix ans, qu'aimerais-tu qu'on dise de ton travail ?"},
+    {quoi:"Tes amis et tes projets : les groupes, les réseaux, les causes, les espoirs.", vie:"Elle dit avec qui tu partages tes idées et tes rêves, quel genre d'amis tu choisis, et ce que tu espères pour l'avenir.", q:"Quel groupe ou quelle amitié t'aide à avancer vers ce que tu espères ?"},
+    {quoi:"Ce qui est caché : ta vie intérieure, la solitude, les retraites, les rêves, ce que tu ne montres pas.", vie:"C'est la maison la plus secrète : elle parle de ce qui se joue en coulisses, des peurs comme des ressources spirituelles, et de ce qu'on fait pour les autres sans être vu.", q:"Où vas-tu quand tu as besoin de te retirer du monde ?"}
+  ];
+  const ICI = {
+    soleil:"c'est un domaine central pour toi : tu y cherches à te réaliser, à rayonner, à y trouver de la reconnaissance.",
+    lune:"c'est un domaine sensible : tu as besoin de t'y sentir en sécurité, tes humeurs y montent et y descendent, tu y gardes tes habitudes.",
+    mercure:"tu y penses beaucoup, tu en parles, tu y négocies : ton esprit s'y active et tu y apprends vite.",
+    venus:"tu y cherches l'harmonie et le plaisir : tu y es à l'aise, tu y plais, tu aimes que les choses y soient belles.",
+    mars:"tu y mets de l'énergie et de la combativité : tu y prends des initiatives, parfois avec impatience, parfois dans le conflit.",
+    jupiter:"c'est un domaine de confiance et d'occasions : les portes s'y ouvrent plus facilement, avec le risque d'en faire trop.",
+    saturne:"c'est un domaine sérieux, qui demande du temps : les débuts y sont souvent lents ou difficiles, mais ce que tu y bâtis tient.",
+    uranus:"tu as besoin d'y être libre : les choses y changent brusquement, et tu y refuses la routine.",
+    neptune:"c'est un domaine de rêve et d'idéal : tu y trouves de l'inspiration, mais tu peux aussi y être flou, ou vite déçu.",
+    pluton:"c'est un domaine intense : tu y vis des transformations profondes, des fins et des renaissances, parfois des questions de pouvoir."
+  };
+  let hOrder = "vie";
+  function maisons(ch){
+    if(!ch.heure) return `<p class="lead">Sans heure de naissance, les maisons ne peuvent pas être calculées : elles dépendent de l'heure, à quelques minutes près.</p><p class="help">Si tu retrouves ton heure (acte de naissance, carnet de santé, livret de famille), modifie le thème : les douze maisons apparaîtront.</p>`;
+    const sc = school(), ids = sc === "tradition" ? C.TRAD7 : C.MOD10;
+    const list = ch.cusps.map((c, i) => { const n = i + 1, k = C.si(c), r = C.rulerOf(k, sc), inH = ids.filter(id => ch.P[id].house === n); return {n, c, k, r, inH}; });
+    const ordered = hOrder === "vie" ? [...list].sort((a, b) => b.inH.length - a.inH.length || a.n - b.n) : list;
+    const card = x => { const H = D.HOUSES[x.n - 1], M = MAISON[x.n - 1], S = SG[x.k], rh = ch.P[x.r].house, open = x.inH.length > 0;
+      return `<details class="a-mh${open ? " full" : ""}"${open ? " open" : ""}><summary>
+          <span class="a-mh-n" aria-hidden="true">${ROM[x.n]}</span>
+          <span class="a-mh-t"><b>Maison ${ROM[x.n]} · ${H.mots.slice(0, 2).join(", ")}</b><small>${x.inH.length ? x.inH.map(id => `${pg(id)} ${PL[id].court}`).join(" · ") : "aucune planète"}</small></span>
+          <i class="a-chev" aria-hidden="true"></i></summary>
+        <div class="a-mh-b">
+          <p class="a-glab">Ce que c'est</p><p><b>${M.quoi}</b> ${M.vie}</p>
+          <p class="a-glab">Chez toi</p>
+          <p>Tu vis ce domaine <b>${S.style}</b>, à la manière ${S.du}.</p>
+          ${x.inH.length ? `<ul class="a-mh-pl">${x.inH.map(id => `<li>${pg(id)} <span><b>${id === "soleil" ? "Le Soleil" : id === "lune" ? "La Lune" : PL[id].court} ici</b> : ${ICI[id] || PL[id].fn + "."}</span></li>`).join("")}</ul>`
+            : `<p class="help m-left">Aucune planète ici. Ce n'est pas un domaine absent de ta vie : il est simplement moins au premier plan, et on le lit par son signe et par sa planète maîtresse.</p>`}
+          <p>${rh === x.n ? `Sa planète maîtresse, ${PL[x.r].court}, se trouve dans cette maison même : ce domaine a sa propre force, il ne dépend que de lui.`
+            : `Ce domaine est relié à un autre : sa planète maîtresse, ${fiche("np:" + x.r, PL[x.r].court)}, se trouve en maison ${ROM[rh]}. Ce qui se joue ici passe donc aussi ${D.HOUSES[rh - 1].dom}.`}</p>
+          <p class="a-mh-q">${M.q}</p>
+          <details class="a-gloin"><summary><span>Pour aller plus loin</span><i class="a-chev" aria-hidden="true"></i></summary><div class="a-gloin-b">
+            <p>Nom traditionnel : <b>${H.nom}</b>, maison ${H.type}. Cuspide (début de la maison) à ${fmtPos(x.c)}. Maître : ${fiche("np:" + x.r, PL[x.r].court)} ${sc === "moderne" ? "(maîtres modernes)" : "(maîtres traditionnels)"}, placé en ${SG[C.si(ch.P[x.r].lon)].nom}, maison ${ROM[rh]}.</p>
+            <p>${H.mod}</p><p class="help m-left">${H.trad}</p>
+            <p>${fiche("h:" + x.n, "La fiche complète de la maison " + ROM[x.n])}</p></div></details>
+        </div></details>`; };
+    return `<p class="lead">Les douze maisons sont douze domaines de ta vie. Pour chacune : ce qu'elle représente, puis comment tu la vis, d'après le signe où elle commence, les planètes qui l'habitent et la maison où se trouve sa planète maîtresse.</p>
+      <div class="a-mh-bar"><div class="a-seg" role="group" aria-label="Ordre des maisons"><button type="button" data-horder="vie" class="${hOrder === "vie" ? "on" : ""}">Les plus habitées d'abord</button><button type="button" data-horder="num" class="${hOrder === "num" ? "on" : ""}">De I à XII</button></div></div>
+      <div class="a-mhs">${ordered.map(card).join("")}</div>
+      <p class="help">Système de maisons : ${H.sysNom ? H.sysNom(ch) : ch.system}. Une planète proche du début d'une maison peut changer de maison selon le système choisi.</p>`;
+  }
+
   /* ---------- les étapes ---------- */
   let T0 = null;
   function steps(ch, t){
@@ -355,6 +413,7 @@ window.AstroLecture = H => {
       if(ta) ta.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { const L = lec(); (L.notes[t.id] = L.notes[t.id] || {})[ta.dataset.gnote] = ta.value.slice(0, 2000); save(); const s = q1(".a-gsaved", body); if(s) s.textContent = "Gardé."; }, 500); };
       const nav = q1(".a-gnav", body), on = nav && q1(".on", nav); if(on) nav.scrollLeft = on.parentElement.offsetLeft - 20;
     }
+    if(tab === "maisons") qa("[data-horder]", body).forEach(b => b.onclick = () => { hOrder = b.dataset.horder; body.innerHTML = maisons(ch); bind(root, ch, t, tab, rerender); });
     if(tab === "annee"){
       const rl = q1("[data-yrl]", body); if(rl) rl.onchange = () => { gs.rl = rl.checked; body.innerHTML = annee(ch, t); bind(root, ch, t, tab, rerender); };
       const f = q1("[data-jform]", body);
@@ -366,5 +425,5 @@ window.AstroLecture = H => {
       qa("[data-jdel]", body).forEach(b => b.onclick = () => { lec().journal = lec().journal.filter(j => j.id !== b.dataset.jdel); save(); body.innerHTML = annee(ch, t); bind(root, ch, t, tab, rerender); });
     } else { const w = q1(".a-thwheel", root); if(w && tab !== "guide"){ w.classList.remove("a-focus"); } }
   }
-  return {guide, annee, bind, print, lames:lamesHTML};
+  return {guide, annee, bind, print, lames:lamesHTML, maisons};
 };

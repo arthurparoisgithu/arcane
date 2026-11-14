@@ -493,14 +493,14 @@
       <h2 class="lsub">Les progressions secondaires</h2><p>Un jour après la naissance pour une année de vie. Aujourd'hui, ton <b>Soleil progressé</b> est à ${fmtPos(prog.soleil.lon)} et ta <b>Lune progressée</b> à ${fmtPos(prog.lune.lon)}${ch.heure ? `, en maison ${ROM[C.houseOf(prog.lune.lon, ch.cusps)]}` : ""}. La Lune progressée change de signe tous les deux ans et demi environ : elle décrit le climat affectif de la période.</p>
       <p class="help">Pour comprendre ces techniques : ${fiche("l:temps", "le module « Le temps » de L'école")}.</p>`;
   }
-  const LECT = window.AstroLecture ? window.AstroLecture({C, D, SG, PL, ROM, ASP, h, cap, gl, pg, sgl, fiche, fmtPos, fmtOrb, fmtD, school, st:() => st, save, IMG, wheel}) : null;
+  const LECT = window.AstroLecture ? window.AstroLecture({C, D, SG, PL, ROM, ASP, h, cap, gl, pg, sgl, fiche, fmtPos, fmtOrb, fmtD, school, st:() => st, save, IMG, wheel, sysNom:ch => SYS_NOM[ch.system] || ch.system}) : null;
   const THT = (LECT ? [["guide","Lecture guidée"]] : []).concat([["synth","Synthèse"],["planetes","Planètes"],["maisons","Maisons"],["aspects","Aspects"],["trad","Tradition"],["temps","Le temps"]], LECT ? [["annee","Mon année"]] : []);
   function themeResult(t){
     const ch = chartOf(t), sc = school(), tz = t.lieu && t.lieu.tz;
     lastCharts.natal = {ch, nom:t.nom};
     const born = `${t.d} ${MOIS[t.m-1]} ${t.y}${t.heure ? ` à ${String(t.h).padStart(2,"0")} h ${String(t.mi).padStart(2,"0")}` : ", heure inconnue"}`;
     if(!LECT && (thTab === "guide" || thTab === "annee")) thTab = "synth";
-    const body = thTab === "guide" ? LECT.guide(ch, t) : thTab === "annee" ? LECT.annee(ch, t) : thTab === "planetes" ? tPlanets(ch) : thTab === "maisons" ? tHouses(ch) : thTab === "aspects" ? tAspects(ch) : thTab === "trad" ? tTrad(ch) : thTab === "temps" ? tTemps(ch, t) : tSynth(ch, t) + (LECT && LECT.lames ? `<h2 class="lsub">Tes lames de tarot</h2>${LECT.lames(ch, t, {compact:true})}` : "");
+    const body = thTab === "guide" ? LECT.guide(ch, t) : thTab === "annee" ? LECT.annee(ch, t) : thTab === "planetes" ? tPlanets(ch) : thTab === "maisons" ? (LECT && LECT.maisons ? LECT.maisons(ch) : tHouses(ch)) : thTab === "aspects" ? tAspects(ch) : thTab === "trad" ? tTrad(ch) : thTab === "temps" ? tTemps(ch, t) : tSynth(ch, t) + (LECT && LECT.lames ? `<h2 class="lsub">Tes lames de tarot</h2>${LECT.lames(ch, t, {compact:true})}` : "");
     return `<div class="a-thhead"><div><p class="eyebrow">Thème natal${t.moi ? " · le tien" : ""}</p><h1>${h(t.nom)}</h1><p class="help">${born} · ${h(t.lieu.nom)}</p></div>
         <div class="a-thtools"><div class="a-seg" role="group" aria-label="École de lecture"><button type="button" data-ecole="tradition" class="${sc === "tradition" ? "on" : ""}">Tradition</button><button type="button" data-ecole="moderne" class="${sc === "moderne" ? "on" : ""}">Moderne</button></div>
           <button type="button" class="btn ghost small" data-th-edit>Modifier</button>${LECT ? `<button type="button" class="btn ghost small" data-th-print>Imprimer</button>` : ""}<button type="button" class="btn ghost small" data-popen="outils:ephem">Outils</button></div></div>

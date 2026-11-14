@@ -1116,3 +1116,24 @@ details[open]>summary .a-chev{transform:rotate(180deg)}
 .a-lame .linkbtn{font-size:14px;padding:4px 0}
 .a-lame-rep{margin-top:4px}
 @media print{.a-lame{break-inside:avoid}.a-lame-img{box-shadow:none}}
+
+/* ---------- les maisons, en clair ---------- */
+.a-mh-bar{margin:4px 0 14px}
+.a-mhs{display:grid;gap:10px}
+.a-mh{border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}
+.a-mh.full{border-color:color-mix(in srgb,var(--vermillon) 28%,var(--line))}
+.a-mh>summary{list-style:none;display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:12px 14px;cursor:pointer}
+.a-mh>summary::-webkit-details-marker{display:none}
+.a-mh-n{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:400 17px var(--f-display);border:1px solid var(--line);background:var(--panel-solid)}
+.a-mh.full .a-mh-n{background:var(--vermillon);border-color:var(--vermillon);color:#fff}
+.a-mh-t{display:grid;gap:2px;min-width:0}
+.a-mh-t b{font:600 16px var(--f-ui)}
+.a-mh-t small{font:13.5px var(--f-ui);color:var(--ink-soft)}
+.a-mh-b{padding:2px 18px 14px}
+.a-mh-b>p{line-height:1.6;margin:0 0 10px}
+.a-mh-b .a-glab{margin:12px 0 4px}
+.a-mh-pl{list-style:none;padding:0;margin:4px 0 10px;display:grid;gap:8px}
+.a-mh-pl li{display:grid;grid-template-columns:26px 1fr;gap:8px;line-height:1.55}
+.a-mh-pl li .ag{font-size:19px}
+.a-mh-q{font:italic 17.5px/1.45 var(--f-text);padding:10px 14px;border-left:3px solid var(--vermillon);background:color-mix(in srgb,var(--vermillon) 5%,transparent);border-radius:0 10px 10px 0}
+.a-mh .a-gloin{margin-top:8px}
