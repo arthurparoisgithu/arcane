@@ -4901,7 +4901,7 @@ function mergeBackup(d){
   const des = new Map(); [...(A.des||[]), ...(B.des||[])].forEach(r => { if(r && !des.has(r.t)) des.set(r.t, r); });
   const astroM = Object.assign({}, B, A, { themes:[...th.values()].slice(0, 40), done: uni(A.done, B.done), best: mergeBest(A.best, B.best), des:[...des.values()].sort((a,b) => b.t - a.t).slice(0, 30) });
   const MA = okObj(cur.magie), MB = okObj(d.magie), byT = (a, b, k) => { const m = new Map(); [...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])].forEach(x => { if(x && x[k] != null && !m.has(x[k])) m.set(x[k], x); }); return [...m.values()]; };
-  const magieM = Object.assign({}, MB, MA, { done: uni(MA.done, MB.done), best: mergeBest(MA.best, MB.best), carnet: byT(MA.carnet, MB.carnet, "id").sort((a,b) => b.t - a.t).slice(0, 400), sceaux: byT(MA.sceaux, MB.sceaux, "id").slice(0, 200) });
+  const magieM = Object.assign({}, MB, MA, { done: uni(MA.done, MB.done), best: mergeBest(MA.best, MB.best), carnet: byT(MA.carnet, MB.carnet, "id").sort((a,b) => b.t - a.t).slice(0, 400), sceaux: byT(MA.sceaux, MB.sceaux, "id").slice(0, 200), fiches: uni(MA.fiches, MB.fiches) });
   const added = journalM.length - cur.journal.length;
   const ok = writeKey(BACKUP_KEYS.journal, journalM.slice(0, 200)) && writeKey(BACKUP_KEYS.custom, [...cs.values()]) && writeKey(BACKUP_KEYS.learn, learnM)
     && writeKey(BACKUP_KEYS.ritual, uni(cur.ritual, d.ritual).sort().slice(-400)) && writeKey(BACKUP_KEYS.profile, profileM) && writeKey(BACKUP_KEYS.prefs, prefsM) && writeKey(BACKUP_KEYS.astro, astroM) && writeKey(BACKUP_KEYS.magie, magieM);

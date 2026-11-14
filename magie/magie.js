@@ -602,20 +602,46 @@
         <li><button type="button" class="m-lec quiz" data-mquiz="${m.id}"><span class="m-lec-n">?</span><span><b>Le quiz du module</b><small>${m.quiz.length} questions, chaque réponse expliquée${st.best[m.id] != null ? ` · ton meilleur score : ${st.best[m.id]}/${m.quiz.length}` : ""}</small></span></button></li></ol>`;
     bindLinks(root);
   }
+  /* les fiches gardées, dans le carnet */
+  EXT.carnetTabs.push({id:"fiches", label:"Mes fiches", render(){
+    const F = (st.fiches || []).filter(id => (window.MAGIE_ETOFFE || {})[id]);
+    if(!F.length) return `<div class="m-empty"><p>Pas encore de fiche.</p><p class="help">À la fin de chaque leçon, « Garder la fiche » range ici ses cinq points à retenir.</p><div class="m-acts"><button type="button" class="btn small" data-mgo="ecole">Aller à l'école</button></div></div>`;
+    return `<div class="m-fiches">${F.map(id => { const mm = K.MODULES.find(x => x.lecons.some(y => y.id === id)), k = mm.lecons.findIndex(y => y.id === id), L = mm.lecons[k];
+      return `<article class="m-fiche kept"><p class="eyebrow">Module ${mm.n} · leçon ${k + 1}</p><h3>${nb(L.t)}</h3><ol>${window.MAGIE_ETOFFE[id].ret.map(x => `<li>${x}</li>`).join("")}</ol>
+        <div class="m-acts start"><button type="button" class="linkbtn" data-mgo="lec:${id}">Relire la leçon</button></div></article>`; }).join("")}</div>`; }});
   function renderLecon(root){
     const m = MOD(ev.mod), i = ev.lec, l = m.lecons[i]; st.last = {mod:m.id, lec:i}; save();
     const prev = i > 0 ? `${m.id}:${i - 1}` : null, next = i < m.lecons.length - 1 ? `${m.id}:${i + 1}` : null;
     const exAct = l.ex && l.ex.outil ? (() => { const [k, v] = l.ex.outil.split(":"); return k === "rituel" ? `<button type="button" class="btn small" data-mrite="${v}">Lancer le rituel guidé</button>` : k === "outil" ? `<button type="button" class="btn small" data-mgo="atelier:${v}">Ouvrir l'atelier</button>` : k === "cycle" ? `<button type="button" class="btn small" data-mgo="carnet:cycle">Ouvrir le cycle</button>` : `<button type="button" class="btn small" data-mgo="carnet:new">Ouvrir le carnet</button>`; })() : "";
     const marge = EXT.marge ? EXT.marge(l, m) : "";
+    const E = (window.MAGIE_ETOFFE || {})[l.id] || null, kept = (st.fiches || []).includes(l.id);
+    const lvl = E && E.prat ? [["decouvrir", "Découvrir", l.ex ? `<h3>${l.ex.t}</h3><p>${l.ex.txt}</p>${exAct ? `<div class="m-acts">${exAct}</div>` : ""}` : ""],
+      ["approfondir", "Approfondir", `<p>${E.prat[0]}</p>`],
+      ["cycle", "Intégrer au cycle", `<p>${E.prat[1]}</p><div class="m-acts"><button type="button" class="btn ghost small" data-mgo="carnet:cycle">Ouvrir le cycle de 28 jours</button></div>`]].filter(x => x[2]) : null;
     root.innerHTML = `<p class="crumb"><button type="button" class="linkbtn" data-mmod="${m.id}">← Module ${m.n} · ${m.t}</button></p>
       <article class="m-lesson"><header><p class="eyebrow">Leçon ${i + 1} sur ${m.lecons.length}</p><h1>${nb(l.t)}</h1><p class="m-lede">${l.sous}</p></header>
-        <div class="m-lgrid${marge ? " has-marge" : ""}"><div class="m-idee">${l.idee.map((p, k) => `<p${k === 0 ? ' class="m-lettrine"' : ""}>${p}</p>`).join("")}</div>${marge}</div>
-        <blockquote class="m-source"><p>${l.source.txt}</p><footer>${badge(l.source.st)}<cite>${l.source.ref}</cite></footer></blockquote>
+        ${E && E.acc ? `<p class="m-acc">${E.acc}</p>` : ""}
+        <div class="m-lgrid${marge ? " has-marge" : ""}"><div class="m-idee">${l.idee.concat(E && E.idee || []).map((p, k) => `<p${k === 0 ? ' class="m-lettrine"' : ""}>${p}</p>`).join("")}</div>${marge}</div>
+        <div class="m-srcwrap"><blockquote class="m-source"><p>${l.source.txt}</p><footer>${badge(l.source.st)}<cite>${l.source.ref}</cite></footer></blockquote>
+          ${E && E.com ? `<div class="m-scom"><p class="eyebrow">La source, commentée</p><p>${E.com}</p></div>` : ""}</div>
         <figure class="m-schema" data-schema="${l.schema}"></figure>
-        ${l.ex ? `<section class="m-ex"><p class="eyebrow">L'exercice · facultatif</p><h3>${l.ex.t}</h3><p>${l.ex.txt}</p>${exAct ? `<div class="m-acts">${exAct}</div>` : ""}</section>` : ""}
+        ${E && E.conf ? `<section class="m-conf"><p class="eyebrow">Ce qu'on confond souvent</p>${E.conf.map(([q, r]) => `<div class="m-conf-i"><p class="m-conf-q"><span>Idée reçue</span>« ${q} »</p><p class="m-conf-r">${r}</p></div>`).join("")}</section>` : ""}
+        ${lvl ? `<section class="m-ex m-ex3"><p class="eyebrow">La pratique · trois niveaux, tous facultatifs</p>
+            <div class="m-lvl" role="tablist" aria-label="Niveaux de pratique">${lvl.map(([k, t], n) => `<button type="button" role="tab" id="m-lt-${k}" aria-controls="m-lp-${k}" aria-selected="${n === 0}" tabindex="${n === 0 ? 0 : -1}" data-mlvl="${k}"><span>${n + 1}</span>${t}</button>`).join("")}</div>
+            ${lvl.map(([k, t, html], n) => `<div class="m-lvlp" role="tabpanel" id="m-lp-${k}" aria-labelledby="m-lt-${k}"${n ? " hidden" : ""}>${html}</div>`).join("")}</section>`
+          : l.ex ? `<section class="m-ex"><p class="eyebrow">L'exercice · facultatif</p><h3>${l.ex.t}</h3><p>${l.ex.txt}</p>${exAct ? `<div class="m-acts">${exAct}</div>` : ""}</section>` : ""}
+        ${E && E.ret ? `<section class="m-fiche${kept ? " kept" : ""}"><div class="m-fiche-h"><p class="eyebrow">La fiche · à retenir</p><button type="button" class="btn ${kept ? "ghost " : ""}small" data-mfiche="${l.id}" aria-pressed="${kept}">${kept ? "Fiche gardée ✓" : "Garder la fiche"}</button></div>
+            <ol>${E.ret.map(x => `<li>${x}</li>`).join("")}</ol></section>` : ""}
         <section class="m-note"><p class="eyebrow">Pour ton carnet</p><p class="m-q">${l.carnet}</p><button type="button" class="btn ghost small" data-mnote="${l.id}">Écrire dans le carnet</button></section>
+        ${E && E.loin ? `<details class="m-loin"><summary><span>Pour aller plus loin</span><i class="a-chev" aria-hidden="true"></i></summary><ul>${E.loin.map(x => `<li>${x}</li>`).join("")}</ul></details>` : ""}
         <nav class="m-lnav">${prev ? `<button type="button" class="btn ghost small" data-mlec="${prev}">← Précédente</button>` : "<span></span>"}
           <button type="button" class="btn small" data-mread="${l.id}" data-mnext="${next || "quiz:" + m.id}">${st.done.includes(l.id) ? (next ? "Leçon suivante →" : "Le quiz du module →") : (next ? "J'ai lu · suivante →" : "J'ai lu · le quiz →")}</button></nav></article>`;
+    const tabs = qa("[data-mlvl]", root);
+    const pick = b => { tabs.forEach(t => { const on = t === b; t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; const pn = q1("#m-lp-" + t.dataset.mlvl, root); if(pn) pn.hidden = !on; }); };
+    tabs.forEach((b, n) => { b.onclick = () => pick(b); b.onkeydown = e => { const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if(d){ e.preventDefault(); const t = tabs[(n + d + tabs.length) % tabs.length]; pick(t); t.focus(); } }; });
+    const fb = q1("[data-mfiche]", root);
+    if(fb) fb.onclick = () => { st.fiches = st.fiches || []; const on = st.fiches.includes(l.id); st.fiches = on ? st.fiches.filter(x => x !== l.id) : [l.id, ...st.fiches]; save();
+      fb.textContent = on ? "Garder la fiche" : "Fiche gardée ✓"; fb.classList.toggle("ghost", !on); fb.setAttribute("aria-pressed", String(!on)); fb.closest(".m-fiche").classList.toggle("kept", !on); };
     const fig = q1(".m-schema", root); if(schemas[l.schema]) schemas[l.schema](fig, {}); else fig.remove();
     bindLinks(root);
   }
