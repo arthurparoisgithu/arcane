@@ -65,7 +65,7 @@
     const sec = document.createElement("section");
     sec.className = "pv"; sec.dataset.pv = "";
     sec.innerHTML = `<div class="pv-head"><p class="eyebrow">Changer de point de vue</p><h2>De la roue au système solaire</h2>
-        <p class="pv-lede">La roue du thème place la Terre au centre. L'Observatoire, plus bas, place le Soleil au centre. C'est le même ciel, au même instant : passe de l'un à l'autre pour voir ce qui change, et ce qui ne change pas.</p><div class="pv-seg" role="group" aria-label="Point de vue"><button type="button" data-pvm="0" aria-pressed="true">Vu de la Terre</button><button type="button" data-pvm="1" aria-pressed="false">Vu du Soleil</button></div></div>
+        <p class="pv-lede">La roue du ciel place la Terre au centre ; le système solaire place le Soleil au centre. C'est le même ciel, au même instant : passe de l'un à l'autre pour voir ce qui change, et ce qui ne change pas.</p><div class="pv-seg" role="group" aria-label="Point de vue"><button type="button" data-pvm="0" aria-pressed="true">Vu de la Terre</button><button type="button" data-pvm="1" aria-pressed="false">Vu du Soleil</button></div></div>
       <div class="pv-grid"><figure class="pv-fig">${scene()}<figcaption class="help pv-cap"></figcaption></figure>
         <div class="pv-side">
           <div class="pv-txt" aria-live="polite"></div>
@@ -141,8 +141,7 @@
     svg.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ const g = e.target.closest("[data-pvb]"); if(g){ e.preventDefault(); g.dispatchEvent(new MouseEvent("click", {bubbles:true})); } } });
     sec.querySelector("[data-pvobs]").onclick = () => {
       setPlay(false);
-      const fr = document.querySelector("#v-a-ciel .obs-frame"); if(!fr) return;
-      fr.src = `astro/observatoire.html?t=${Math.round(S.t)}`;
+      const P = window.ArcanesPlus, fr = P && P.observatoire && P.observatoire.open ? P.observatoire.open(S.t) : null; if(!fr) return;
       const obs = fr.closest(".obs") || fr; obs.classList.add("pv-arrive");
       obs.scrollIntoView({behavior:reduce() ? "auto" : "smooth", block:"start"});
       setTimeout(() => obs.classList.remove("pv-arrive"), 1600);

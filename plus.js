@@ -648,7 +648,7 @@
 
 /* ===== Chantier 5 · L'atelier de l'astrologue =====
    Une page à onglets, ouverte depuis L'école : la glyphothèque, la révision espacée,
-   le tracé des symboles, l'atelier du thème (placer soi-même les planètes) et deux thèmes historiques.
+   le tracé des symboles et deux thèmes historiques.
    La même page accueille les outils de l'expert (chantier 7), ouverts depuis Mon thème. */
 (() => {
   const P = window.ArcanesPlus;
@@ -666,8 +666,8 @@
 
   /* ================= la page ================= */
   const PAGES = {
-    atelier:{nav:"apprendre", titre:"L'atelier", lede:"Apprendre les symboles, monter un thème soi-même, lire les maîtres sur leurs propres cartes.",
-      tabs:[["cles","Les trois clés"],["glyphes","Les glyphes"],["placer","Placer les planètes"],["histo","Thèmes historiques"]]},
+    atelier:{nav:"apprendre", titre:"L'atelier", lede:"Apprendre les symboles et lire les maîtres sur leurs propres cartes.",
+      tabs:[["cles","Les trois clés"],["glyphes","Les glyphes"],["histo","Thèmes historiques"]]},
     outils:{nav:"theme", titre:"Les outils", lede:"Pour aller plus loin : les éphémérides et le calendrier du ciel, les comparaisons de thèmes, les questions horaires, et tous les réglages.",
       tabs:[["ephem","Éphémérides"],["calendrier","Calendrier"],["synastrie","Synastrie"],["revolution","Révolution solaire"],["horaire","Horaire"],["elective","Élective"],["reglages","Réglages"]]}
   };
@@ -701,9 +701,9 @@
   }
   function entryTiles(page, intro){
     const Pg = PAGES[page];
-    const DESC = {cles:"Planète, signe, maison : lire une position", glyphes:"Tous les symboles, leur origine, leurs variantes", reviser:"Des cartes qui reviennent au bon moment", tracer:"Dessiner chaque glyphe du bout du doigt", placer:"Mettre soi-même les planètes sur la roue", histo:"Kepler pour Wallenstein, Lilly et le navire",
+    const DESC = {cles:"Planète, signe, maison : lire une position", glyphes:"Tous les symboles, leur origine, leurs variantes", reviser:"Des cartes qui reviennent au bon moment", tracer:"Dessiner chaque glyphe du bout du doigt", histo:"Kepler pour Wallenstein, Lilly et le navire",
       ephem:"Les positions jour par jour", calendrier:"Lunaisons, rétrogradations, Lune vide de course", synastrie:"Deux thèmes face à face, et le composite", revolution:"Le thème de ton anniversaire solaire", horaire:"Dresser le thème d'une question", elective:"Chercher le bon moment", reglages:"Orbes, maisons, zodiaque, étoiles fixes"};
-    const ICO = {cles:"☉", glyphes:"♈", reviser:"☾", tracer:"♃", placer:"⊙", histo:"♄", ephem:"☉", calendrier:"☽", synastrie:"♀", revolution:"☉", horaire:"☿", elective:"♂", reglages:"✶"};
+    const ICO = {cles:"☉", glyphes:"♈", reviser:"☾", tracer:"♃", histo:"♄", ephem:"☉", calendrier:"☽", synastrie:"♀", revolution:"☉", horaire:"☿", elective:"♂", reglages:"✶"};
     return `<section class="pg-entry" data-pentry="${page}"><div class="pg-entry-h"><p class="eyebrow">${page === "atelier" ? "Pratiquer" : "Pour l'expert"}</p><h2 class="lsub">${Pg.titre}</h2><p class="help">${intro}</p></div>
       <div class="pg-tiles">${Pg.tabs.map(([k, l]) => `<button type="button" class="pg-tile" data-popen="${page}:${k}"><span class="pg-ico" aria-hidden="true">${ICO[k]}${T}</span><b>${l}</b><small>${DESC[k]}</small></button>`).join("")}</div></section>`;
   }
@@ -888,44 +888,6 @@
     body.querySelector("[data-tguide]").onclick = e => { guide = !guide; e.target.setAttribute("aria-pressed", guide); e.target.textContent = guide ? "Masquer le modèle" : "Montrer le modèle"; paint(); };
     body.querySelectorAll("[data-ti]").forEach(b => b.onclick = () => { idx = +b.dataset.ti; setG(); });
     (document.fonts && document.fonts.load ? document.fonts.load(FONT, L[idx].gl) : Promise.resolve()).finally(setG);
-  };
-
-  /* ================= placer les planètes ================= */
-  P.renderers.placer = body => {
-    const A = window.ArcanesAstro, st = A.state(), C = ASTRO_CALC;
-    const themes = (st.themes || []);
-    let src = "ciel", ch = C.chart({date:new Date(), lat:48.857, lon:2.352, heure:false});
-    const ids = ["soleil","lune","mercure","venus","mars","jupiter","saturne","uranus","neptune","pluton"];
-    let placed = {}, sel = ids[0], checked = false;
-    const truth = () => Object.fromEntries(ids.map(id => [id, ch.P[id].lon]));
-    function ui(){
-      const tr = truth();
-      const inner = ids.filter(id => placed[id] != null).map(id => ({id, lon:placed[id], cls:checked ? (Math.abs(((placed[id] - tr[id] + 540) % 360) - 180) <= 5 ? "good" : "bad") : (id === sel ? "sel" : "")}));
-      const ghost = checked ? ids.map(id => ({id, lon:tr[id], cls:"truth"})) : null;
-      const lines = checked ? ids.filter(id => placed[id] != null).map(id => [placed[id], tr[id], ""]) : [];
-      const errs = checked ? ids.filter(id => placed[id] != null).map(id => Math.abs(((placed[id] - tr[id] + 540) % 360) - 180)) : [];
-      const mean = errs.length ? errs.reduce((a, b) => a + b, 0)/errs.length : 0;
-      body.innerHTML = `<div class="pw">
-        <div class="pw-wheel" data-pwheel>${roue({inner, ghost, lines, label:"Roue à compléter"})}</div>
-        <div class="pw-side">
-          <label class="pw-src"><span class="eyebrow">Le thème</span><select data-psrc><option value="ciel">Le ciel de maintenant</option>${themes.map(t => `<option value="${t.id}"${src === t.id ? " selected" : ""}>${hx(t.nom)}</option>`).join("")}</select></label>
-          <p class="help">Choisis une planète, puis touche la roue à l'endroit où elle se trouve. Le 0° du Bélier est à gauche, les signes tournent dans le sens inverse des aiguilles d'une montre.</p>
-          <ul class="pw-list">${ids.map(id => `<li><button type="button" class="pw-pl${id === sel ? " on" : ""}${placed[id] != null ? " set" : ""}" data-psel="${id}"><span class="ag pl">${C.PL[id].gl}${T}</span><b>${C.PL[id].court}</b><span class="pw-pos">${fmt(tr[id])}</span>${checked && placed[id] != null ? `<i class="${errs[ids.filter(x => placed[x] != null).indexOf(id)] <= 5 ? "ok" : "ko"}">${Math.round(errs[ids.filter(x => placed[x] != null).indexOf(id)])}°</i>` : ""}</button></li>`).join("")}</ul>
-          ${checked ? `<p class="pw-res"><b>${errs.filter(e => e <= 5).length} sur ${errs.length}</b> à moins de 5° · écart moyen ${mean.toFixed(1)}°</p>` : ""}
-          <div class="tr-acts"><button type="button" class="btn" data-pcheck ${Object.keys(placed).length ? "" : "disabled"}>${checked ? "Recommencer" : "Vérifier"}</button>${checked ? "" : `<button type="button" class="btn ghost" data-pclear>Tout effacer</button>`}</div>
-        </div></div>`;
-      body.querySelector("[data-psrc]").onchange = e => { src = e.target.value; const t = themes.find(x => x.id === src);
-        if(t){ const lieu = t.lieu || {}; const date = t.heure ? C.localToUTC(t.y, t.m, t.d, t.h, t.mi, lieu) : C.localToUTC(t.y, t.m, t.d, 12, 0, lieu); ch = C.chart({date, lat:+lieu.lat || 0, lon:+lieu.lon || 0, heure:false}); }
-        else ch = C.chart({date:new Date(), lat:48.857, lon:2.352, heure:false});
-        placed = {}; checked = false; ui(); };
-      body.querySelectorAll("[data-psel]").forEach(b => b.onclick = () => { sel = b.dataset.psel; ui(); });
-      const svg = body.querySelector("[data-pwheel] svg");
-      svg.addEventListener("click", e => { if(checked) return; const {lon, dist} = lonAt(svg, e); if(dist > 300) return;
-        placed[sel] = lon; const nx = ids.find(id => placed[id] == null); if(nx) sel = nx; ui(); });
-      body.querySelector("[data-pcheck]").onclick = () => { if(checked){ placed = {}; checked = false; } else checked = true; ui(); };
-      const cl = body.querySelector("[data-pclear]"); if(cl) cl.onclick = () => { placed = {}; ui(); };
-    }
-    ui();
   };
 
   /* ================= thèmes historiques ================= */
@@ -1560,12 +1522,31 @@
     const slot = v.querySelector("[data-obs-slot]"); if(!slot) return;
     obsT = null;
     const cw = window.ArcanesAstro.cielWhen && window.ArcanesAstro.cielWhen();
-    slot.innerHTML = `<section class="obs" data-obs aria-label="L'Observatoire astral"><iframe class="obs-frame" src="astro/observatoire.html?t=${(cw || new Date()).getTime()}" title="L'Observatoire astral : planétarium, rétrogradations, aspects, phases lunaires" loading="lazy" scrolling="no"></iframe></section>`;
-    fit(slot.querySelector(".obs-frame"));
-    if(window.ArcanesPV) try{ window.ArcanesPV.mount(slot); }catch(e){ console.warn("point de vue", e); }
+    /* « Explorer le ciel » : d'abord Vu de la Terre / Vu du Soleil, puis l'Observatoire, chargé seulement à la demande */
+    slot.innerHTML = `<div class="ex-head"><p class="eyebrow">Explorer le ciel</p><h2 class="lsub">Le ciel en mouvement</h2>
+        <p class="help">Deux ateliers animés pour voir autrement le même instant : changer de point de vue, puis l'Observatoire et ses quatre lectures.</p></div>
+      <div data-pv-slot></div>
+      <section class="obs obs-off" data-obs aria-label="L'Observatoire astral"><div class="obs-cta">
+        <div class="obs-cta-art" aria-hidden="true"><svg viewBox="-60 -60 120 120"><circle r="54" class="o1"/><circle r="40" class="o2"/><circle r="26" class="o2"/><circle r="12" class="o3"/><circle cx="40" r="4.5" class="o4"/><circle cx="-18" cy="-20" r="3.5" class="o4"/><circle cx="-16" cy="51" r="5" class="o4"/></svg></div>
+        <div><p class="eyebrow">Atelier du ciel</p><h3>L'Observatoire</h3><p class="help">Planétarium, rétrogradations, aspects, phases de la Lune : un même instant, quatre façons de le comprendre.</p>
+          <button type="button" class="btn small" data-obsopen>Ouvrir l'Observatoire</button></div></div></section>`;
+    slot.querySelector("[data-obsopen]").onclick = () => openObs();
+    if(window.ArcanesPV) try{ window.ArcanesPV.mount(slot.querySelector("[data-pv-slot]")); }catch(e){ console.warn("point de vue", e); }
     const dslot = v.querySelector("[data-obs-detail]");
     if(dslot){ dslot.innerHTML = `<details class="obs-det"><summary><span class="obs-det-t"><b>Vues du Soleil, distances et mouvements</b><small>Les mêmes astres en chiffres, et ce que ces chiffres veulent dire</small></span><i class="a-chev" aria-hidden="true"></i></summary><div class="obs-det-body" data-obs-body></div></details>`;
       const det = dslot.querySelector(".obs-det"); det.addEventListener("toggle", () => { if(det.open) renderDetail(); }); }
+  }
+  /* ouvre l'Observatoire (sans le modifier) à une date donnée, ou à celle du Ciel du jour */
+  function openObs(t){
+    const sec = document.querySelector("#v-a-ciel [data-obs]"); if(!sec) return null;
+    const cw = window.ArcanesAstro.cielWhen && window.ArcanesAstro.cielWhen();
+    t = Math.round(t || (cw || new Date()).getTime());
+    let fr = sec.querySelector(".obs-frame");
+    if(fr){ fr.src = `astro/observatoire.html?t=${t}`; return fr; }
+    sec.classList.remove("obs-off");
+    sec.innerHTML = `<iframe class="obs-frame" src="astro/observatoire.html?t=${t}" title="L'Observatoire astral : planétarium, rétrogradations, aspects, phases lunaires" scrolling="no"></iframe>`;
+    fr = sec.querySelector(".obs-frame"); fit(fr);
+    return fr;
   }
   window.addEventListener("message", e => {
     if(!e.data || e.data.type !== "arcanes-observatoire") return;
@@ -1574,7 +1555,7 @@
     obsT = t;
     const det = document.querySelector("#v-a-ciel .obs-det"); if(det && det.open) renderDetail();
   });
-  P.observatoire = {inject, renderDetail};
+  P.observatoire = {inject, renderDetail, open:openObs};
   P.onReady.push(() => {
     const v = document.getElementById("v-a-ciel"); if(!v) return;
     new MutationObserver(() => inject()).observe(v, {childList:true});

@@ -299,7 +299,6 @@
       <div class="a-c3s">
         <article class="a-card a-c3"><p class="eyebrow">Le ton du jour</p><div class="a-c3-g">${sgl(ms)}</div><h3>La Lune en ${SG[ms].nom}</h3><p class="help">${MOON_TIP[ms]}</p></article>
         ${hourCard}${meCard}</div>
-      <div data-obs-slot></div>
       <p class="eyebrow a-foldk">Le détail</p>
       <details class="a-fold"><summary><span><b>Où sont les planètes</b><small>${ids.length} positions · signe, maison, état</small></span><i class="a-chev" aria-hidden="true"></i></summary>
         <div class="a-fold-b"><div class="a-table" role="table">${ids.map(id => { const p = ch.P[id]; return `<button type="button" class="a-row" data-afiche="cp:${id}" role="row">${pg(id)}<span class="a-rn">${PL[id].court}</span><span class="a-rp">${fmtPos(p.lon)}</span><span class="a-rh">${p.house ? "maison " + ROM[p.house] : ""}</span><span class="a-rt">${tags(ch, id)}</span></button>`; }).join("")}</div>
@@ -308,6 +307,7 @@
         <div class="a-fold-b">${asp.length ? `<ul class="a-asplist">${asp.map(x => `<li>${pg(x.a)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.b)} <span>${aspSentence(x)} <i>Orbe ${fmtOrb(x.orb)}, ${x.app ? "il se forme" : "il se défait"}.</i></span></li>`).join("")}</ul>` : `<p class="help">Aucun aspect serré entre les planètes en ce moment.</p>`}</div></details>
       <div class="a-h2row"><h2 class="lsub">À venir</h2><button type="button" class="btn ghost small" data-popen="outils:calendrier">Tout le calendrier</button></div>
       <div class="a-frise" role="list">${ev.map(e => `<article class="a-ev" role="listitem"><p class="a-evd"><b>${fmtD(e.date, tz, {day:"numeric"})}</b><span>${fmtD(e.date, tz, {month:"short"})}</span></p><p class="a-evt">${evTxt(e)}</p></article>`).join("")}</div>
+      <div class="a-explore" data-obs-slot></div>
       <article class="a-card a-desc"><div><p class="eyebrow">Un jeu</p><h3>Les dés astrologiques</h3><p class="help">Une question, trois dés : une planète, un signe, une maison.</p></div><button type="button" class="btn small" data-ades>Lancer les dés</button></article>`;
     const go = q1("#a-when-go", root); if(go) go.onclick = () => { const v = q1("#a-when", root).value; if(!v) return; const [d, t] = v.split("T"), [y, m, dd] = d.split("-").map(Number), [hh, mm] = t.split(":").map(Number); cielWhen = C.localToUTC(y, m, dd, hh, mm, L); renderCiel(); };
     const nw = q1("[data-anow]", root); if(nw) nw.onclick = () => { cielWhen = null; renderCiel(); };
