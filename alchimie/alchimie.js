@@ -41,7 +41,7 @@
   }
   /* le métal du thème natal : la planète dominante parmi les sept */
   function metalNatal(){
-    try{ const A = window.ArcanesAstro, C = window.ASTRO_CALC, me = A.state().themes.find(x => x.moi); if(!me) return null;
+    try{ const A = window.ArcanesAstro, C = typeof ASTRO_CALC !== "undefined" ? ASTRO_CALC : window.ASTRO_CALC, me = A.state().themes.find(x => x.moi); if(!me) return null;
       const ch = C.chart({date:C.localToUTC(me.y, me.m, me.d, me.heure ? me.h : 12, me.heure ? me.mi : 0, me.lieu), lat:+me.lieu.lat, lon:+me.lieu.lon, heure:me.heure, system:"placidus"});
       const dom = C.dominants(ch, "tradition")[0]; return dom ? metalDe(dom.id) : null; }catch(e){ return null; }
   }

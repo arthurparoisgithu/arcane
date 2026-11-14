@@ -284,8 +284,13 @@
     const meCard = me ? `<article class="a-card a-c3"><p class="eyebrow">Tes transits · ${h(me.t.nom)}</p>
         ${tr.length ? `<ul class="a-c3-list">${tr.slice(0, 3).map(x => `<li>${pg(x.t)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.n)}<span>${PL[x.t].court} ${ASP[x.asp].nom.toLowerCase()} ${ton(x.n)}</span></li>`).join("")}</ul><button type="button" class="btn ghost small" data-thgo="temps">Tous mes transits</button>` : `<p class="help">Aucun transit serré aujourd'hui : un ciel calme pour toi.</p>`}</article>`
       : `<article class="a-card a-c3 a-cta"><p class="eyebrow">Tes transits</p><h3>Le ciel et toi</h3><p class="help">Calcule ton thème natal et marque-le comme le tien : chaque jour, Arcanes te dira quelles planètes touchent ton thème.</p><button type="button" class="btn small" data-agoto="theme">Calculer mon thème</button></article>`;
+    const ss = C.si(ch.P.soleil.lon), a0 = asp.slice().sort((x, y) => x.orb - y.orb)[0];
+    const resume = `Lune en ${SG[ms].nom} (${ph[0].toLowerCase()}), Soleil en ${SG[ss].nom}.${a0 ? ` L'aspect le plus serré du moment : ${PL[a0.a].court} ${ASP[a0.asp].nom.toLowerCase()} ${PL[a0.b].court}.` : ""}`;
+    const toi = me ? `<section class="a-card a-toi"><div class="a-toi-h"><p class="eyebrow">Le ciel et toi · ${h(me.t.nom)}</p><h2>${tr.length ? "Ce qui touche ton thème aujourd'hui" : "Un ciel calme pour toi"}</h2></div>
+        ${tr.length ? `<ul class="a-toi-l">${tr.slice(0, 3).map(trLi).join("")}</ul>` : `<p class="help">Aucune planète ne forme d'aspect serré avec ton thème aujourd'hui.</p>`}
+        <div class="a-toi-f"><button type="button" class="btn ghost small" data-thgo="temps">Tous mes transits</button><button type="button" class="btn ghost small" data-thgo="annee">Mon année</button></div></section>` : "";
     root.innerHTML = `<header class="a-hero"><p class="eyebrow">${cap(fmtD(now, tz, dayFmt))} · ${fmtD(now, tz, hm)} · ${h(L.nom)}</p><h1>Le ciel du jour</h1>
-        <p class="a-lede">Où sont les astres, ce qu'ils racontent, ce qui t'attend. Touche une planète pour lire sa fiche.</p></header>
+        <p class="a-lede">${resume} Touche une planète pour lire sa fiche.</p></header>${toi}
       <div class="a-sky">
         <figure class="a-sky-wheel">${wheel(ch, {prefix:"cp", label:"Le ciel en ce moment"})}
           <figcaption class="help">Ascendant (AS) à gauche, Milieu du Ciel (MC) en haut, pour ${h(L.nom)} · maisons ${SYS_NOM[ch.system] || ""}${ch.fallback ? " (repli : latitude trop haute)" : ""}.</figcaption>
@@ -298,7 +303,7 @@
           <dl class="a-lun">${lun.map(x => `<div><dt>${x.type === "nl" ? "Nouvelle lune" : "Pleine lune"}</dt><dd>${fmtD(x.date, tz, {day:"numeric", month:"long"})} · ${fmtD(x.date, tz, hm)}<br>en ${SG[C.si(x.lon)].nom}</dd></div>`).join("")}</dl></aside></div>
       <div class="a-c3s">
         <article class="a-card a-c3"><p class="eyebrow">Le ton du jour</p><div class="a-c3-g">${sgl(ms)}</div><h3>La Lune en ${SG[ms].nom}</h3><p class="help">${MOON_TIP[ms]}</p></article>
-        ${hourCard}${meCard}</div>
+        ${hourCard}${me ? "" : meCard}</div>
       <p class="eyebrow a-foldk">Le détail</p>
       <details class="a-fold"><summary><span><b>Où sont les planètes</b><small>${ids.length} positions · signe, maison, état</small></span><i class="a-chev" aria-hidden="true"></i></summary>
         <div class="a-fold-b"><div class="a-table" role="table">${ids.map(id => { const p = ch.P[id]; return `<button type="button" class="a-row" data-afiche="cp:${id}" role="row">${pg(id)}<span class="a-rn">${PL[id].court}</span><span class="a-rp">${fmtPos(p.lon)}</span><span class="a-rh">${p.house ? "maison " + ROM[p.house] : ""}</span><span class="a-rt">${tags(ch, id)}</span></button>`; }).join("")}</div>
@@ -483,6 +488,27 @@
       ${pr ? `<h2 class="lsub">La profection de l'année</h2><p>À ${pr.age} ans, l'Ascendant a avancé de ${pr.age} signe${pr.age > 1 ? "s" : ""} : l'année active la <b>maison ${ROM[pr.house]}</b> (${D.HOUSES[pr.house-1].nom.toLowerCase()}), en ${SG[pr.sign].nom}. Le <b>maître de l'année</b> est ${fiche("np:" + pr.lord, PL[pr.lord].court)} : ses transits comptent particulièrement jusqu'au prochain anniversaire. Les thèmes de l'année : ${D.HOUSES[pr.house-1].dom.replace(/^dans /, "")}.</p>` : ""}`;
   }
   let tempsCache = {};
+  /* deux thèmes côte à côte : les aspects que les planètes de l'un forment avec celles de l'autre */
+  let compId = null;
+  function tComp(ch, t){
+    const autres = st.themes.filter(x => x.id !== t.id); if(!autres.length) return "";
+    const o = autres.find(x => x.id === compId) || autres.find(x => x.moi) || autres[0], ch2 = chartOf(o), ids = C.TRAD7;
+    const DEF = [["conj", 0, 7], ["opp", 180, 6], ["trigone", 120, 6], ["carre", 90, 6], ["sext", 60, 4]], lum = id => id === "soleil" || id === "lune" ? 1.5 : 0;
+    const L = [];
+    ids.forEach(a => ids.forEach(b => { const d = C.sep(ch.P[a].lon, ch2.P[b].lon); DEF.forEach(([k, ang, orb]) => { const e = Math.abs(d - ang), mx = orb + Math.max(lum(a), lum(b)); if(e <= mx) L.push({a, b, k, e, w:(1 - e/mx)*(1 + (lum(a) + lum(b))/3)}); }); }));
+    L.sort((x, y) => y.w - x.w);
+    const dur = k => k === "carre" || k === "opp", doux = L.filter(x => !dur(x.k)).slice(0, 5), frotte = L.filter(x => dur(x.k)).slice(0, 5);
+    const li = x => `<li>${pg(x.a)}${gl(ASP[x.k].gl, "asp " + ASP[x.k].cls)}${pg(x.b)}<span><b>${PL[x.a].court} de ${h(t.nom)} ${ASP[x.k].nom.toLowerCase()} ${PL[x.b].court} de ${h(o.nom)}</b> : ${ASP[x.k].sens}. Entre ${PL[x.a].mots[0]} et ${PL[x.b].mots[0]}. <i>Écart ${fmtOrb(x.e)}.</i></span></li>`;
+    const el = c => { const B = C.balance(c).el; return Object.entries(B).sort((x, y) => y[1] - x[1])[0][0]; }, e1 = el(ch), e2 = el(ch2), EN = {feu:"le Feu", terre:"la Terre", air:"l'Air", eau:"l'Eau"};
+    return `<div class="a-comp"><p class="a-lede">Deux thèmes posés l'un sur l'autre. On regarde les angles que les planètes de l'un forment avec celles de l'autre : c'est ce que les astrologues appellent une synastrie.</p>
+      <div class="a-comp-pick" role="group" aria-label="Comparer avec"><span class="eyebrow">Comparer ${h(t.nom)} avec</span>${autres.map(x => `<button type="button" class="chip small${x.id === o.id ? " on" : ""}" data-comp="${x.id}">${x.moi ? "★ " : ""}${h(x.nom)}</button>`).join("")}</div>
+      <div class="a-comp-w"><figure>${wheel(ch, {small:true, aspects:false, prefix:"c1", label:"Thème de " + t.nom})}<figcaption><b>${h(t.nom)}</b><span>${EN[e1] || e1} domine</span></figcaption></figure>
+        <figure>${wheel(ch2, {small:true, aspects:false, prefix:"c2", label:"Thème de " + o.nom})}<figcaption><b>${h(o.nom)}</b><span>${EN[e2] || e2} domine</span></figcaption></figure></div>
+      <div class="a-comp-g"><section class="a-card"><p class="eyebrow">Ce qui rapproche</p><h3>${doux.length ? "Les ententes" : "Peu d'aspects doux"}</h3>${doux.length ? `<ul class="a-toi-l">${doux.map(li).join("")}</ul>` : `<p class="help">Aucun aspect harmonieux serré entre les sept planètes classiques.</p>`}</section>
+        <section class="a-card"><p class="eyebrow">Ce qui frotte</p><h3>${frotte.length ? "Les tensions" : "Peu de tensions"}</h3>${frotte.length ? `<ul class="a-toi-l">${frotte.map(li).join("")}</ul>` : `<p class="help">Aucun carré ni opposition serrés entre les sept planètes classiques.</p>`}</section></div>
+      <p class="help">${e1 === e2 ? `Vous avez le même élément dominant : ${EN[e1] || e1}. On se comprend vite, on peut aussi s'y enfermer à deux.` : `Vos éléments dominants diffèrent : ${EN[e1] || e1} pour ${h(t.nom)}, ${EN[e2] || e2} pour ${h(o.nom)}.`} Seules les sept planètes classiques sont comparées${t.heure && o.heure ? "" : ", sans les maisons quand une heure de naissance manque"}.</p>
+      <p class="help">Ce n'est pas un verdict. Une tension peut rendre une relation vivante, une entente peut l'endormir : la synastrie décrit un climat, elle ne dit pas si deux personnes iront bien ensemble. Comparer les thèmes de deux époux se lit déjà chez Ptolémée, au IIe siècle.</p></div>`;
+  }
   function tTemps(ch, t){
     const now = new Date(), sc = school(), tz = (t.lieu && t.lieu.tz) || undefined;
     const sr = C.solarReturn(ch, new Date(now.getTime() - 2*86400000));
@@ -506,12 +532,12 @@
     lastCharts.natal = {ch, nom:t.nom};
     const born = `${t.d} ${MOIS[t.m-1]} ${t.y}${t.heure ? ` à ${String(t.h).padStart(2,"0")} h ${String(t.mi).padStart(2,"0")}` : ", heure inconnue"}`;
     if(!LECT && (thTab === "guide" || thTab === "annee")) thTab = "synth";
-    const body = thTab === "guide" ? LECT.guide(ch, t) : thTab === "annee" ? LECT.annee(ch, t) : thTab === "planetes" ? tPlanets(ch) : thTab === "maisons" ? (LECT && LECT.maisons ? LECT.maisons(ch) : tHouses(ch)) : thTab === "aspects" ? tAspects(ch) : thTab === "trad" ? tTrad(ch) : thTab === "temps" ? tTemps(ch, t) : tSynth(ch, t) + (LECT && LECT.lames ? `<h2 class="lsub">Tes lames de tarot</h2>${LECT.lames(ch, t, {compact:true})}` : "");
+    const body = thTab === "guide" ? LECT.guide(ch, t) : thTab === "annee" ? LECT.annee(ch, t) : thTab === "planetes" ? tPlanets(ch) : thTab === "maisons" ? (LECT && LECT.maisons ? LECT.maisons(ch) : tHouses(ch)) : thTab === "aspects" ? tAspects(ch) : thTab === "trad" ? tTrad(ch) : thTab === "temps" ? tTemps(ch, t) : thTab === "comp" && st.themes.length > 1 ? tComp(ch, t) : tSynth(ch, t) + (LECT && LECT.lames ? `<h2 class="lsub">Tes lames de tarot</h2>${LECT.lames(ch, t, {compact:true})}` : "");
     return `<div class="a-thhead"><div><p class="eyebrow">Thème natal${t.moi ? " · le tien" : ""}</p><h1>${h(t.nom)}</h1><p class="help">${born} · ${h(t.lieu.nom)}</p></div>
         <div class="a-thtools"><div class="a-seg" role="group" aria-label="École de lecture"><button type="button" data-ecole="tradition" class="${sc === "tradition" ? "on" : ""}">Tradition</button><button type="button" data-ecole="moderne" class="${sc === "moderne" ? "on" : ""}">Moderne</button></div>
           <button type="button" class="btn ghost small" data-th-edit>Modifier</button>${LECT ? `<button type="button" class="btn ghost small" data-th-print>Imprimer</button>` : ""}<button type="button" class="btn ghost small" data-popen="outils:ephem">Outils</button></div></div>
       <figure class="a-card a-wheelcard a-thwheel">${wheel(ch, {prefix:"np", label:"Thème de " + t.nom})}<figcaption class="help">Touche une planète pour lire sa fiche. ${ch.heure ? `Maisons ${SYS_NOM[ch.system]}.` : "Sans heure : roue sans maisons, le 0° Bélier à gauche."}</figcaption></figure>
-      <nav class="subtabs a-tabs" aria-label="Les lectures du thème">${THT.map(([k, n]) => `<button type="button" class="subtab${thTab === k ? " on" : ""}" data-thtab="${k}">${n}</button>`).join("")}</nav>
+      <nav class="subtabs a-tabs" aria-label="Les lectures du thème">${THT.concat(st.themes.length > 1 ? [["comp","À deux"]] : []).map(([k, n]) => `<button type="button" class="subtab${thTab === k ? " on" : ""}" data-thtab="${k}">${n}</button>`).join("")}</nav>
       <div class="a-thbody">${body}</div>
       <div class="a-acts a-thacts">${t.moi ? "" : `<button type="button" class="btn ghost small" data-th-moi>C'est mon thème</button>`}<button type="button" class="linkbtn danger" data-th-del>Supprimer ce thème</button></div>`;
   }
@@ -562,6 +588,7 @@
         const mo = q1("[data-th-moi]", root); if(mo) mo.onclick = () => { st.themes.forEach(x => x.moi = x.id === t.id); save(); renderTheme(); };
         const del = q1("[data-th-del]", root); del.onclick = () => { const w = del.parentElement; w.innerHTML = `<span class="confirm">Supprimer le thème de ${h(t.nom)} ?</span><button type="button" class="linkbtn danger" data-yes>Oui</button><button type="button" class="linkbtn" data-no>Non</button>`;
           q1("[data-yes]", w).onclick = () => { st.themes = st.themes.filter(x => x.id !== t.id); st.cur = st.themes[0] ? st.themes[0].id : null; save(); renderTheme(); }; q1("[data-no]", w).onclick = renderTheme; };
+        qa("[data-comp]", root).forEach(b => b.onclick = () => { compId = b.dataset.comp; renderTheme(); });
         qa("[data-thtab]", root).forEach(b => b.onclick = () => { thTab = b.dataset.thtab; renderTheme(); const tb = q1(".a-tabs", root); if(tb){ if(tb.getBoundingClientRect().top < 4) window.scrollTo(0, window.scrollY + q1(".a-thbody", root).getBoundingClientRect().top - tb.offsetHeight - 8); const on = q1(".subtab.on", tb); if(on) tb.scrollLeft = on.offsetLeft - 16; } });
         qa("[data-ecole]", root).forEach(b => b.onclick = () => { st.ecole = b.dataset.ecole; save(); const y = window.scrollY; renderTheme(); window.scrollTo(0, y); });
         const tb0 = q1(".a-tabs", root), on0 = tb0 && q1(".subtab.on", tb0); if(on0) tb0.scrollLeft = on0.offsetLeft - 16;

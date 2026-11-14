@@ -1535,14 +1535,15 @@
     const cw = window.ArcanesAstro.cielWhen && window.ArcanesAstro.cielWhen();
     /* « Explorer le ciel » : d'abord Vu de la Terre / Vu du Soleil, puis l'Observatoire, chargé seulement à la demande */
     slot.innerHTML = `<div class="ex-head"><p class="eyebrow">Explorer le ciel</p><h2 class="lsub">Le ciel en mouvement</h2>
-        <p class="help">Deux ateliers animés pour voir autrement le même instant : changer de point de vue, puis l'Observatoire et ses quatre lectures.</p></div>
+        <p class="help">Quatre ateliers animés pour comprendre le ciel en le manipulant : changer de point de vue, voir une planète « reculer », faire tourner un aspect, suivre la Lune pendant un mois.</p></div>
       <div data-pv-slot></div>
       <section class="obs obs-off" data-obs aria-label="L'Observatoire astral"><div class="obs-cta">
         <div class="obs-cta-art" aria-hidden="true"><svg viewBox="-60 -60 120 120"><circle r="54" class="o1"/><circle r="40" class="o2"/><circle r="26" class="o2"/><circle r="12" class="o3"/><circle cx="40" r="4.5" class="o4"/><circle cx="-18" cy="-20" r="3.5" class="o4"/><circle cx="-16" cy="51" r="5" class="o4"/></svg></div>
-        <div><p class="eyebrow">Atelier du ciel</p><h3>L'Observatoire</h3><p class="help">Planétarium, rétrogradations, aspects, phases de la Lune : un même instant, quatre façons de le comprendre.</p>
-          <button type="button" class="btn small" data-obsopen>Ouvrir l'Observatoire</button></div></div></section>`;
+        <div><p class="eyebrow">Version d'origine</p><h3>Le grand planétarium</h3><p class="help">Le premier Observatoire d'Arcanes, avec son planétarium complet. Il s'ouvre dans un cadre à part et met un instant à se charger.</p>
+          <button type="button" class="btn small ghost" data-obsopen>Ouvrir le planétarium</button></div></div></section>`;
     slot.querySelector("[data-obsopen]").onclick = () => openObs();
-    if(window.ArcanesPV) try{ window.ArcanesPV.mount(slot.querySelector("[data-pv-slot]")); }catch(e){ console.warn("point de vue", e); }
+    if(window.ArcanesObs) try{ window.ArcanesObs.mount(slot.querySelector("[data-pv-slot]")); }catch(e){ console.warn("observatoire", e); }
+    else if(window.ArcanesPV) try{ window.ArcanesPV.mount(slot.querySelector("[data-pv-slot]")); }catch(e){ console.warn("point de vue", e); }
     const dslot = v.querySelector("[data-obs-detail]");
     if(dslot){ dslot.innerHTML = `<details class="obs-det"><summary><span class="obs-det-t"><b>Vues du Soleil, distances et mouvements</b><small>Les mêmes astres en chiffres, et ce que ces chiffres veulent dire</small></span><i class="a-chev" aria-hidden="true"></i></summary><div class="obs-det-body" data-obs-body></div></details>`;
       const det = dslot.querySelector(".obs-det"); det.addEventListener("toggle", () => { if(det.open) renderDetail(); }); }

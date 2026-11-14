@@ -1153,3 +1153,76 @@ details[open]>summary .a-chev{transform:rotate(180deg)}
 .vl-wait{margin:0;padding:12px;font:14.5px var(--f-ui);color:var(--ink-soft)}
 .vl-st{margin:6px 0 0;min-height:0}
 .vl-st:empty{display:none}
+
+/* ---------- le ciel et toi, en tête du ciel du jour ; deux thèmes comparés ---------- */
+.a-toi{margin:6px 0 22px;border-color:color-mix(in srgb,var(--or) 55%,var(--line));background:linear-gradient(150deg,color-mix(in srgb,var(--or) 10%,var(--panel-solid)),var(--panel-solid) 60%)}
+.a-toi h2{font-family:var(--f-display);font-weight:400;font-size:clamp(24px,3.4vw,32px);margin:4px 0 12px;line-height:1.1}
+.a-toi-l{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.a-toi-l li{display:grid;grid-template-columns:auto auto auto 1fr;gap:4px 6px;align-items:start;line-height:1.5;font-size:15.5px}
+.a-toi-l li .ag{font-size:20px;line-height:1.2}
+.a-toi-l li>span:last-child{margin-left:8px}
+.a-toi-l li i{color:var(--ink-soft);font-size:.92em}
+.a-toi-f{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.a-comp-pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:16px 0}
+.a-comp-w{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:620px;margin:0 auto 18px}
+.a-comp-w figure{margin:0;display:grid;gap:8px;justify-items:center}
+.a-comp-w figcaption{display:grid;text-align:center;font-family:var(--f-ui);font-size:13.5px;color:var(--ink-soft)}
+.a-comp-w figcaption b{font:400 21px var(--f-display);color:var(--ink)}
+.a-comp-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:12px}
+.a-comp-g h3{font:400 24px var(--f-display);margin:2px 0 12px}
+@media (max-width:760px){ .a-comp-g{grid-template-columns:minmax(0,1fr)} }
+
+/* ---------- l'Observatoire refondu : quatre ateliers en onglets ---------- */
+.ob{margin-top:18px}
+.ob-tabs{margin-top:0}
+.ob-pane{margin-top:14px}
+.ob-pane>.pv{margin-top:0}
+.ob-grid{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:26px;align-items:start;padding:22px;border:1px solid var(--line);border-radius:22px;background:var(--panel)}
+.ob-svg{display:block;width:100%;height:auto;overflow:visible}
+.ob-z{fill:none;stroke:var(--line);stroke-width:1}
+.ob-zt{stroke:var(--ink-soft);stroke-width:1;opacity:.6}
+.ob-zg{font:400 13px var(--f-sym,"Arcanes Symboles",serif);fill:var(--ink-soft);text-anchor:middle}
+.ob-orb{fill:none;stroke:var(--line);stroke-width:1;stroke-dasharray:2 4}
+.ob-orb.p{stroke:var(--pc,var(--or));opacity:.7;transition:r .6s}
+.ob-sun{fill:#f0c04e;filter:drop-shadow(0 0 10px #f0c04e)}
+.ob-earth{fill:#5aa7e0;stroke:var(--panel-solid);stroke-width:1.5}
+.ob-pl{stroke:var(--panel-solid);stroke-width:1.5}
+.ob-sight{stroke:var(--pc,var(--or));stroke-width:1.2;stroke-dasharray:3 4;opacity:.8}
+.ob-mark{fill:var(--panel-solid);stroke:var(--pc,var(--or));stroke-width:1.6;transition:stroke .3s}
+.ob-mg{font:400 10px var(--f-sym,"Arcanes Symboles",serif);text-anchor:middle;fill:var(--ink)}
+.is-retro .ob-mark{stroke:var(--vermillon);filter:drop-shadow(0 0 6px var(--vermillon))}
+.is-retro .ob-sight{stroke:var(--vermillon)}
+.is-retro [data-rt]{color:var(--vermillon)}
+.ob-strip{display:block;width:100%;height:auto;margin-top:8px;border-top:1px solid var(--line2)}
+.ob-s-l{fill:none;stroke:var(--ink-soft);stroke-width:1.4}
+.ob-s-r{fill:none;stroke:var(--vermillon);stroke-width:3;stroke-linecap:round}
+.ob-s-c{stroke:var(--or);stroke-width:1.4}
+.ob-s-t{font:600 9.5px var(--f-ui);letter-spacing:.06em;fill:var(--ink-soft)}
+.ob-s-t.c{text-anchor:middle}
+.ob-side h3{font:400 clamp(26px,3.6vw,34px)/1.1 var(--f-display);margin:14px 0 6px;transition:color .3s}
+.ob-p{margin:0 0 8px;line-height:1.55}
+.ob-chips{display:flex;gap:7px;flex-wrap:wrap}
+.ob-chips .chip.on{border-color:var(--pc,var(--or));color:var(--ink);background:color-mix(in srgb,var(--pc,var(--or)) 18%,transparent)}
+.ob-lab{font:700 11px var(--f-ui);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);margin:16px 0 8px}
+.ob-ctl{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;margin:16px 0 12px}
+.ob-ctl input{width:100%;accent-color:var(--or)}
+.ob-ctl span{grid-column:1/-1;font:600 13.5px var(--f-ui);color:var(--ink-soft)}
+.ob-asp .ob-ray{stroke:var(--ink-soft);stroke-width:1;opacity:.6}
+.ob-arc{fill:none;stroke:var(--or);stroke-width:2}
+.ob-deg{font:400 30px var(--f-display);text-anchor:middle;fill:var(--ink)}
+.ob-poly{fill:color-mix(in srgb,var(--or) 10%,transparent);stroke:var(--or);stroke-width:2;stroke-linejoin:round;transition:stroke .3s,fill .3s}
+[data-asp="dur"] .ob-poly{stroke:var(--vermillon);fill:color-mix(in srgb,var(--vermillon) 10%,transparent)}
+[data-asp="doux"] .ob-poly{stroke:var(--azur);fill:color-mix(in srgb,var(--azur) 12%,transparent)}
+.ob-pt{fill:var(--panel-solid);stroke:var(--ink);stroke-width:1.6}
+.ob-pt.b{stroke:var(--or);stroke-width:2.4}
+.ob-ptt{font:400 16px var(--f-sym,"Arcanes Symboles",serif);text-anchor:middle;fill:var(--ink);pointer-events:none}
+.ob-hit{fill:transparent}
+.ob-drag{cursor:grab;touch-action:none;outline:none}
+.ob-drag:focus-visible .ob-pt{stroke-width:4}
+.ob-rayl{fill:none;stroke:#f0c04e;stroke-width:1.2;opacity:.7}
+.ob-m-d{fill:#2a2f45;stroke:var(--ink-soft);stroke-width:.8}
+.ob-m-l{fill:#e9ecf5}
+.ob-big-d{fill:#1b2033}
+.ob-big-l{fill:#eef0f7;filter:drop-shadow(0 0 14px rgba(230,236,255,.45))}
+.ob-big-o{fill:none;stroke:var(--ink-soft);stroke-width:1}
+@media (max-width:820px){ .ob-grid{grid-template-columns:minmax(0,1fr);gap:14px;padding:16px} .ob-stage{max-width:400px;margin:0 auto;width:100%} }
