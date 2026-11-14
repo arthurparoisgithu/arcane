@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L’Observatoire · Arcanes</title>
+<style>html{background:transparent}body{margin:0;padding:0}#observatoire-astral{margin:0!important}</style></head><body>
+<script>
+/* Page hôte Arcanes : mémorise l'état de l'observatoire, le cale sur le moment affiché dans « Le ciel du jour »,
+   et prévient l'app quand la date ou l'astre changent. Le code de l'observatoire lui-même est intact. */
+(function(){
+  var KEY = 'arcanes-observatoire-v1', saved = null;
+  try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e) {}
+  var t = Number(new URLSearchParams(location.search).get('t'));
+  if (Number.isFinite(t) && t > 0) {
+    saved = saved && saved.privateContent && saved.privateContent.app === 'observatoire-astral' ? saved : {privateContent:{app:'observatoire-astral', version:1, state:{}}};
+    saved.privateContent.state = Object.assign({}, saved.privateContent.state, {time: t});
+  }
+  var tell = function(s){ try { parent !== window && parent.postMessage({type:'arcanes-observatoire', state: s && s.privateContent && s.privateContent.state}, '*'); } catch(e) {} };
+  window.openai = { widgetState: saved, setWidgetState: async function(s){ this.widgetState = s; try { localStorage.setItem(KEY, JSON.stringify(s)); } catch(e) {} tell(s); } };
+  window.addEventListener('message', function(e){
+    if (e.source !== parent || !e.data || e.data.type !== 'arcanes-observatoire-time') return;
+    var cur = window.openai.widgetState || {privateContent:{app:'observatoire-astral', version:1, state:{}}};
+    var next = {modelContent: cur.modelContent, privateContent:{app:'observatoire-astral', version:1, state: Object.assign({}, cur.privateContent && cur.privateContent.state, {time: e.data.t})}};
+    window.openai.widgetState = next;
+    window.dispatchEvent(new CustomEvent('openai:set_globals', {detail:{globals:{widgetState: next}}}));
+  });
+})();
+</script>
+<style>
+#observatoire-astral{--oa-bg:#0c1522;--oa-panel:#111e2e;--oa-line:#28364a;--oa-text:#f1eee7;--oa-muted:#aebbc9;--oa-gold:#e8c48b;--oa-blue:#87c4e3;--oa-rose:#ec9ca7;color-scheme:dark;background:var(--oa-bg);color:var(--oa-text);font:14px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;border:1px solid #29374a;border-radius:24px;overflow:hidden;isolation:isolate;text-align:left;container-type:inline-size}
+#observatoire-astral *{box-sizing:border-box}
+#observatoire-astral [hidden]{display:none!important}
+#observatoire-astral button,#observatoire-astral input,#observatoire-astral select{font:inherit;color:inherit}
+#observatoire-astral button,#observatoire-astral select,#observatoire-astral input[type=date]{min-height:42px;border:1px solid var(--oa-line);border-radius:9px;background:#152234;padding:8px 12px}
+#observatoire-astral button{cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+#observatoire-astral button:hover{background:#23344a;border-color:#708092}
+#observatoire-astral button:focus-visible,#observatoire-astral a:focus-visible,#observatoire-astral select:focus-visible,#observatoire-astral input:focus-visible,#observatoire-astral summary:focus-visible{outline:2px solid var(--oa-gold);outline-offset:4px}
+#observatoire-astral button:disabled{opacity:.45;cursor:default}
+#observatoire-astral .oa-header{padding:28px 30px 23px;background:radial-gradient(ellipse at 65% -90%,#30415b 0,transparent 70%)}
+#observatoire-astral .oa-brand{color:var(--oa-gold);font-size:10px;letter-spacing:.22em;font-weight:600;padding-right:80px}
+#observatoire-astral .oa-brand span{opacity:.45;margin:0 9px}
+#observatoire-astral h1{font:400 clamp(32px,5cqi,46px)/1.15 Georgia,serif;letter-spacing:-.03em;margin:12px 0 7px}
+#observatoire-astral h1 span{color:var(--oa-gold)}
+#observatoire-astral p{margin:0}
+#observatoire-astral .oa-header p{color:var(--oa-muted);font-size:13px}
+#observatoire-astral .oa-modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:0 24px;gap:4px;border-bottom:1px solid var(--oa-line)}
+#observatoire-astral .oa-modes button{position:relative;border:0;background:transparent;border-radius:8px 8px 0 0;min-height:58px;display:flex;align-items:center;justify-content:center;gap:9px;font-size:13px;color:var(--oa-muted);padding:10px 5px}
+#observatoire-astral .oa-modes button[aria-pressed=true]{color:var(--oa-gold);background:#172334}
+#observatoire-astral .oa-modes button[aria-pressed=true]:after{content:"";position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--oa-gold)}
+#observatoire-astral .oa-index{font-size:10px;opacity:.65;font-variant-numeric:tabular-nums}
+#observatoire-astral .oa-workspace{display:grid;grid-template-columns:minmax(0,1fr) 278px}
+#observatoire-astral .oa-instrument{min-width:0}
+#observatoire-astral .oa-scene-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;min-height:65px;padding:16px 22px 0}
+#observatoire-astral #oa-scene-label{font-size:10px;letter-spacing:.16em;color:var(--oa-muted)}
+#observatoire-astral #oa-scene-status{font-size:11px;color:var(--oa-gold);text-align:right}
+#observatoire-astral #oa-scene-status:empty{display:none}
+#observatoire-astral .oa-segment{display:flex;background:#172334;border:1px solid var(--oa-line);padding:3px;border-radius:10px}
+#observatoire-astral .oa-segment button{border:0;min-height:32px;font-size:11px;padding:6px 9px;background:transparent;color:var(--oa-muted)}
+#observatoire-astral .oa-segment button[aria-pressed=true]{color:#162131;background:var(--oa-gold)}
+#observatoire-astral #oa-scene-intro{padding:14px clamp(14px,3cqi,22px) 0;display:grid;gap:5px;font-size:13px}
+#observatoire-astral #oa-interpretation{color:var(--oa-gold)}
+#observatoire-astral #oa-interpretation:empty{display:none}
+#observatoire-astral #oa-aspect-examples{padding:12px clamp(14px,3cqi,22px) 0}
+#observatoire-astral #oa-aspect-example-label{color:var(--oa-muted);font-size:12px}
+#observatoire-astral #oa-aspect-examples .oa-examples{margin-top:7px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+#observatoire-astral #oa-aspect-examples button{min-height:48px;white-space:normal;padding:7px 5px}
+#observatoire-astral #oa-aspect-examples button[aria-pressed=true]{background:var(--oa-gold);color:#17202d;border-color:var(--oa-gold)}
+#observatoire-astral .oa-aspect-meaning{display:grid;gap:6px;padding:14px 0;font-size:13px}
+#observatoire-astral .oa-aspect-meaning strong{font-weight:500;color:var(--oa-gold)}
+#observatoire-astral #oa-aspect-example{color:var(--oa-muted);font-size:12px}
+#observatoire-astral .oa-aspect-meaning summary{cursor:pointer;font-size:12px;color:var(--oa-muted)}
+#observatoire-astral .oa-aspect-meaning details p{margin-top:7px}
+#observatoire-astral #oa-position{display:block;color:var(--oa-gold);font-size:13px;margin-bottom:5px}
+#observatoire-astral #oa-position:empty{display:none}
+#observatoire-astral .oa-canvas-wrap{position:relative;height:420px;max-width:100%;overflow:hidden}
+#observatoire-astral canvas{display:block;width:100%;height:100%}
+#observatoire-astral #oa-body-targets{position:absolute;inset:0;pointer-events:none}
+#observatoire-astral .oa-body-hit{position:absolute;min-height:44px;width:44px;height:44px;transform:translate(-50%,-50%);background:transparent;border:0;border-radius:50%;padding:0;pointer-events:auto}
+#observatoire-astral .oa-body-hit:hover{background:rgba(232,196,139,.12);border:1px solid #e8c48b77}
+#observatoire-astral .oa-scene-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 22px 14px;color:var(--oa-muted);font-size:11px;min-height:48px}
+#observatoire-astral .oa-scene-foot button{font-size:11px;min-height:32px;padding:5px 9px;white-space:nowrap}
+#observatoire-astral .oa-pickers{display:flex;gap:10px;flex-wrap:wrap;padding:0 22px 18px}
+#observatoire-astral .oa-pickers label{display:flex;flex-direction:column;gap:5px;color:var(--oa-muted);font-size:11px;flex:1;min-width:110px}
+#observatoire-astral .oa-pickers select{width:100%;color:var(--oa-text);font-size:14px}
+#observatoire-astral .oa-time{padding:18px 22px 22px;border-top:1px solid var(--oa-line);background:#0f1a29}
+#observatoire-astral .oa-time-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#observatoire-astral .oa-overline{display:block;color:var(--oa-gold);font-size:10px;letter-spacing:.15em;font-weight:500}
+#observatoire-astral #oa-date-display{font-family:Georgia,serif;font-size:20px;margin-top:4px;font-variant-numeric:tabular-nums}
+#observatoire-astral .oa-date-label{font-size:10px;color:var(--oa-muted);display:flex;flex-direction:column;gap:4px;flex:none}
+#observatoire-astral input[type=date]{font-size:12px;max-width:150px;padding:5px 8px;min-height:34px}
+#observatoire-astral input[type=range]{accent-color:var(--oa-gold);width:100%;margin:17px 0 0;height:22px;cursor:ew-resize}
+#observatoire-astral .oa-range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--oa-muted)}
+#observatoire-astral .oa-transport{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+#observatoire-astral .oa-transport-buttons{display:flex;gap:6px}
+#observatoire-astral .oa-transport-buttons button{font-size:12px;min-width:44px}
+#observatoire-astral button.oa-primary{background:var(--oa-gold);color:#17202d;border-color:var(--oa-gold);min-width:78px}
+#observatoire-astral .oa-speed{display:flex;gap:7px;align-items:center;font-size:11px;color:var(--oa-muted)}
+#observatoire-astral .oa-speed select{font-size:12px;padding:5px;min-height:36px}
+#observatoire-astral .oa-learning{padding:28px 24px;background:linear-gradient(150deg,#172536,#101b2a 80%);border-left:1px solid var(--oa-line);min-width:0}
+#observatoire-astral h2{font:400 29px/1.15 Georgia,serif;margin:12px 0 20px;letter-spacing:-.02em}
+#observatoire-astral .oa-reading{display:flex;flex-direction:column;margin-bottom:18px;gap:2px}
+#observatoire-astral #oa-metric{font:400 34px/1.2 Georgia,serif;color:var(--oa-gold);font-variant-numeric:tabular-nums}
+#observatoire-astral #oa-metric-caption{font-size:11px;color:var(--oa-muted)}
+#observatoire-astral #oa-explanation{font-size:13px;line-height:1.7}
+#observatoire-astral .oa-observation{font-size:12px;color:var(--oa-muted);margin-top:12px}
+#observatoire-astral #oa-mini-wrap{margin-top:18px}
+#observatoire-astral #oa-mini{height:130px}
+#observatoire-astral #oa-mini-caption{font-size:10px;color:var(--oa-muted);text-align:center;margin-top:3px}
+#observatoire-astral .oa-guided{margin-top:24px;padding-top:18px;border-top:1px solid var(--oa-line)}
+#observatoire-astral .oa-guided p{font-size:12px;margin:8px 0 12px;color:var(--oa-muted)}
+#observatoire-astral .oa-guided button{font-size:12px;text-align:left;width:100%;border-color:#5e5749;color:var(--oa-gold);background:#212b36}
+#observatoire-astral .oa-examples{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#observatoire-astral .oa-examples button{font-size:11px;padding:6px 9px;flex:1;white-space:nowrap}
+#observatoire-astral .oa-symbolic{font-size:11px;color:var(--oa-muted);margin-top:18px;line-height:1.7}
+#observatoire-astral .oa-footer{display:flex;align-items:start;gap:16px;justify-content:space-between;border-top:1px solid var(--oa-line);padding:14px 24px;font-size:11px;color:var(--oa-muted)}
+#observatoire-astral .oa-footer>span{font-family:Georgia,serif;font-style:italic;flex:none}
+#observatoire-astral .oa-footer details{max-width:480px;text-align:right}
+#observatoire-astral .oa-footer summary{cursor:pointer;color:var(--oa-gold)}
+#observatoire-astral .oa-footer details p{text-align:left;margin-top:12px}
+#observatoire-astral a{color:var(--oa-gold);text-underline-offset:3px}
+#observatoire-astral .oa-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@container (max-width:760px){#observatoire-astral .oa-workspace{grid-template-columns:minmax(0,1fr)}#observatoire-astral .oa-learning{border-left:0;border-top:1px solid var(--oa-line);padding:24px}#observatoire-astral #oa-mini-wrap{display:none}#observatoire-astral .oa-learning h2{margin-bottom:12px}#observatoire-astral .oa-reading{margin-bottom:14px}#observatoire-astral .oa-guided{margin-top:18px}#observatoire-astral .oa-canvas-wrap{height:390px}}
+@container (max-width:480px){#observatoire-astral .oa-header{padding:24px 18px 20px}#observatoire-astral .oa-brand{font-size:9px;letter-spacing:.14em}#observatoire-astral .oa-modes{padding:0 8px;gap:0;grid-template-columns:1fr 1fr}#observatoire-astral .oa-modes button{min-height:46px;font-size:12px}#observatoire-astral .oa-canvas-wrap{height:340px}#observatoire-astral .oa-scene-top{padding:14px 14px 0;min-height:59px}#observatoire-astral #oa-scene-label{font-size:9px;letter-spacing:.08em}#observatoire-astral .oa-scene-foot{padding:0 14px 12px}#observatoire-astral .oa-pickers{padding:0 14px 16px}#observatoire-astral .oa-time{padding:16px 14px}#observatoire-astral .oa-time-top{align-items:start}#observatoire-astral #oa-date-display{font-size:18px}#observatoire-astral .oa-transport{gap:5px}#observatoire-astral .oa-transport-buttons{gap:4px}#observatoire-astral .oa-transport-buttons button{padding:7px 9px}#observatoire-astral .oa-speed{gap:4px}#observatoire-astral .oa-learning{padding:23px 18px}#observatoire-astral .oa-footer{flex-direction:column;padding:14px 18px;gap:8px}#observatoire-astral .oa-footer details{text-align:left}#observatoire-astral input[type=date]{font-size:16px;width:144px}#observatoire-astral select{font-size:16px!important}#observatoire-astral .oa-date-label{font-size:10px}}
+@media(prefers-reduced-motion:reduce){#observatoire-astral button{transition:none}}
+@media(pointer:coarse){#observatoire-astral .oa-segment button{min-height:44px}}
+
+/* ---- Réglages d'accueil dans Arcanes (demandés par Arthur, nov. 2026) : pas de fond ni de cadre,
+   le ciel de l'app passe derrière ; scène plus grande ; relief, note d'échelle et sélecteur d'astre retirés
+   (on touche l'astre pour l'observer). Les sources de l'objet restent intactes. ---- */
+#observatoire-astral{background:transparent;border:0;border-radius:0}
+#observatoire-astral .oa-header{background:none}
+#observatoire-astral .oa-time,#observatoire-astral .oa-learning{background:transparent}
+#observatoire-astral .oa-learning{border-left:1px solid var(--oa-line)}
+#observatoire-astral #oa-relief,#observatoire-astral #oa-scale-note{display:none!important}
+/* Planétarium : on touche l'astre pour l'observer, le sélecteur disparaît. Il reste dans Rétrogradations et Aspects,
+   où un seul astre est dessiné et où l'on ne peut donc pas en toucher un autre. */
+#observatoire-astral:has(.oa-modes [data-mode="solar"][aria-pressed="true"]) #oa-body-label,
+#observatoire-astral:has(.oa-modes [data-mode="moon"][aria-pressed="true"]) #oa-body-label{display:none!important}
+#observatoire-astral .oa-scene-foot{min-height:0;padding-bottom:8px}
+#observatoire-astral .oa-scene-foot:not(:has(#oa-position:not(:empty))){display:none}
+#observatoire-astral:has(.oa-modes [data-mode="solar"][aria-pressed="true"]) .oa-pickers,
+#observatoire-astral:has(.oa-modes [data-mode="moon"][aria-pressed="true"]) .oa-pickers{display:none}
+#observatoire-astral .oa-canvas-wrap{height:clamp(440px,58cqw,660px)}
+#observatoire-astral .oa-workspace{grid-template-columns:minmax(0,1fr) 300px}
+@container (max-width:760px){#observatoire-astral .oa-workspace{grid-template-columns:minmax(0,1fr)}#observatoire-astral .oa-learning{border-left:0;border-top:1px solid var(--oa-line)}#observatoire-astral .oa-canvas-wrap{height:min(112cqw,520px)}}
+
+</style>
+<div id="observatoire-astral" lang="fr">
+  <header class="oa-header">
+    <div class="oa-brand">ARCANES <span>/</span> ATELIERS DU CIEL</div>
+    <h1>L’Observatoire<span>.</span></h1>
+    <p>Un ciel. Quatre façons de le comprendre.</p>
+  </header>
+  <nav class="oa-modes" aria-label="Les quatre ateliers">
+    <button type="button" data-mode="solar" aria-pressed="true"><span class="oa-index">01</span><span>Planétarium</span></button>
+    <button type="button" data-mode="retro" aria-pressed="false"><span class="oa-index">02</span><span>Rétrogradations</span></button>
+    <button type="button" data-mode="aspects" aria-pressed="false"><span class="oa-index">03</span><span>Aspects</span></button>
+    <button type="button" data-mode="moon" aria-pressed="false"><span class="oa-index">04</span><span>Phases lunaires</span></button>
+  </nav>
+  <div class="oa-workspace">
+    <section class="oa-instrument" aria-label="Ciel interactif">
+      <div class="oa-scene-top"><span id="oa-scene-label">SYSTÈME SOLAIRE</span><div id="oa-view-switch" class="oa-segment" role="group" aria-label="Point de vue"><button type="button" data-view="sun" aria-pressed="true">Depuis le Soleil</button><button type="button" data-view="earth" aria-pressed="false">Depuis la Terre</button></div><span id="oa-scene-status"></span></div>
+      <div id="oa-scene-intro" hidden>
+        <p id="oa-definition"></p>
+        <p id="oa-interpretation"></p>
+      </div>
+      <div id="oa-aspect-examples" hidden>
+        <p id="oa-aspect-example-label">Toucher un aspect le montre sur la roue · Soleil–Lune</p>
+        <div class="oa-examples" role="group" aria-labelledby="oa-aspect-example-label">
+          <button type="button" data-aspect="0">Conjonction · 0°</button>
+          <button type="button" data-aspect="60">Sextile · 60°</button>
+          <button type="button" data-aspect="90">Carré · 90°</button>
+          <button type="button" data-aspect="120">Trigone · 120°</button>
+          <button type="button" data-aspect="180">Opposition · 180°</button>
+        </div>
+        <div class="oa-aspect-meaning" aria-live="polite">
+          <strong id="oa-aspect-heading"></strong>
+          <p id="oa-aspect-meaning"></p>
+          <details><summary>Un exemple concret</summary><p id="oa-aspect-example"></p></details>
+        </div>
+      </div>
+      <div class="oa-canvas-wrap"><canvas id="oa-canvas" role="img" aria-label="Positions des astres, mises à jour avec la date."></canvas><div id="oa-body-targets" aria-label="Astres du graphique"></div></div>
+      <div class="oa-scene-foot"><div><span id="oa-position"></span><span id="oa-scale-note"></span></div><button type="button" id="oa-relief" aria-pressed="true">Relief activé</button></div>
+      <div class="oa-pickers">
+        <label id="oa-body-label">Astre observé<select id="oa-body"></select></label>
+        <label id="oa-other-label" hidden>Comparer avec<select id="oa-other"></select></label>
+        <label id="oa-orb-label" hidden>Tolérance (orbe)<select id="oa-orb"><option value="1">1° · stricte</option><option value="3" selected>3° · modérée</option><option value="6">6° · large</option></select></label>
+      </div>
+      <div class="oa-time">
+        <div class="oa-time-top"><div><span class="oa-overline">LE FIL DU TEMPS</span><div id="oa-date-display"></div></div><label class="oa-date-label">Date · UTC<input id="oa-date" type="date" min="1900-01-01" max="2100-12-31"></label></div>
+        <label class="oa-sr" for="oa-time-slider">Explorer les jours autour de la date sélectionnée</label><input id="oa-time-slider" type="range" min="-180" max="180" step="0.1" value="0">
+        <div class="oa-range-labels"><span id="oa-range-start"></span><span id="oa-range-end"></span></div>
+        <div class="oa-transport"><div class="oa-transport-buttons"><button id="oa-back" type="button" aria-label="Reculer d’un jour">−1 j</button><button id="oa-play" class="oa-primary" type="button" aria-pressed="false">Lire</button><button id="oa-forward" type="button" aria-label="Avancer d’un jour">+1 j</button></div><label class="oa-speed">Vitesse<select id="oa-speed"><option value="1">1 j/s</option><option value="8" selected>8 j/s</option><option value="32">32 j/s</option></select></label></div>
+      </div>
+    </section>
+    <aside class="oa-learning" aria-label="Comprendre ce que vous observez">
+      <div class="oa-overline" id="oa-lesson-kicker"></div>
+      <h2 id="oa-lesson-title"></h2>
+      <div class="oa-reading"><span id="oa-metric"></span><span id="oa-metric-caption"></span></div>
+      <p id="oa-explanation"></p>
+      <p id="oa-observation" class="oa-observation"></p>
+      <div id="oa-mini-wrap"><canvas id="oa-mini" role="img" aria-label="Vue complémentaire de la même scène"></canvas><p id="oa-mini-caption"></p></div>
+      <div id="oa-guided" class="oa-guided"><span class="oa-overline">À EXPLORER</span><p id="oa-prompt"></p><button type="button" id="oa-experiment"></button></div>
+      <div id="oa-phase-buttons" class="oa-examples" hidden aria-label="Prochaines phases principales"><button type="button" data-phase="0">Nouvelle</button><button type="button" data-phase="90">1er quartier</button><button type="button" data-phase="180">Pleine</button><button type="button" data-phase="270">Dernier quartier</button></div>
+      <p id="oa-symbolic" class="oa-symbolic"></p>
+    </aside>
+  </div>
+  <div id="oa-announcement" class="oa-sr" aria-live="polite"></div>
+  <footer class="oa-footer"><span>Un même instant, quatre lectures.</span><details><summary>Repères & sources</summary><p>Positions calculées avec <a href="https://github.com/cosinekitty/astronomy" target="_blank" rel="noopener noreferrer">Astronomy Engine</a> (Don Cross, licence MIT). Repères géocentriques et zodiaque tropical. Les sphères sont des illustrations et leurs tailles sont amplifiées. La vue du Soleil comprime les distances ; le laboratoire conserve une échelle commune pour les orbites.</p><p>La vue terrestre représente les directions depuis le centre de la Terre, sans horizon local. Les noms du zodiaque désignent douze secteurs de 30°, pas les constellations astronomiques.</p><p>La Lune est présentée avec le nord en haut, de façon schématique. Les phases viennent de l’éclairage solaire, pas de l’ombre de la Terre. <a href="https://science.nasa.gov/moon/moon-phases/" target="_blank" rel="noopener noreferrer">Comprendre les phases · NASA</a>. <a href="https://starchild.gsfc.nasa.gov/docs/StarChild/questions/question46.html" target="_blank" rel="noopener noreferrer">Comprendre la rétrogradation · NASA</a>.</p><p>Les significations astrologiques sont présentées comme des lectures symboliques. Les angles et les mouvements sont des données astronomiques. Dates disponibles de 1900 à 2100.</p></details></footer>
+</div>
+
+<script src="astronomy.min.js"></script>
+<script>
+(function () {
+const module = undefined, exports = undefined, define = undefined;
+/* Light-time corrected geocentric directions, without aberration, matching
+   Astronomy Engine's PairLongitude/MoonPhase convention. Ecliptic of date. */
+(function (host) {
+  'use strict';
+  const A = typeof module === 'object' && module.exports ? require('./astronomy.min.js') : host.Astronomy;
+  const DAY = 86400000, RAD = Math.PI / 180;
+  const bodies = [
+    {id:'Sun',name:'Soleil',glyph:'☉',color:'#f4c777',period:0},
+    {id:'Moon',name:'Lune',glyph:'☽',color:'#d7e0e4',period:27.32},
+    {id:'Mercury',name:'Mercure',glyph:'☿',color:'#bdafb0',period:87.969},
+    {id:'Venus',name:'Vénus',glyph:'♀',color:'#e4bd8d',period:224.701},
+    {id:'Mars',name:'Mars',glyph:'♂',color:'#de967b',period:686.98},
+    {id:'Jupiter',name:'Jupiter',glyph:'♃',color:'#d8b79b',period:4332.59},
+    {id:'Saturn',name:'Saturne',glyph:'♄',color:'#d9c598',period:10759.22},
+    {id:'Uranus',name:'Uranus',glyph:'♅',color:'#9bced0',period:30688.5},
+    {id:'Neptune',name:'Neptune',glyph:'♆',color:'#7b9ad9',period:60182},
+    {id:'Pluto',name:'Pluton',glyph:'♇',color:'#c4a89b',period:90560}
+  ];
+  const earth={id:'Earth',name:'Terre',glyph:'⊕',color:'#7bb7cd',period:365.256};
+  const signs=['Bélier','Taureau','Gémeaux','Cancer','Lion','Vierge','Balance','Scorpion','Sagittaire','Capricorne','Verseau','Poissons'];
+  const aspects=[
+    {angle:0,name:'Conjonction',symbol:'Les deux thèmes se mêlent et prennent plus de place.'},
+    {angle:60,name:'Sextile',symbol:'Les deux thèmes peuvent s’entraider si on les fait travailler ensemble.'},
+    {angle:90,name:'Carré',symbol:'Les deux thèmes se heurtent et demandent un ajustement.'},
+    {angle:120,name:'Trigone',symbol:'Les deux thèmes se soutiennent facilement.'},
+    {angle:180,name:'Opposition',symbol:'Les deux thèmes tirent dans des directions opposées et cherchent un équilibre.'}
+  ];
+  const wrap=x=>((x%360)+360)%360;
+  const signed=x=>wrap(x+180)-180;
+  const date=t=>new Date(t);
+  function geo(id,t){return A.Ecliptic(A.GeoVector(id,date(t),false));}
+  function helio(id,t){return A.Ecliptic(A.HelioVector(id,date(t))).vec;}
+  function longitude(id,t){return geo(id,t).elon;}
+  function velocity(id,t){return signed(longitude(id,t+DAY/2)-longitude(id,t-DAY/2));}
+  function separation(a,b){return Math.abs(signed(a-b));}
+  function aspect(a,b,orb){const angle=separation(a,b);const nearest=aspects.reduce((v,n)=>Math.abs(n.angle-angle)<Math.abs(v.angle-angle)?n:v);const delta=Math.abs(nearest.angle-angle);return {angle,nearest,delta,active:delta<=orb};}
+  function lunar(t){
+    const phase=A.MoonPhase(date(t)),fraction=A.Illumination('Moon',date(t)).phase_fraction;
+    let name=phase<90?'Premier croissant':phase<180?'Gibbeuse croissante':phase<270?'Gibbeuse décroissante':'Dernier croissant';
+    for(const [angle,title] of [[0,'Nouvelle Lune'],[90,'Premier quartier'],[180,'Pleine Lune'],[270,'Dernier quartier']])if(Math.abs(signed(phase-angle))<.5)name=title;
+    return {phase,fraction,name,waxing:phase<180};
+  }
+  function nextPhase(angle,t){return A.SearchMoonPhase(angle,date(t+60000),40).date.getTime();}
+  function nextRetro(id,t){
+    if(id==='Sun'||id==='Moon')return null;
+    let cursor=t, count=0;
+    // Include an ongoing episode by locating its beginning first.
+    if(velocity(id,cursor)<0){while(velocity(id,cursor)<0&&count++<350)cursor-=DAY;}
+    else {while(velocity(id,cursor)>=0&&count++<1000)cursor+=DAY;if(count>=1000)return null;cursor-=DAY;}
+    let lo=cursor,hi=cursor+DAY;
+    for(let i=0;i<18;i++){const mid=(lo+hi)/2;if(velocity(id,mid)<0)hi=mid;else lo=mid;}
+    const start=(lo+hi)/2;cursor=start+DAY;count=0;
+    while(velocity(id,cursor)<0&&count++<350)cursor+=DAY;
+    lo=cursor-DAY;hi=cursor;
+    for(let i=0;i<18;i++){const mid=(lo+hi)/2;if(velocity(id,mid)<0)lo=mid;else hi=mid;}
+    return {start,end:(lo+hi)/2};
+  }
+  const api={A,DAY,RAD,bodies,earth,signs,aspects,wrap,signed,geo,helio,longitude,velocity,separation,aspect,lunar,nextPhase,nextRetro};
+  if(typeof module==='object'&&module.exports)module.exports=api;else host.ObservatoryModel=api;
+})(typeof window!=='undefined'?window:globalThis);
+
+;
+(function(){
+  'use strict';
+  const root=document.getElementById('observatoire-astral');
+  if(!root)return;
+  const M=window.ObservatoryModel,{DAY,RAD,bodies,earth,signs}=M;
+  const $=id=>root.querySelector('#oa-'+id);
+  const all=s=>Array.from(root.querySelectorAll(s));
+  const minTime=Date.UTC(1900,0,1),maxTime=Date.UTC(2100,11,31,23,59);
+  const clamp=t=>Math.max(minTime,Math.min(maxTime,t));
+  const stationSpeed=.0001;
+  const defaults={mode:'solar',body:'Mercury',other:'Moon',view:'sun',retroView:'earth',aspectLesson:120,time:Date.UTC(2026,10,11,12),speed:8,orb:3,relief:true};
+  const publishedSnapshots=new Set();
+  const snapshotKey=snapshot=>JSON.stringify(Object.keys(defaults).map(key=>snapshot?.[key]??defaults[key]));
+  let state={...defaults},anchor=state.time,playing=false,frame=0,lastFrame=0,orbits=new Map(),positions=[],lastInfo=0,lastDraw=0;
+  let canvas=$('canvas'),ctx=canvas.getContext('2d'),mini=$('mini'),mx=mini.getContext('2d'),width=600,height=420,miniWidth=230;
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const palette={gold:'#e8c48b',blue:'#87c4e3',rose:'#ec9ca7',text:'#eeeae2',muted:'#aebbc9',line:'#2b3a50'};
+  const fmt=new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+  const shortFmt=new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'short',timeZone:'UTC'});
+  const num=(n,p=1)=>n.toLocaleString('fr-FR',{minimumFractionDigits:p,maximumFractionDigits:p});
+  const desc=id=>bodies.find(b=>b.id===id)||earth;
+  const dstr=t=>new Date(t).toISOString().slice(0,10);
+  const canRetrograde=()=>state.body!=='Sun'&&state.body!=='Moon';
+  const viewKey=()=>state.mode==='retro'?'retroView':'view';
+  const retroThemes={
+    Mercury:'sa façon de communiquer',
+    Venus:'ses relations et ce qui compte pour soi',
+    Mars:'sa façon d’agir',
+    Jupiter:'ses convictions et ses ambitions',
+    Saturn:'ses limites et ses responsabilités',
+    Uranus:'son rapport au changement',
+    Neptune:'ses idéaux et ses illusions',
+    Pluto:'son rapport au pouvoir'
+  };
+  function readSaved(v){
+    const saved=v?.privateContent;
+    if(saved?.app!=='observatoire-astral'||saved.version!==1)return;
+    const s=saved.state||{};
+    state={...defaults};
+    if(['solar','retro','aspects','moon'].includes(s.mode))state.mode=s.mode;
+    for(const k of ['body','other'])if(bodies.some(b=>b.id===s[k]))state[k]=s[k];
+    if(s.view==='earth')state.view='earth';
+    if(s.retroView==='sun')state.retroView='sun';
+    if(M.aspects.some(aspect=>aspect.angle===s.aspectLesson))state.aspectLesson=s.aspectLesson;
+    if(Number.isFinite(s.time))state.time=clamp(s.time);
+    if([1,8,32].includes(s.speed))state.speed=s.speed;
+    if([1,3,6].includes(s.orb))state.orb=s.orb;
+    if(typeof s.relief==='boolean')state.relief=s.relief;
+    if(state.body===state.other)state.other=state.body==='Moon'?'Sun':'Moon';
+    anchor=state.time;
+  }
+  readSaved(window.openai?.widgetState);
+  let lastReceivedSnapshot=snapshotKey(state);
+  function save(){
+    const payload={modelContent:{outil:'Observatoire astral',atelier:state.mode,astre:desc(state.body).name,comparaison:desc(state.other).name,dateUTC:new Date(state.time).toISOString(),vue:state[viewKey()]},privateContent:{app:'observatoire-astral',version:1,state:{...state}}};
+    publishedSnapshots.add(snapshotKey(state));
+    if(publishedSnapshots.size>64)publishedSnapshots.delete(publishedSnapshots.values().next().value);
+    try{window.openai?.setWidgetState?.(payload)?.catch(()=>{});}catch(e){/* host optional */}
+  }
+  function announce(s){$('announcement').textContent=s;}
+  function circle(g,x,y,r,fill,stroke){g.beginPath();g.arc(x,y,Math.max(.01,r),0,Math.PI*2);if(fill){g.fillStyle=fill;g.fill();}if(stroke){g.strokeStyle=stroke;g.stroke();}}
+  function line(g,a,b,color=palette.line,dashed=false){g.beginPath();g.setLineDash(dashed?[4,5]:[]);g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.strokeStyle=color;g.stroke();g.setLineDash([]);}
+  function label(g,s,x,y,color=palette.muted,size=12,align='center'){g.font=`${size}px system-ui, sans-serif`;g.fillStyle=color;g.textAlign=align;g.textBaseline='middle';g.fillText(s,x,y);}
+  function bodyLabels(g,items,w,h){
+    const occupied=items.map(p=>({x:p.x-p.r-4,y:p.y-p.r-4,w:p.r*2+8,h:p.r*2+8}));
+    const overlaps=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+    for(const p of items){
+      const text=desc(p.id).name,tw=text.length*6.5;
+      const candidates=[[0,p.r+18],[0,-p.r-18],[p.r+tw/2+14,-12],[-p.r-tw/2-14,-12],[p.r+tw/2+20,25],[-p.r-tw/2-20,25]];
+      let best=null,bestScore=Infinity;
+      for(const [dx,dy]of candidates){const x=Math.max(tw/2+6,Math.min(w-tw/2-6,p.x+dx)),y=Math.max(15,Math.min(h-15,p.y+dy));const box={x:x-tw/2-3,y:y-8,w:tw+6,h:16};const score=occupied.filter(o=>overlaps(box,o)).length;if(score<bestScore){best={x,y,box};bestScore=score;}}
+      if(Math.hypot(best.x-p.x,best.y-p.y)>p.r+24)line(g,{x:p.x,y:p.y},{x:best.x,y:best.y},'#64748a66');
+      label(g,text,best.x,best.y,p.id===state.body?palette.gold:palette.muted,11);occupied.push(best.box);
+    }
+  }
+  function glow(g,x,y,r,color){let gradient=g.createRadialGradient(x,y,1,x,y,r);gradient.addColorStop(0,color);gradient.addColorStop(1,'transparent');circle(g,x,y,r,gradient);}
+  function sphere(g,id,x,y,r,selected=false){
+    const b=desc(id);
+    if(id==='Sun')glow(g,x,y,r*3.4,'#efba6344');
+    if(selected){circle(g,x,y,r+6,null,palette.gold);circle(g,x,y,r+10,null,'#e8c48b22');}
+    g.save();circle(g,x,y,r);g.clip();
+    const grad=g.createRadialGradient(x-r*.38,y-r*.4,r*.05,x+r*.3,y+r*.3,r*1.5);
+    grad.addColorStop(0,id==='Sun'?'#fff3cb':b.color);grad.addColorStop(.42,b.color);grad.addColorStop(1,'#111927');
+    g.fillStyle=grad;g.fillRect(x-r,y-r,r*2,r*2);
+    if(id==='Jupiter'||id==='Saturn'){g.globalAlpha=.18;for(let j=-4;j<=4;j++){g.fillStyle=j%2?'#392f35':'#fff1cc';g.fillRect(x-r,y+j*r/5,r*2,r/9);}g.globalAlpha=1;}
+    if(id==='Earth'){g.fillStyle='#739f9d';g.globalAlpha=.7;g.beginPath();g.ellipse(x-r*.3,y-r*.1,r*.31,r*.53,-.55,0,Math.PI*2);g.fill();g.beginPath();g.ellipse(x+r*.44,y+r*.25,r*.4,r*.21,-.7,0,Math.PI*2);g.fill();g.globalAlpha=1;}
+    g.restore();
+    if(id==='Saturn'){g.save();g.translate(x,y);g.rotate(-.35);g.strokeStyle='#cbbb9388';g.lineWidth=Math.max(2,r*.18);g.beginPath();g.ellipse(0,0,r*1.8,r*.48,0,0,Math.PI*2);g.stroke();g.restore();}
+    g.lineWidth=1;
+  }
+  function stars(g,w,h){
+    for(let i=0;i<80;i++){let x=((i*137.507+19)%997)/997*w,y=((i*i*31.31+71)%991)/991*h;circle(g,x,y,i%7===0?1:.55,i%7===0?'#d3d6e54c':'#a8bad125');}
+    const grad=g.createRadialGradient(w*.5,h*.5,0,w*.5,h*.5,w*.5);grad.addColorStop(0,'#25405a20');grad.addColorStop(1,'transparent');g.fillStyle=grad;g.fillRect(0,0,w,h);
+  }
+  function setupCanvas(c,g,w,h){const dpr=Math.min(window.devicePixelRatio||1,2);c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);g.setTransform(dpr,0,0,dpr,0,0);}
+  function resize(){
+    const rect=canvas.parentElement.getBoundingClientRect();
+    if(rect.width<=0||rect.height<=0)return;
+    width=rect.width;height=rect.height;
+    setupCanvas(canvas,ctx,width,height);miniWidth=mini.getBoundingClientRect().width||230;setupCanvas(mini,mx,miniWidth,130);draw();
+  }
+  function track(id){
+    const period=desc(id).period,key=id+':'+Math.floor(state.time/(365.25*DAY));
+    if(orbits.has(key))return orbits.get(key);
+    const pts=[];for(let i=0;i<=140;i++)pts.push(M.helio(id,state.time+(i/140-.5)*period*DAY));
+    if(orbits.size>30)orbits.clear();orbits.set(key,pts);return pts;
+  }
+  function drawSolar(g,w,h,physical=false,small=false){
+    const cx=w/2,cy=h*.49,tilt=small?.7:(state.relief?.68:1),maxR=Math.min(w*.43,h*.38/tilt);
+    const selected=state.body;
+    const items=physical?[earth,desc(selected==='Sun'||selected==='Moon'?'Mercury':selected)]:[earth,...bodies.filter(b=>!['Sun','Moon'].includes(b.id))];
+    let maxDist=1.1;
+    if(physical)for(const b of items)for(const p of track(b.id))maxDist=Math.max(maxDist,Math.hypot(p.x,p.y));
+    const projection=p=>{
+      const rr=Math.hypot(p.x,p.y),angle=Math.atan2(p.y,p.x)+.35;
+      const radius=physical?rr/maxDist*maxR:(.22+.78*Math.log1p(rr*2)/Math.log(81))*maxR;
+      return {x:cx+Math.cos(angle)*radius,y:cy-Math.sin(angle)*radius*tilt};
+    };
+    const displayed=[];
+    for(const b of items){
+      const p=M.helio(b.id,state.time),point=projection(p);
+      const active=b.id===selected||physical;
+      g.beginPath();
+      if(physical){track(b.id).forEach((v,i)=>{const q=projection(v);if(i===0)g.moveTo(q.x,q.y);else g.lineTo(q.x,q.y);});}
+      else{const radius=Math.hypot(point.x-cx,(point.y-cy)/tilt);g.ellipse(cx,cy,radius,radius*tilt,0,0,Math.PI*2);}
+      g.strokeStyle=active?'#a5b4ca5c':'#61738b38';g.lineWidth=1;g.stroke();
+      displayed.push({b,...point});
+    }
+    if(physical){const e=displayed.find(v=>v.b.id==='Earth'),p=displayed.find(v=>v.b.id!=='Earth');line(g,e,p,palette.gold);const dx=p.x-e.x,dy=p.y-e.y;const len=Math.hypot(dx,dy);if(len>1)line(g,p,{x:p.x+dx/len*50,y:p.y+dy/len*50},'#e8c48b66',true);}
+    sphere(g,'Sun',cx,cy,small?9:18,selected==='Sun'&&!physical);
+    displayed.sort((a,b)=>a.y-b.y);
+    for(const p of displayed){
+      const r=small?5:(p.b.id==='Earth'?10:(p.b.id===selected?13:['Jupiter','Saturn'].includes(p.b.id)?11:6));
+      sphere(g,p.b.id,p.x,p.y,r,p.b.id===selected&&!small);
+      if(!small)positions.push({id:p.b.id,x:p.x,y:p.y,r});
+    }
+    if(!small&&!physical)positions.push({id:'Sun',x:cx,y:cy,r:18});
+    if(!small)bodyLabels(g,[{id:'Sun',x:cx,y:cy,r:18},...positions.filter(p=>p.id!=='Sun'&&(physical||p.id===selected||p.id==='Earth'))],w,h-28);
+    if((selected==='Moon'||(state.mode==='aspects'&&state.other==='Moon'))&&!physical){const e=displayed.find(v=>v.b.id==='Earth');const moon=M.geo('Moon',state.time),a=moon.elon*RAD+.35;const radius=small?15:30;const x=e.x+Math.cos(a)*radius,y=e.y-Math.sin(a)*radius*tilt;sphere(g,'Moon',x,y,small?4:6,selected==='Moon'&&!small);if(!small)positions.push({id:'Moon',x,y,r:6});}
+    if(physical&&!small)label(g,'La ligne de regard part de la Terre',cx,h-19,palette.muted,11);
+  }
+  function ring(g,w,h,aspectMode=false,small=false){
+    const cx=w/2,cy=h/2,R=Math.min(w,h)*.37;
+    for(let i=0;i<360;i+=5){const a=i*RAD,r=i%30===0?R-10:R-4;line(g,{x:cx+Math.cos(a)*r,y:cy-Math.sin(a)*r},{x:cx+Math.cos(a)*R,y:cy-Math.sin(a)*R},i%30===0?'#8a9aab77':'#53627944');}
+    circle(g,cx,cy,R,null,'#64748a66');circle(g,cx,cy,R*.72,null,'#53627933');
+    if(!small)for(let i=0;i<12;i++){
+      const a=-(i*30+15)*RAD;g.save();g.translate(cx+Math.cos(a)*(R+19),cy+Math.sin(a)*(R+19));g.rotate(a+Math.PI/2);if(i>=6)g.rotate(Math.PI);label(g,signs[i],0,0,palette.muted,11);g.restore();
+    }
+    const retroMode=state.mode==='retro';
+    const list=aspectMode?[desc(state.body),desc(state.other)]:retroMode?[desc(state.body)]:bodies;
+    if(retroMode)drawRetroTrail(g,cx,cy,R,small);
+    const points=list.map((b,i)=>{const lon=M.longitude(b.id,state.time),a=lon*RAD,r=R*(aspectMode&&i===1?.58:.86);return {b,lon,x:cx+Math.cos(a)*r,y:cy-Math.sin(a)*r};});
+    if(aspectMode){
+      const [a,b]=points,info=M.aspect(a.lon,b.lon,state.orb),color=info.active?palette.gold:palette.muted;
+      g.beginPath();g.moveTo(cx,cy);g.lineTo(a.x,a.y);g.lineTo(b.x,b.y);g.closePath();g.fillStyle=info.active?'#e8c48b0d':'#7eb6d909';g.fill();
+      line(g,{x:cx,y:cy},a,color);line(g,{x:cx,y:cy},b,color);line(g,a,b,color,true);
+      const delta=M.signed(b.lon-a.lon);g.beginPath();g.arc(cx,cy,R*.40,-a.lon*RAD,-(a.lon+delta)*RAD,delta>0);g.strokeStyle=palette.gold;g.lineWidth=2;g.stroke();g.lineWidth=1;
+      // Metric sits below the origin so that the Earth remains visible.
+      label(g,num(info.angle)+'°',cx,cy+R*.65,palette.gold,small?13:23);
+    }else{
+      const p=points.find(p=>p.b.id===state.body);line(g,{x:cx,y:cy},p,palette.gold,true);
+    }
+    sphere(g,'Earth',cx,cy,small?7:16);
+    if(!small)label(g,'Terre',cx,cy+29,palette.muted,11);
+    if(retroMode&&!small)label(g,desc(state.body).name,cx,cy-32,palette.gold,13);
+    points.sort((a,b)=>(a.b.id===state.body?1:0)-(b.b.id===state.body?1:0));
+    for(const p of points){const active=p.b.id===state.body||aspectMode;sphere(g,p.b.id,p.x,p.y,small?4:active?11:4,active&&!small);if(!small)positions.push({id:p.b.id,x:p.x,y:p.y,r:11});}
+    if(!small&&!retroMode)bodyLabels(g,positions.filter(p=>aspectMode||p.id===state.body),w,h);
+  }
+  function drawRetroTrail(g,cx,cy,radius,small){
+    const days={Sun:7,Moon:3,Mercury:10,Venus:20,Mars:30,Jupiter:60,Saturn:60,Uranus:60,Neptune:60,Pluto:60}[state.body];
+    const start=Math.max(minTime,state.time-days*DAY);
+    const point=longitude=>({
+      x:cx+Math.cos(longitude*RAD)*radius*.86,
+      y:cy-Math.sin(longitude*RAD)*radius*.86
+    });
+    let previousLongitude=M.longitude(state.body,start);
+    let previousPoint=point(previousLongitude);
+    for(let i=1;i<=32;i++){
+      const time=start+(state.time-start)*i/32;
+      const longitude=M.longitude(state.body,time);
+      const currentPoint=point(longitude);
+      const retrograde=M.signed(longitude-previousLongitude)<0;
+      g.globalAlpha=.15+.7*i/32;
+      g.lineWidth=small?2:4;
+      line(g,previousPoint,currentPoint,retrograde?palette.rose:palette.blue);
+      previousLongitude=longitude;
+      previousPoint=currentPoint;
+    }
+    g.globalAlpha=1;
+    g.lineWidth=1;
+    const speed=M.velocity(state.body,state.time);
+    if(Math.abs(speed)<stationSpeed)return;
+    const longitude=M.longitude(state.body,state.time);
+    const direction=Math.sign(speed);
+    const from=-longitude*RAD;
+    const to=-(longitude+direction*14)*RAD;
+    const arrowRadius=radius*.70;
+    const color=speed<0?palette.rose:palette.blue;
+    g.beginPath();
+    g.arc(cx,cy,arrowRadius,from,to,direction>0);
+    g.strokeStyle=color;
+    g.lineWidth=2;
+    g.stroke();
+    const tip={x:cx+Math.cos(to)*arrowRadius,y:cy+Math.sin(to)*arrowRadius};
+    const tangent=to-direction*Math.PI/2;
+    for(const offset of [-.5,.5]){
+      line(g,tip,{x:tip.x-7*Math.cos(tangent+offset),y:tip.y-7*Math.sin(tangent+offset)},color);
+    }
+    g.lineWidth=1;
+  }
+  function updateAspectLesson(){
+    const aspect=M.aspects.find(item=>item.angle===state.aspectLesson);
+    const examples={
+      0:'Le Soleil représente la volonté et la Lune les besoins émotionnels. En conjonction, ces deux thèmes se mêlent.',
+      60:'Avec un sextile Soleil–Lune, on peut chercher comment ses besoins émotionnels peuvent soutenir ses projets.',
+      90:'Avec un carré Soleil–Lune, ce que l’on veut et ce dont on a besoin peuvent demander un compromis.',
+      120:'Avec un trigone Soleil–Lune, ce que l’on veut exprimer et ce dont on a besoin peuvent aller dans le même sens.',
+      180:'Avec une opposition Soleil–Lune, on cherche un équilibre entre ses projets et ses besoins émotionnels.'
+    };
+    $('aspect-heading').textContent=aspect.name+' · '+aspect.angle+'°';
+    $('aspect-meaning').textContent=aspect.symbol;
+    $('aspect-example').textContent='Exemple symbolique. '+examples[aspect.angle];
+    for(const button of all('[data-aspect]')){
+      button.setAttribute('aria-pressed',String(Number(button.dataset.aspect)===aspect.angle));
+    }
+  }
+  let moonCache={},textureCache={};
+  function moonDisk(g,x,y,r,t){
+    const moon=M.lunar(t),key=Math.round(moon.phase*2)+':'+Math.round(r);
+    if(moonCache.key!==key){
+      const size=Math.round(r*2)*2,off=document.createElement('canvas');off.width=off.height=size;const oc=off.getContext('2d'),img=oc.createImageData(size,size);
+      if(textureCache.size!==size){
+        const albedo=new Float32Array(size*size),maria=[[-.35,-.3,.32,.27],[.15,-.4,.23,.31],[-.13,.02,.28,.24],[.4,-.1,.18,.22]];
+        const craters=Array.from({length:65},(_,i)=>({x:Math.sin(i*71.31)*.95,y:Math.cos(i*34.13)*.95,r:.012+(Math.sin(i*12.31)+1)*.022}));
+        for(let py=0;py<size;py++)for(let px=0;px<size;px++){
+          const nx=(px+.5-size/2)/(size/2),ny=(py+.5-size/2)/(size/2);let tone=.87;
+          for(const [x,y,rx,ry]of maria){const d=((nx-x)/rx)**2+((ny-y)/ry)**2;tone-=.17*Math.exp(-d*2);}
+          for(const c of craters){const d=Math.hypot(nx-c.x,ny-c.y)/c.r;if(d<1.3)tone+=d<.75?-.10:.08;}
+          tone+=.018*Math.sin(px*37.11+py*51.73)*Math.sin(px*7.13-py*11.19);albedo[py*size+px]=tone;
+        }
+        textureCache={size,albedo};
+      }
+      const sz=2*moon.fraction-1,sx=(moon.waxing?1:-1)*Math.sqrt(Math.max(0,1-sz*sz));
+      for(let py=0;py<size;py++)for(let px=0;px<size;px++){
+        const nx=(px+.5-size/2)/(size/2),ny=(py+.5-size/2)/(size/2),rr=nx*nx+ny*ny;if(rr>1)continue;
+        const nz=Math.sqrt(1-rr),light=Math.max(0,nx*sx+nz*sz);
+        const albedo=textureCache.albedo[py*size+px];
+        const lum=(18+216*Math.pow(light,.65))*albedo,i=(py*size+px)*4;
+        img.data[i]=Math.min(255,lum*1.01);img.data[i+1]=Math.min(255,lum*1.025);img.data[i+2]=Math.min(255,lum*1.08);img.data[i+3]=Math.min(255,(1-rr)*size*80);
+      }
+      oc.putImageData(img,0,0);moonCache={key,image:off};
+    }
+    glow(g,x,y,r*1.4,'#9ebcda0c');g.drawImage(moonCache.image,x-r,y-r,r*2,r*2);circle(g,x,y,r,null,'#a6bbd81c');
+  }
+  function lunarGeometry(g,w,h,small=false){
+    const phase=M.lunar(state.time).phase*RAD,cx=w*.57,cy=h*.48,R=Math.min(w*.22,h*.34);
+    const sun={x:w*.11,y:cy},moon={x:cx-Math.cos(phase)*R,y:cy+Math.sin(phase)*R};
+    for(let i=-1;i<=1;i++)line(g,{x:sun.x+18,y:cy+i*18},{x:w*.93,y:cy+i*18},'#e8c48b17');
+    sphere(g,'Sun',sun.x,sun.y,small?10:16);circle(g,cx,cy,R,null,'#65758b66');line(g,{x:cx,y:cy},moon,'#e8c48b88',true);sphere(g,'Earth',cx,cy,small?8:12);
+    // In the top view the lit hemisphere always faces the Sun on the left.
+    circle(g,moon.x,moon.y,small?5:8,'#253247');g.beginPath();g.arc(moon.x,moon.y,small?5:8,Math.PI/2,Math.PI*1.5);g.fillStyle='#d9e0e4';g.fill();
+    if(!small){label(g,'Soleil',sun.x,h-12,palette.gold,11);label(g,'Terre',cx+24,cy,palette.muted,11,'left');label(g,'Lune',moon.x+(moon.x>cx?-15:15),moon.y+(moon.y>cy?-14:14),palette.muted,11,moon.x>cx?'right':'left');}
+  }
+  function hits(){
+    const container=$('body-targets');
+    const eligible=positions.filter(p=>p.id!=='Earth');
+    const ids=eligible.map(p=>p.id).join(',');
+    if(container.dataset.ids!==ids){container.replaceChildren();for(const p of eligible){const b=document.createElement('button');b.type='button';b.className='oa-body-hit';b.dataset.body=p.id;b.setAttribute('aria-label','Observer '+desc(p.id).name);b.addEventListener('click',()=>selectBody(p.id));container.append(b);}container.dataset.ids=ids;}
+    for(const p of eligible){const b=container.querySelector(`[data-body="${p.id}"]`);b.style.left=p.x+'px';b.style.top=p.y+'px';b.setAttribute('aria-pressed',String(p.id===state.body));}
+  }
+  function draw(){
+    ctx.clearRect(0,0,width,height);positions=[];stars(ctx,width,height);
+    if(state.mode==='solar'){if(state.view==='sun')drawSolar(ctx,width,height);else ring(ctx,width,height);}
+    if(state.mode==='retro'){
+      if(!canRetrograde())ring(ctx,width,height);
+      else if(state.retroView==='earth')ring(ctx,width,height);
+      else drawSolar(ctx,width,height,true);
+    }
+    if(state.mode==='aspects')ring(ctx,width,height,true);
+    if(state.mode==='moon'){
+      const r=Math.min(width*.24,height*.25);moonDisk(ctx,width/2,height*.34,r,state.time);
+      label(ctx,'VUE DEPUIS LA TERRE · NORD EN HAUT',width/2,height*.65,palette.muted,10);
+      ctx.save();ctx.translate(0,height*.70);lunarGeometry(ctx,width,height*.30);ctx.restore();
+    }
+    hits();
+    if(!$('mini-wrap').hidden&&mini.getBoundingClientRect().width){
+      mx.clearRect(0,0,miniWidth,130);
+      if(state.mode==='solar'){
+        if(state.view==='sun')ring(mx,miniWidth,130,false,true);
+        else drawSolar(mx,miniWidth,130,false,true);
+      }else if(state.mode==='moon'){
+        lunarGeometry(mx,miniWidth,130,true);
+      }else if(state.retroView==='earth'){
+        drawSolar(mx,miniWidth,130,true,true);
+      }else{
+        ring(mx,miniWidth,130,false,true);
+      }
+    }
+  }
+  function updateInfo(){
+    const body=desc(state.body),t=state.time,lon=M.longitude(state.body,t),sign=signs[Math.floor(lon/30)],deg=num(lon%30),speed=M.velocity(state.body,t);
+    let title,metric,caption,explanation,observation,prompt,experiment,symbolic='',kicker,scene,scale,miniCaption;
+    let definition='',interpretation='',status='';
+    if(state.mode==='solar'){
+      kicker='01 / CHANGER DE POINT DE VUE';title='Un ciel, deux regards.';metric=body.name;caption=deg+'° en '+sign+' · vu de la Terre';
+      explanation=state.view==='sun'?'Depuis le Soleil, les planètes suivent leurs orbites. Passez au point de vue terrestre pour voir leurs directions dans le zodiaque.':'Depuis la Terre, les astres se projettent dans différentes directions du zodiaque. La Terre occupe le centre de ce repère d’observation.';
+      observation=state.view==='sun'?'La petite Terre bleue est votre observatoire. La position d’un astre dans le zodiaque dépend de la ligne qui les relie.':'Ce cercle montre des angles. Deux astres voisins sur la roue peuvent être très éloignés l’un de l’autre dans l’espace.';
+      prompt='Gardez la même date et le même astre, puis changez de regard.';experiment=state.view==='sun'?'Regarder depuis la Terre':'Revenir au Soleil';
+      scene=state.view==='sun'?'SYSTÈME SOLAIRE':'DIRECTIONS DANS LE ZODIAQUE';scale=state.view==='sun'?'Distances comprimées · orbites schématisées':'Zodiaque tropical · directions géocentriques';miniCaption=state.view==='sun'?'Le même instant, depuis la Terre':'Le même instant, depuis le Soleil';
+      symbolic='En astrologie, la position géocentrique sert à situer l’astre dans un signe. La Terre reste le point d’observation.';
+    }else if(state.mode==='retro'){
+      const valid=canRetrograde(),fromEarth=state.retroView==='earth';
+      const station=Math.abs(speed)<=stationSpeed;
+      kicker='02 / COMPRENDRE LE MOUVEMENT';
+      title='La rétrogradation';
+      metric=valid?(station?'Presque immobile':speed<0?'Rétrograde':'Direct'):'Toujours direct';
+      caption=body.name+' · '+(speed>=0?'+':'')+num(speed,2)+'° / jour depuis la Terre';
+      definition='Une planète rétrograde quand sa position vue de la Terre recule dans le zodiaque. La flèche indique le sens de son déplacement.';
+      interpretation=valid?`En astrologie, une rétrogradation de ${body.name} invite à revoir ${retroThemes[state.body]}.`:'';
+      explanation=valid?(fromEarth?'La roue reste fixe. En rétrogradation, les degrés diminuent et la planète se déplace dans le sens des aiguilles d’une montre.':'La planète poursuit son orbite dans le même sens. La ligne dorée montre comment la direction observée depuis la Terre change.'):'Le Soleil et la Lune avancent toujours dans le zodiaque. Choisissez une planète comme Mercure pour suivre un recul apparent.';
+      observation='';
+      prompt=valid?'Chargez un épisode, puis appuyez sur Lire pour suivre le changement de direction.':'Mercure offre des épisodes courts, faciles à suivre.';
+      experiment=valid?'Charger un épisode de '+body.name:'Explorer Mercure';
+      scene=valid?(fromEarth?'ROUE DU ZODIAQUE':'SYSTÈME SOLAIRE'):'ROUE DU ZODIAQUE';
+      scale=valid?(fromEarth?'Trace des jours précédents · bleu direct · rose rétrograde':'Orbites à échelle commune · tailles amplifiées'):'Zodiaque tropical · directions vues de la Terre';
+      miniCaption=fromEarth?'Système solaire · même instant':'Roue du zodiaque · même instant';
+      status=metric;
+    }else if(state.mode==='aspects'){
+      const other=desc(state.other),a=M.aspect(lon,M.longitude(state.other,t),state.orb);
+      kicker='03 / LIRE LES RELATIONS';
+      title=a.active?a.nearest.name:'Pas d’aspect majeur';
+      metric=num(a.angle)+'°';
+      caption=body.name+' et '+other.name+' · angle vu de la Terre';
+      definition='Un aspect est un angle entre deux astres. En astrologie, cet angle indique comment les thèmes de ces astres se combinent.';
+      interpretation=a.active?`${a.nearest.name} (${a.nearest.angle}°). ${a.nearest.symbol}`:'';
+      const sunMoon=[state.body,state.other].includes('Sun')&&[state.body,state.other].includes('Moon');
+      explanation=a.active&&a.nearest.angle===120&&sunMoon
+        ? 'Dans ce trigone Soleil–Lune, ce que vous voulez exprimer et ce dont vous avez besoin peuvent aller dans le même sens.'
+        : 'Sur la roue, les deux traits partent de la Terre. L’arc doré montre le plus petit angle entre eux.';
+      observation=a.active?`Écart de ${num(a.delta)}° avec l’angle exact. La tolérance choisie est de ${state.orb}°.`:`Aspect le plus proche · ${a.nearest.name} (${a.nearest.angle}°). L’écart de ${num(a.delta)}° dépasse la tolérance de ${state.orb}°.`;
+      scene='LE COMPAS DES ASPECTS';scale='Le plus petit angle, mesuré le long du zodiaque';
+    }else{
+      const moon=M.lunar(t);kicker='04 / VOIR LA LUMIÈRE';title=moon.name+'.';metric=num(moon.fraction*100,0)+' %';caption='de la face visible éclairée · '+(moon.waxing?'croissante':'décroissante');
+      explanation='Le Soleil éclaire toujours une moitié de la Lune. Au fil de son orbite, nous voyons une part différente de cette moitié éclairée.';
+      observation='Le disque montre la face visible depuis la Terre ; le schéma inférieur révèle la géométrie Soleil–Terre–Lune. Un cycle de phases dure environ 29,5 jours.';
+      prompt='Sautez à la prochaine phase principale, ou ralentissez le temps à 1 jour par seconde.';experiment='Aller à la prochaine pleine Lune';scene='LE THÉÂTRE LUNAIRE';scale='Géométrie schématique · tailles et distances amplifiées';miniCaption='La même phase, vue du dessus';symbolic='Lecture symbolique : le cycle lunaire sert souvent de rythme à l’intention, au développement et au bilan.';
+    }
+    const texts={'lesson-kicker':kicker,'lesson-title':title,metric,'metric-caption':caption,explanation,observation,prompt,experiment,symbolic,definition,interpretation,'scene-label':scene,'scale-note':scale,'mini-caption':miniCaption};
+    for(const [key,value]of Object.entries(texts))$(key).textContent=value??'';
+    $('scene-status').textContent=state.mode==='moon'?num(M.lunar(t).phase,0)+'° de phase':status;
+    $('position').textContent=state.mode==='retro'?body.name+' · '+deg+'° en '+sign:'';
+    canvas.setAttribute('aria-label',title+' '+metric+'. '+caption+'. '+(observation||explanation));
+    $('date-display').textContent=fmt.format(new Date(t));$('date').value=dstr(t);
+    $('time-slider').value=String((t-anchor)/DAY);$('time-slider').setAttribute('aria-valuetext',fmt.format(new Date(t)));
+    $('range-start').textContent=shortFmt.format(new Date(clamp(anchor-180*DAY)));$('range-end').textContent=shortFmt.format(new Date(clamp(anchor+180*DAY)));
+    $('back').disabled=t<=minTime;$('forward').disabled=t>=maxTime;
+  }
+  function sync(){
+    for(const b of all('[data-mode]'))b.setAttribute('aria-pressed',String(b.dataset.mode===state.mode));
+    const solar=state.mode==='solar',retro=state.mode==='retro',aspects=state.mode==='aspects';
+    const hasViews=solar||(retro&&canRetrograde());
+    for(const b of all('[data-view]')){
+      b.setAttribute('aria-pressed',String(b.dataset.view===state[viewKey()]));
+      b.textContent=b.dataset.view==='sun'?'Système solaire':'Roue du zodiaque';
+    }
+    $('view-switch').hidden=!hasViews;
+    $('scene-intro').hidden=!retro;
+    $('other-label').hidden=!aspects;$('orb-label').hidden=!aspects;$('body-label').hidden=state.mode==='moon';
+    $('phase-buttons').hidden=state.mode!=='moon';$('aspect-examples').hidden=!aspects;$('guided').hidden=aspects;
+    $('relief').hidden=!hasViews||state[viewKey()]==='earth';
+    $('relief').textContent=state.relief?'Relief activé':'Vue du dessus';$('relief').setAttribute('aria-pressed',String(state.relief));
+    $('body').value=state.body;$('other').value=state.other;$('speed').value=String(state.speed);$('orb').value=String(state.orb);
+    for(const o of $('other').options)o.disabled=o.value===state.body;
+    $('mini-wrap').hidden=aspects||(retro&&!canRetrograde());
+    updateAspectLesson();updateInfo();draw();
+  }
+  function setTime(t,recenter=true){state.time=clamp(t);if(recenter||Math.abs(state.time-anchor)>180*DAY)anchor=state.time;updateInfo();draw();}
+  function pause(saveState=true){playing=false;cancelAnimationFrame(frame);$('play').textContent='Lire';$('play').setAttribute('aria-pressed','false');if(saveState)save();}
+  function selectBody(id){state.body=id;if(state.other===id)state.other=id==='Moon'?'Sun':'Moon';sync();save();announce('Astre sélectionné : '+desc(id).name);}
+  function setMode(mode){pause(false);state.mode=mode;sync();if(!reduced.matches&&canvas.animate)canvas.animate([{opacity:.4,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:230,easing:'ease-out'});save();announce($('lesson-title').textContent);}
+  function loop(now){
+    if(!playing)return;
+    if(!root.isConnected){pause(false);return;}
+    const delta=Math.min((now-lastFrame)/1000,.1);lastFrame=now;state.time=clamp(state.time+delta*state.speed*DAY);
+    if(Math.abs(state.time-anchor)>180*DAY)anchor=state.time;
+    // Reduced-motion users retain the explicit time control; playback updates discretely.
+    if(now-lastDraw>(reduced.matches?500:32)){draw();lastDraw=now;}
+    if(now-lastInfo>180){updateInfo();lastInfo=now;}
+    if(state.time>=maxTime){pause();announce('Fin de la période disponible.');updateInfo();return;}
+    frame=requestAnimationFrame(loop);
+  }
+  function jumpPhase(angle,asExample=false){
+    pause(false);const t=M.nextPhase(angle,state.time);
+    if(t>maxTime){announce('Cette phase est hors de la période disponible.');return;}
+    if(asExample){state.body='Sun';state.other='Moon';state.aspectLesson=angle;}
+    setTime(t);sync();save();announce('Date mise à jour : '+fmt.format(new Date(t)));
+  }
+  for(const id of ['body','other'])for(const b of bodies){const o=document.createElement('option');o.value=b.id;o.textContent=b.name+(b.id==='Pluto'?' · planète naine':'');$(id).append(o);}
+  all('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+  all('[data-view]').forEach(b=>b.addEventListener('click',()=>{
+    state[viewKey()]=b.dataset.view;
+    sync();
+    save();
+    announce($('scene-label').textContent);
+  }));
+  $('body').addEventListener('change',e=>selectBody(e.target.value));
+  $('other').addEventListener('change',e=>{state.other=e.target.value;sync();save();});
+  $('orb').addEventListener('change',e=>{state.orb=Number(e.target.value);sync();save();});
+  $('relief').addEventListener('click',()=>{state.relief=!state.relief;sync();save();});
+  $('speed').addEventListener('change',e=>{state.speed=Number(e.target.value);save();});
+  $('date').addEventListener('change',e=>{if(!e.target.value||!e.target.validity.valid){e.target.value=dstr(state.time);return;}pause(false);setTime(new Date(e.target.value+'T12:00:00Z').getTime());save();});
+  $('time-slider').addEventListener('input',e=>{pause(false);setTime(anchor+Number(e.target.value)*DAY,false);});
+  $('time-slider').addEventListener('change',()=>{save();announce($('date-display').textContent);});
+  $('back').addEventListener('click',()=>{pause(false);setTime(state.time-DAY,false);save();});
+  $('forward').addEventListener('click',()=>{pause(false);setTime(state.time+DAY,false);save();});
+  $('play').addEventListener('click',()=>{if(playing){pause();return;}if(state.time>=maxTime)return;playing=true;$('play').textContent='Pause';$('play').setAttribute('aria-pressed','true');lastFrame=performance.now();frame=requestAnimationFrame(loop);});
+  all('[data-phase]').forEach(b=>b.addEventListener('click',()=>jumpPhase(Number(b.dataset.phase))));
+  all('[data-aspect]').forEach(button=>button.addEventListener('click',()=>{
+    jumpPhase(Number(button.dataset.aspect),true);
+  }));
+  $('experiment').addEventListener('click',()=>{
+    if(state.mode==='solar'){state.view=state.view==='sun'?'earth':'sun';sync();save();return;}
+    if(state.mode==='moon'){jumpPhase(180);return;}
+    if(state.mode!=='retro')return;
+    pause(false);
+    const body=canRetrograde()?state.body:'Mercury';
+    const episode=M.nextRetro(body,state.time);
+    if(!episode||episode.start>maxTime){announce('Aucun épisode disponible dans cette période.');return;}
+    state.body=body;
+    if(state.other===body)state.other='Moon';
+    setTime(episode.start-7*DAY);sync();save();announce('Épisode chargé. Lancez la lecture pour suivre le mouvement de '+desc(state.body).name+'.');
+  });
+  window.addEventListener('openai:set_globals',event=>{
+    const incoming=event.detail?.globals?.widgetState;
+    if(incoming?.privateContent?.app!=='observatoire-astral'||incoming.privateContent.version!==1)return;
+    const key=snapshotKey(incoming.privateContent.state);
+    // A delayed acknowledgement of our own save must not rewind live motion.
+    if(publishedSnapshots.has(key)||key===lastReceivedSnapshot)return;
+    lastReceivedSnapshot=key;
+    pause(false);
+    readSaved(incoming);
+    sync();
+  });
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
+  new ResizeObserver(resize).observe(canvas.parentElement);
+  sync();resize();
+})();
+
+})();
+</script>
+<script>
+/* Page hôte Arcanes : signale sa hauteur à l'app, pour que le cadre s'ajuste sans barre de défilement. */
+(function(){ var last = 0, send = function(){ var h = Math.ceil(document.body.getBoundingClientRect().height); if (h && h !== last) { last = h; try { parent !== window && parent.postMessage({type:'arcanes-frame-height', h: h}, '*'); } catch(e) {} } };
+  try { new ResizeObserver(send).observe(document.body); } catch(e) {} window.addEventListener('load', send); setTimeout(send, 300); })();
+</script>
+</body></html>
