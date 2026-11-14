@@ -318,7 +318,7 @@
   /* =================================================================
      THÈME : le thème natal et les dés
      ================================================================= */
-  let thMode = "natal", thTab = "synth", editing = false, editId = null, desFrom = null;
+  let thMode = "natal", thTab = "guide", editing = false, editId = null, desFrom = null;
   const MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   function chartOf(t, sys){
     const lieu = t.lieu || {};
@@ -402,7 +402,7 @@
       const t = {id: editId || ("t" + Date.now().toString(36)), nom, y, m, d, h:hh, mi:mm, heure:!sans, lieu, moi:E.moi.checked};
       if(t.moi) st.themes.forEach(x => x.moi = false);
       const i = st.themes.findIndex(x => x.id === t.id); if(i >= 0) st.themes[i] = t; else st.themes.unshift(t);
-      st.themes = st.themes.slice(0, 40); st.cur = t.id; save(); editing = false; editId = null; thTab = "synth"; renderTheme(); window.scrollTo({top:0});
+      st.themes = st.themes.slice(0, 40); st.cur = t.id; save(); editing = false; editId = null; thTab = "guide"; renderTheme(); window.scrollTo({top:0});
     };
     show(1);
   }
@@ -493,15 +493,17 @@
       <h2 class="lsub">Les progressions secondaires</h2><p>Un jour après la naissance pour une année de vie. Aujourd'hui, ton <b>Soleil progressé</b> est à ${fmtPos(prog.soleil.lon)} et ta <b>Lune progressée</b> à ${fmtPos(prog.lune.lon)}${ch.heure ? `, en maison ${ROM[C.houseOf(prog.lune.lon, ch.cusps)]}` : ""}. La Lune progressée change de signe tous les deux ans et demi environ : elle décrit le climat affectif de la période.</p>
       <p class="help">Pour comprendre ces techniques : ${fiche("l:temps", "le module « Le temps » de L'école")}.</p>`;
   }
-  const THT = [["synth","Synthèse"],["planetes","Planètes"],["maisons","Maisons"],["aspects","Aspects"],["trad","Tradition"],["temps","Le temps"]];
+  const LECT = window.AstroLecture ? window.AstroLecture({C, D, SG, PL, ROM, ASP, h, cap, gl, pg, sgl, fiche, fmtPos, fmtOrb, fmtD, school, st:() => st, save, IMG, wheel}) : null;
+  const THT = (LECT ? [["guide","Lecture guidée"]] : []).concat([["synth","Synthèse"],["planetes","Planètes"],["maisons","Maisons"],["aspects","Aspects"],["trad","Tradition"],["temps","Le temps"]], LECT ? [["annee","Mon année"]] : []);
   function themeResult(t){
     const ch = chartOf(t), sc = school(), tz = t.lieu && t.lieu.tz;
     lastCharts.natal = {ch, nom:t.nom};
     const born = `${t.d} ${MOIS[t.m-1]} ${t.y}${t.heure ? ` à ${String(t.h).padStart(2,"0")} h ${String(t.mi).padStart(2,"0")}` : ", heure inconnue"}`;
-    const body = thTab === "planetes" ? tPlanets(ch) : thTab === "maisons" ? tHouses(ch) : thTab === "aspects" ? tAspects(ch) : thTab === "trad" ? tTrad(ch) : thTab === "temps" ? tTemps(ch, t) : tSynth(ch, t);
+    if(!LECT && (thTab === "guide" || thTab === "annee")) thTab = "synth";
+    const body = thTab === "guide" ? LECT.guide(ch, t) : thTab === "annee" ? LECT.annee(ch, t) : thTab === "planetes" ? tPlanets(ch) : thTab === "maisons" ? tHouses(ch) : thTab === "aspects" ? tAspects(ch) : thTab === "trad" ? tTrad(ch) : thTab === "temps" ? tTemps(ch, t) : tSynth(ch, t);
     return `<div class="a-thhead"><div><p class="eyebrow">Thème natal${t.moi ? " · le tien" : ""}</p><h1>${h(t.nom)}</h1><p class="help">${born} · ${h(t.lieu.nom)}</p></div>
         <div class="a-thtools"><div class="a-seg" role="group" aria-label="École de lecture"><button type="button" data-ecole="tradition" class="${sc === "tradition" ? "on" : ""}">Tradition</button><button type="button" data-ecole="moderne" class="${sc === "moderne" ? "on" : ""}">Moderne</button></div>
-          <button type="button" class="btn ghost small" data-th-edit>Modifier</button><button type="button" class="btn ghost small" data-popen="outils:ephem">Outils</button></div></div>
+          <button type="button" class="btn ghost small" data-th-edit>Modifier</button>${LECT ? `<button type="button" class="btn ghost small" data-th-print>Imprimer</button>` : ""}<button type="button" class="btn ghost small" data-popen="outils:ephem">Outils</button></div></div>
       <figure class="a-card a-wheelcard a-thwheel">${wheel(ch, {prefix:"np", label:"Thème de " + t.nom})}<figcaption class="help">Touche une planète pour lire sa fiche. ${ch.heure ? `Maisons ${SYS_NOM[ch.system]}.` : "Sans heure : roue sans maisons, le 0° Bélier à gauche."}</figcaption></figure>
       <nav class="subtabs a-tabs" aria-label="Les lectures du thème">${THT.map(([k, n]) => `<button type="button" class="subtab${thTab === k ? " on" : ""}" data-thtab="${k}">${n}</button>`).join("")}</nav>
       <div class="a-thbody">${body}</div>
@@ -557,6 +559,7 @@
         qa("[data-thtab]", root).forEach(b => b.onclick = () => { thTab = b.dataset.thtab; renderTheme(); const tb = q1(".a-tabs", root); if(tb){ if(tb.getBoundingClientRect().top < 4) window.scrollTo(0, window.scrollY + q1(".a-thbody", root).getBoundingClientRect().top - tb.offsetHeight - 8); const on = q1(".subtab.on", tb); if(on) tb.scrollLeft = on.offsetLeft - 16; } });
         qa("[data-ecole]", root).forEach(b => b.onclick = () => { st.ecole = b.dataset.ecole; save(); const y = window.scrollY; renderTheme(); window.scrollTo(0, y); });
         const tb0 = q1(".a-tabs", root), on0 = tb0 && q1(".subtab.on", tb0); if(on0) tb0.scrollLeft = on0.offsetLeft - 16;
+        if(LECT && lastCharts.natal){ const ch0 = lastCharts.natal.ch; LECT.bind(root, ch0, t, thTab); const pb = q1("[data-th-print]", root); if(pb) pb.onclick = () => LECT.print(ch0, t); }
       }
     }
     qa("[data-thmode]", root).forEach(b => b.onclick = () => { thMode = b.dataset.thmode; renderTheme(); });
