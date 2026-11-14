@@ -1562,6 +1562,7 @@
     const cw = window.ArcanesAstro.cielWhen && window.ArcanesAstro.cielWhen();
     slot.innerHTML = `<section class="obs" data-obs aria-label="L'Observatoire astral"><iframe class="obs-frame" src="astro/observatoire.html?t=${(cw || new Date()).getTime()}" title="L'Observatoire astral : planétarium, rétrogradations, aspects, phases lunaires" loading="lazy" scrolling="no"></iframe></section>`;
     fit(slot.querySelector(".obs-frame"));
+    if(window.ArcanesPV) try{ window.ArcanesPV.mount(slot); }catch(e){ console.warn("point de vue", e); }
     const dslot = v.querySelector("[data-obs-detail]");
     if(dslot){ dslot.innerHTML = `<details class="obs-det"><summary><span class="obs-det-t"><b>Vues du Soleil, distances et mouvements</b><small>Les mêmes astres en chiffres, et ce que ces chiffres veulent dire</small></span><i class="a-chev" aria-hidden="true"></i></summary><div class="obs-det-body" data-obs-body></div></details>`;
       const det = dslot.querySelector(".obs-det"); det.addEventListener("toggle", () => { if(det.open) renderDetail(); }); }

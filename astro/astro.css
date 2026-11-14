@@ -1042,3 +1042,56 @@ details[open]>summary .a-chev{transform:rotate(180deg)}
 }
 .a-eclic{width:20px;height:20px;vertical-align:-4px}
 .a-eclic .s{fill:var(--acc)} .a-eclic .m{fill:var(--ink)} .a-eclic .l{fill:none;stroke:var(--ink);stroke-width:1.4} .a-eclic .r{fill:var(--vermillon)}
+
+/* ---------- changer de point de vue : de la roue au système solaire ---------- */
+.pv{margin:30px 0 10px;padding:22px 22px 18px;border:1px solid var(--line);border-radius:22px;background:var(--panel)}
+.pv-head h2{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,4vw,34px);margin:2px 0 6px;line-height:1.1}
+.pv-lede{margin:0 0 14px;max-width:720px}
+.pv-grid{display:grid;gap:18px;align-items:start}
+@media (min-width:860px){.pv-grid{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px}}
+.pv-fig{margin:0}
+.pv-svg{display:block;width:100%;height:auto;max-width:560px;margin:0 auto;overflow:visible;font-family:var(--f-sym);--k:0}
+.pv-out{fill:none;stroke:var(--ink);stroke-width:1.2}
+.pv-in{fill:none;stroke:var(--line);stroke-width:1}
+.pv-div,.pv-tick{stroke:var(--line);stroke-width:1}
+.pv-sg{font-size:17px;text-anchor:middle;dominant-baseline:central;fill:currentColor}
+.pv-orbits circle{fill:none;stroke:var(--ink-soft);stroke-width:.8;stroke-dasharray:2 4;opacity:calc(var(--k) * .8)}
+.pv-ring circle{fill:none;stroke:var(--line);stroke-width:1;opacity:calc(1 - var(--k))}
+.pv-sight line{stroke:var(--acc);stroke-width:.8;opacity:calc((1 - var(--k)) * .45)}
+.pv-b text{text-anchor:middle;dominant-baseline:central;font-size:14px;fill:var(--ink);pointer-events:none}
+.pv-b circle{fill:var(--panel-solid);stroke:var(--ink-soft);stroke-width:1.2;transition:stroke .2s,r .2s}
+.pv-b.pl{cursor:pointer;outline:none}
+.pv-b.pl:hover circle,.pv-b.pl:focus-visible circle{stroke:var(--vermillon);stroke-width:2}
+.pv-b.sel circle{stroke:var(--vermillon);stroke-width:2.4;filter:drop-shadow(0 0 5px color-mix(in srgb,var(--vermillon) 45%,transparent))}
+.pv-b.sun circle{fill:#e9b949;stroke:#b98a1d}
+.pv-b.sun text{fill:#5a3d00;font-size:17px}
+.pv-b.earth circle{fill:color-mix(in srgb,var(--azur) 22%,var(--panel-solid));stroke:var(--azur)}
+.pv-b.earth text{fill:var(--azur);font-size:15px}
+.pv-b.moon circle{fill:var(--panel-solid);stroke:var(--ink-soft)}
+.pv-b.moon text{font-size:9px}
+.pv-rx{font:700 10px var(--f-ui);fill:var(--vermillon)!important;opacity:0}
+.pv-b.rx .pv-rx{opacity:calc(1 - var(--k) * 2)}
+.pv-center{font:600 9.5px var(--f-ui);letter-spacing:.12em;text-transform:uppercase;fill:var(--ink-soft);text-anchor:middle;opacity:.8}
+.pv-cap{text-align:center;margin:6px 0 0}
+.pv-seg{display:inline-flex;padding:4px;border-radius:999px;border:1px solid var(--line);background:var(--panel-solid);gap:2px;margin:4px 0 14px}
+.pv-seg button{border:0;background:none;padding:9px 16px;border-radius:999px;font:600 14.5px var(--f-ui);color:var(--ink-soft);cursor:pointer;min-height:40px;transition:background .3s,color .3s}
+.pv-seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel-solid)}
+.pv-txt p{margin:0 0 10px;line-height:1.55}
+.pv-time{margin:12px 0;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pv-trow{display:flex;align-items:center;gap:12px}
+.pv-trow input{flex:1;accent-color:var(--vermillon);height:30px}
+.pv-play{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--panel-solid);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.pv-play svg{width:18px;height:18px;fill:currentColor}
+.pv-play.on{background:var(--vermillon);border-color:var(--vermillon);color:#fff}
+.pv-date{margin:6px 0 0;font:14.5px var(--f-ui);display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.pv-info{min-height:54px}
+.pv-ititle{margin:0 0 6px;font:600 16px var(--f-ui)}
+.pv-dl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 6px}
+.pv-dl div{padding:8px 10px;border-radius:10px;background:var(--panel-solid);border:1px solid var(--line)}
+.pv-dl dt{font:600 11px var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+.pv-dl dd{margin:2px 0 0;font:15px var(--f-ui)}
+.pv-cta{margin-top:6px}
+.pv-side .help{margin:8px 0 0}
+.obs.pv-arrive{animation:pv-arrive 1.4s ease}
+@keyframes pv-arrive{0%{opacity:.3;transform:translateY(16px)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.obs.pv-arrive{animation:none}}
