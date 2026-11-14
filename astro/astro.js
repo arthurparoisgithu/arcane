@@ -325,6 +325,7 @@
     const date = t.heure ? C.localToUTC(t.y, t.m, t.d, t.h, t.mi, lieu) : C.localToUTC(t.y, t.m, t.d, 12, 0, lieu);
     return C.chart({date, lat:+lieu.lat || 0, lon:+lieu.lon || 0, heure:!!t.heure, system:sys || system()});
   }
+  const cityOf = inp => (window.ArcanesVilles && window.ArcanesVilles.pick(inp)) || findCity(inp.value);
   const cityOpts = () => D.CITIES.map(c => `<option value="${h(c[0])} (${h(c[1])})">`).join("");
   const findCity = v => { v = (v || "").trim().toLowerCase(); if(!v) return null;
     return D.CITIES.find(c => `${c[0]} (${c[1]})`.toLowerCase() === v) || D.CITIES.find(c => c[0].toLowerCase() === v) || D.CITIES.find(c => c[0].toLowerCase().startsWith(v)); };
@@ -344,7 +345,8 @@
             <label>Heure<input type="time" name="heure" value="${t.heure ? `${pad(t.h)}:${pad(t.mi)}` : ""}"></label></div>
           <label class="a-check"><input type="checkbox" name="sansheure" ${t.y && !t.heure ? "checked" : ""}> Je ne connais pas l'heure (thème calculé pour midi, sans maisons ni Ascendant)</label></fieldset>
         <fieldset class="a-step" data-s="3" hidden><legend>Le lieu de naissance</legend>
-          <label>Lieu de naissance<input name="ville" list="a-cities" placeholder="Commence à taper : Lyon, Montréal, Dakar…" value="${h(L.nom || "")}"></label><datalist id="a-cities">${cityOpts()}</datalist>
+          <label>Lieu de naissance<input name="ville" list="a-cities" placeholder="Commence à taper : Carquefou, Montréal, Dakar…" value="${h(L.nom || "")}"></label><datalist id="a-cities">${window.ArcanesVilles ? "" : cityOpts()}</datalist>
+          <p class="help">Toutes les communes de France et d'outre-mer, et les villes du monde. Un village introuvable ? Tu pourras aussi chercher en ligne.</p>
           <details class="a-adv" ${L.manuel ? "open" : ""}><summary>Lieu absent de la liste, ou heure particulière ?</summary>
             <p class="help">Entre les coordonnées (latitude nord positive, longitude est positive). Le décalage horaire se remplit seul pour les villes de la liste, avec l'heure d'été de l'époque ; laisse-le vide sauf si tu connais le décalage exact (en minutes par rapport à l'heure universelle, par exemple 60 pour l'heure d'hiver française).</p>
             <div class="a-row3"><label>Latitude<input name="lat" inputmode="decimal" value="${L.manuel ? h(L.lat) : ""}" placeholder="48.86"></label><label>Longitude<input name="lon" inputmode="decimal" value="${L.manuel ? h(L.lon) : ""}" placeholder="2.35"></label><label>Décalage (min)<input name="off" inputmode="numeric" value="${L.off != null ? h(L.off) : ""}" placeholder="60"></label></div></details></fieldset>
@@ -355,6 +357,10 @@
   }
   function bindForm(root){
     const f = q1("#a-form", root), err = q1(".a-err", f), E = f.elements;
+    if(window.ArcanesVilles) window.ArcanesVilles.attach(E.ville);
+    const prevLieu = (st.themes.find(x => x.id === editId) || {}).lieu;
+    const lieuOf = () => { const c = cityOf(E.ville); if(c) return {nom:`${c[0]} (${c[1]})`, lat:c[2], lon:c[3], tz:c[4], c};
+      if(prevLieu && !prevLieu.manuel && E.ville.value.trim() === prevLieu.nom) return {...prevLieu, c:[prevLieu.nom, "", prevLieu.lat, prevLieu.lon, prevLieu.tz]}; return null; };
     const cb = E.sansheure, hr = E.heure; const sync = () => { hr.disabled = cb.checked; }; cb.onchange = () => { sync(); preview(); }; sync();
     const cancel = q1("[data-cancel]", f); if(cancel) cancel.onclick = () => { editing = false; renderTheme(); };
     let step = 1;
@@ -375,7 +381,7 @@
     function preview(){ cancelAnimationFrame(raf); raf = requestAnimationFrame(() => {
       const dv = E.date.value; if(!dv){ return; }
       const [y, m, d] = dv.split("-").map(Number); if(!y || y < 1000) return;
-      const c = findCity(E.ville.value), lieu = c ? {lat:c[2], lon:c[3], tz:c[4]} : st.lieu, known = !cb.checked && !!hr.value;
+      const lo_ = lieuOf(), c = lo_ && lo_.c, lieu = c ? {lat:c[2], lon:c[3], tz:c[4]} : st.lieu, known = !cb.checked && !!hr.value;
       const [hh, mm] = known ? hr.value.split(":").map(Number) : [12, 0];
       try{ const ch = C.chart({date:C.localToUTC(y, m, d, hh, mm, lieu), lat:+lieu.lat, lon:+lieu.lon, heure:known && !!c, system:system()});
         prevW.innerHTML = wheel(ch, {small:true, aspects:false, prefix:"pv", label:"Aperçu du thème"});
@@ -390,14 +396,14 @@
       if(!nom || !dv){ err.textContent = "Il manque le nom ou la date."; show(!nom ? 1 : 2); return; }
       if(!sans && !hv){ show(2); err.textContent = "Indique l'heure, ou coche « Je ne connais pas l'heure »."; return; }
       const [y, m, d] = dv.split("-").map(Number), [hh, mm] = sans ? [12, 0] : hv.split(":").map(Number);
-      const c = findCity(E.ville.value), la = parseFloat(String(E.lat.value).replace(",", ".")), lo = parseFloat(String(E.lon.value).replace(",", ".")), off = E.off.value.trim();
+      const lo_ = lieuOf(), c = lo_ && lo_.c, la = parseFloat(String(E.lat.value).replace(",", ".")), lo = parseFloat(String(E.lon.value).replace(",", ".")), off = E.off.value.trim();
       let lieu;
       if(!isNaN(la) && !isNaN(lo)){
         if(Math.abs(la) > 89.9 || Math.abs(lo) > 180){ err.textContent = "Coordonnées impossibles."; return; }
         lieu = {nom: E.ville.value.trim() || `${la.toFixed(2)}, ${lo.toFixed(2)}`, lat:la, lon:lo, tz: c ? c[4] : null, manuel:true};
         if(!c && off === ""){ err.textContent = "Pour un lieu hors de la liste, indique le décalage horaire en minutes."; return; }
-      } else if(c){ lieu = {nom:`${c[0]} (${c[1]})`, lat:c[2], lon:c[3], tz:c[4]}; }
-      else { err.textContent = "Lieu introuvable : choisis une ville dans la liste, ou entre ses coordonnées."; return; }
+      } else if(lo_){ lieu = {...lo_}; delete lieu.c; }
+      else { err.textContent = "Lieu introuvable : choisis-le dans la liste qui s'ouvre quand tu tapes, cherche en ligne, ou entre ses coordonnées."; return; }
       if(off !== ""){ if(isNaN(+off) || Math.abs(+off) > 900){ err.textContent = "Décalage horaire invalide."; return; } lieu.off = +off; }
       const t = {id: editId || ("t" + Date.now().toString(36)), nom, y, m, d, h:hh, mi:mm, heure:!sans, lieu, moi:E.moi.checked};
       if(t.moi) st.themes.forEach(x => x.moi = false);
@@ -815,7 +821,7 @@
     const sel = (name, v) => `<select data-sys="${name}">${Object.entries(SYS_NOM).map(([k, n]) => `<option value="${k}"${v === k ? " selected" : ""}>${cap(n)}</option>`).join("")}</select>`;
     root.innerHTML = `<header class="a-hero"><p class="eyebrow">Mon espace · astrologie</p><h1>Mon espace</h1><p class="a-lede">Ton lieu, tes thèmes et ta progression. Tout reste sur cet appareil.</p></header>
       <section class="a-card a-set"><h2>Le lieu du ciel du jour</h2><p>Pour calculer l'Ascendant, les maisons et les heures planétaires de l'onglet Ciel.</p>
-        <div class="a-row2"><input id="a-lieu" list="a-cities2" value="${h(st.lieu.nom)}" aria-label="Ville"><datalist id="a-cities2">${cityOpts()}</datalist><button type="button" class="btn small" id="a-lieu-ok">Enregistrer</button></div><p class="help" id="a-lieu-st"></p></section>
+        <div class="a-row2"><input id="a-lieu" list="a-cities2" value="${h(st.lieu.nom)}" aria-label="Ville"><datalist id="a-cities2">${window.ArcanesVilles ? "" : cityOpts()}</datalist><button type="button" class="btn small" id="a-lieu-ok">Enregistrer</button></div><p class="help" id="a-lieu-st"></p></section>
       <section class="a-card a-set"><h2>Les réglages de calcul</h2><p>L'école de lecture, Tradition ou Moderne, se choisit là où on voit son effet : sous la roue du Ciel et en tête de Mon thème. Elle vaut partout. Aujourd'hui : <b>${school() === "tradition" ? "Tradition" : "Moderne"}</b>.</p>
         <button type="button" class="btn ghost small" data-popen="outils:reglages">Maisons, orbes, zodiaque</button></section>
       <section class="a-card a-set"><h2>Mes thèmes</h2>${st.themes.length ? `<ul class="a-tlist">${st.themes.map(t => `<li><button type="button" class="a-link" data-open="${t.id}">${t.moi ? "★ " : ""}${h(t.nom)}</button><span class="help">${t.d} ${MOIS[t.m-1]} ${t.y} · ${h(t.lieu.nom)}</span></li>`).join("")}</ul>` : `<p class="help">Aucun thème pour l'instant.</p>`}
@@ -826,7 +832,8 @@
       <section class="a-card a-set"><h2>Sauvegarde</h2><p>La sauvegarde d'Arcanes emporte aussi tes thèmes et ta progression en astrologie. Elle se trouve dans l'espace Tarot.</p><button type="button" class="btn ghost small" data-esp="tarot">Ouvrir la sauvegarde</button></section>
       <p class="help">Les positions sont calculées avec Astronomy Engine de Don Cross (licence MIT).</p>`;
     bindEspace(root);
-    q1("#a-lieu-ok", root).onclick = () => { const c = findCity(q1("#a-lieu", root).value), o = q1("#a-lieu-st", root);
+    if(window.ArcanesVilles) window.ArcanesVilles.attach(q1("#a-lieu", root));
+    q1("#a-lieu-ok", root).onclick = () => { const c = cityOf(q1("#a-lieu", root)), o = q1("#a-lieu-st", root);
       if(!c){ o.textContent = "Ville introuvable : choisis-la dans la liste."; return; } st.lieu = {nom:`${c[0]} (${c[1]})`, lat:c[2], lon:c[3], tz:c[4]}; save(); o.textContent = `C'est noté : ${st.lieu.nom}.`; };
     qa("[data-open]", root).forEach(b => b.onclick = () => { st.cur = b.dataset.open; save(); thMode = "natal"; editing = false; aView("theme"); });
   }

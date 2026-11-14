@@ -1137,3 +1137,19 @@ details[open]>summary .a-chev{transform:rotate(180deg)}
 .a-mh-pl li .ag{font-size:19px}
 .a-mh-q{font:italic 17.5px/1.45 var(--f-text);padding:10px 14px;border-left:3px solid var(--vermillon);background:color-mix(in srgb,var(--vermillon) 5%,transparent);border-radius:0 10px 10px 0}
 .a-mh .a-gloin{margin-top:8px}
+
+/* ---------- la recherche de lieu ---------- */
+.vl-wrap{position:relative;display:block;min-width:0}
+.vl-wrap>input{width:100%;box-sizing:border-box}
+.vl-box{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:60;max-height:min(360px,55vh);overflow:auto;background:var(--panel-solid);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,.22);padding:4px}
+.vl-it{display:grid;gap:1px;padding:9px 12px;border-radius:10px;cursor:pointer;font:15.5px var(--f-ui);color:var(--ink);text-align:left}
+.vl-it b{font-weight:600}
+.vl-it small{font-size:13px;color:var(--ink-soft)}
+.vl-alt{font-size:13px;color:var(--ink-soft)}
+.vl-it:hover,.vl-it.on{background:color-mix(in srgb,var(--acc) 14%,transparent)}
+.vl-web{display:grid;width:100%;text-align:left;gap:1px;padding:10px 12px;margin-top:2px;border:0;border-top:1px solid var(--line);background:none;border-radius:0 0 10px 10px;cursor:pointer;font:600 14.5px var(--f-ui);color:var(--acc)}
+.vl-web small{font-weight:400;font-size:12.5px;color:var(--ink-soft)}
+.vl-web:hover{background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.vl-wait{margin:0;padding:12px;font:14.5px var(--f-ui);color:var(--ink-soft)}
+.vl-st{margin:6px 0 0;min-height:0}
+.vl-st:empty{display:none}
