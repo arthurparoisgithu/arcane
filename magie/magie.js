@@ -14,6 +14,8 @@
   const rad = Math.PI/180, DAY = 864e5;
   const gl = (s, cls = "") => `<span class="ag mg ${cls}" aria-hidden="true">${s}${T}</span>`;
   const pg = id => `<span class="ag mg" style="color:${PL[id].hex}" aria-hidden="true">${PL[id].gl}${T}</span>`;
+  /* points d'extension : magie-plus.js y branche outils, schémas, rituels, onglets et gloses */
+  const EXT = {tools:[], toolRender:{}, toolIcon:{}, vis:{}, moment:[], carnetTabs:[], histTabs:[], marge:null, onGrade:null, afterRite:null, go:{}, ecoleHead:null};
   const ST = {doc:["Documenté","st-doc"], trad:["Tradition","st-trad"], mod:["Lecture moderne","st-mod"]};
   const badge = k => `<span class="m-st ${ST[k][1]}">${ST[k][0]}</span>`;
 
@@ -36,7 +38,7 @@
     sc.onerror = () => { imgLoading = false; };
     document.head.appendChild(sc);
   }
-  const img = (k, alt = "", cls = "") => `<img class="${cls}" data-mimg="${k}" src="${IMG(k)}" alt="${h(alt)}">`;
+  const img = (k, alt = "", cls = "") => `<img class="${cls}" data-mimg="${k}" src="${IMG(k)}" alt="${h(alt)}" loading="lazy" decoding="async">`;
   const CRED = {
     lab:"Heinrich Khunrath, l'oratoire-laboratoire, Amphitheatrum sapientiae aeternae, 1609",
     homme:"L'homme dans le carré, Agrippa, De occulta philosophia, 1533",
@@ -50,6 +52,11 @@
     ktitre:"Khunrath, Amphitheatrum sapientiae aeternae, page de titre, 1609",
     monas:"La Monade hiéroglyphique de John Dee, 1564",
     grimoire:"Un philosophe se moque de la magie, gravure, XVIIIe siècle",
+    monocorde:"Le monocorde divin, Robert Fludd, Utriusque cosmi historia, 1617-1618",
+    geomancie:"Secrets de la géomancie arabique et arbre géomantique, gravure, XVIIIe siècle",
+    alchimie:"Le roi rouge dans le vase, d'après le Splendor solis (XVIe siècle), aquarelle de E. A. Ibbs",
+    chateau:"Le château de la connaissance, entre la sphère du destin et la roue de la fortune, gravure sur bois, 1556",
+    hermes:"Hermès Trismégiste devant ses colonnes, eau-forte de Cook, XVIIIe siècle",
     p_agrippa:"Agrippa, gravure sur bois, 1533", p_dee:"John Dee, gravure, 1658", p_fludd:"Robert Fludd, gravure, 1626", p_khunrath:"Heinrich Khunrath, gravure, 1602"
   };
 
@@ -414,6 +421,7 @@
             <div class="m-allh"><div><p class="eyebrow">Jour</p>${H.hours.slice(0, 12).map(x => `<p class="${x.i === H.cur ? "on" : ""}"><span class="t">${fmt(x.start, HM)}</span>${pg(x.pl)} ${PL[x.pl].nom}</p>`).join("")}</div>
               <div><p class="eyebrow">Nuit</p>${H.hours.slice(12).map(x => `<p class="${x.i === H.cur ? "on" : ""}"><span class="t">${fmt(x.start, HM)}</span>${pg(x.pl)} ${PL[x.pl].nom}</p>`).join("")}</div></div></details></article>
       </div>
+      ${EXT.moment.map(f => { try{ return f(H, M, now) || ""; }catch(e){ return ""; } }).join("")}
       <p class="eyebrow m-k">Préparer un moment</p>
       <div class="m-quick">
         <button type="button" class="m-qt" data-mgo="atelier:election"><span class="m-qi">${gl("♃")}</span><b>Choisir le moment</b><small>La prochaine bonne fenêtre d'une planète</small></button>
@@ -450,7 +458,7 @@
     if(!at.tool){
       root.innerHTML = `<header class="m-hero"><p class="eyebrow">Les instruments</p><h1>L'atelier</h1><p class="m-lede">Les outils de la magie savante, à manipuler. Rien ne s'envoie nulle part : tout est calculé sur ton appareil.</p></header>
         <figure class="m-medal">${img("lab", "Le laboratoire-oratoire de Khunrath", "m-medal-img")}<figcaption>${CRED.lab}</figcaption></figure>
-        <div class="m-tools">${TOOLS.map(([k, t, d, ic]) => `<button type="button" class="m-tool" data-mtool="${k}"><span class="m-tool-ic">${toolIcon(ic)}</span><span class="m-tool-t"><b>${t}</b><small>${d}</small></span></button>`).join("")}</div>`;
+        <div class="m-tools">${TOOLS.concat(EXT.tools).map(([k, t, d, ic]) => `<button type="button" class="m-tool" data-mtool="${k}"><span class="m-tool-ic">${EXT.toolIcon[ic] || toolIcon(ic)}</span><span class="m-tool-t"><b>${t}</b><small>${d}</small></span></button>`).join("")}</div>`;
       bindLinks(root); return;
     }
     const head = (t, sous) => `<p class="crumb"><button type="button" class="linkbtn" data-mtool="">← L'atelier</button></p><header class="m-hero sm"><p class="eyebrow">L'atelier</p><h1>${t}</h1>${sous ? `<p class="m-lede">${sous}</p>` : ""}</header>`;
@@ -461,6 +469,7 @@
     else if(T0 === "arbre"){ root.innerHTML = head("L'Arbre de vie", "Touche une sphère ou un sentier. Change l'affichage pour voir les lettres, les lames ou les numéros.") + host; schemas.arbre(q1(".m-toolhost", root), {full:true}); }
     else if(T0 === "corresp"){ root.innerHTML = head("Les correspondances", "Choisis une planète ou un élément : tout ce que la tradition lui rattache, au même endroit.") + host; schemas.corresp(q1(".m-toolhost", root), {pl:at.arg}); }
     else if(T0 === "election"){ root.innerHTML = head("Choisir le moment", "Les heures de la planète choisie, sur les trente prochains jours, classées selon les règles des élections.") + host; schemas.election(q1(".m-toolhost", root), {full:true, pl:at.arg}); }
+    else if(EXT.toolRender[T0]){ const X = EXT.toolRender[T0]; root.innerHTML = head(X.t, X.sous) + host; X.render(q1(".m-toolhost", root), {full:true, arg:at.arg}); }
     else if(T0 === "rituels"){ root.innerHTML = head("Les rituels guidés", "Étape par étape, avec un minuteur. Commence par la respiration en carré.") + `<div class="m-rites">${Object.entries(D.RITUELS).map(([k, r]) => `<button type="button" class="m-rite-c" data-mrite="${k}"><span class="m-rite-ic">${riteIcon(k)}</span><span><span class="m-st ${ST[r.statut === "Tradition" ? "trad" : "mod"][1]}">${r.statut}</span><b>${r.nom}</b><small>${r.sous} · ${r.duree}</small></span></button>`).join("")}</div>
       <p class="help m-left">Si un exercice te met mal à l'aise, arrête-le. Ces pratiques ne remplacent aucun soin.</p>`; }
     bindLinks(root);
@@ -480,13 +489,14 @@
     const {g, n} = grade(), tot = K.MODULES.reduce((a, m) => a + m.lecons.length, 0), lus = st.done.filter(x => /^m\dl\d$/.test(x)).length;
     const next = (() => { for(const m of K.MODULES) for(let i = 0; i < m.lecons.length; i++) if(!st.done.includes(m.lecons[i].id)) return [m, i]; return null; })();
     root.innerHTML = `<header class="m-hero"><p class="eyebrow">Apprendre la magie</p><h1>L'école</h1>
-        <p class="m-lede">Huit modules, de la définition de la magie jusqu'aux rituels de la Golden Dawn et aux sigils de la magie du chaos. Chaque leçon donne ses sources, avec leur statut : ce qui est documenté, ce qui relève d'une tradition, ce qui est une lecture moderne.</p></header>
+        <p class="m-lede">${K.MODULES.length > 8 ? "Quatorze modules en deux cercles : d'abord la pratique, de la définition de la magie aux sigils de la magie du chaos ; puis les fondements et les arts, de l'âme du monde à l'art de la mémoire." : "Huit modules, de la définition de la magie jusqu'aux rituels de la Golden Dawn et aux sigils de la magie du chaos."} Chaque leçon donne ses sources, avec leur statut : ce qui est documenté, ce qui relève d'une tradition, ce qui est une lecture moderne.</p></header>
       <section class="m-grade"><div class="m-grade-seal"><svg viewBox="-50 -50 100 100" aria-hidden="true"><circle r="46"/><circle r="40"/><path d="${(() => { const o = [0,3,6,2,5,1,4]; return o.map((i, k) => { const a = (-90 + i*360/7)*rad; return (k ? "L" : "M") + f1(Math.cos(a)*30) + " " + f1(Math.sin(a)*30); }).join("") + "Z"; })()}"/></svg><b>${g.code}</b></div>
-        <div><p class="eyebrow">Ton degré</p><h2>${g.nom}</h2><p class="help m-left">${lus} leçon${lus > 1 ? "s" : ""} sur ${tot} · ${n} module${n > 1 ? "s" : ""} achevé${n > 1 ? "s" : ""}. Les noms sont ceux des grades de la Golden Dawn ; ici, ils marquent seulement ton chemin.</p>
+        <div><p class="eyebrow">Ton degré</p><h2>${g.nom}</h2><p class="help m-left">${lus} leçon${lus > 1 ? "s" : ""} sur ${tot} · ${n} module${n > 1 ? "s" : ""} achevé${n > 1 ? "s" : ""} sur ${K.MODULES.length}. Les noms sont ceux des grades de la Golden Dawn ; ici, ils marquent seulement ton chemin.</p>
         ${next ? `<button type="button" class="btn small" data-mlec="${next[0].id}:${next[1]}">${lus ? "Reprendre" : "Commencer"} : ${h(next[0].lecons[next[1]].t)}</button>` : `<p><b>Tu as parcouru tout le cours.</b></p>`}</div></section>
-      <div class="m-mods">${K.MODULES.map(m => { const d = m.lecons.filter(l => st.done.includes(l.id)).length;
+      ${[1, 2].map(c => { const ms = K.MODULES.filter(m => (m.cercle || 1) === c); if(!ms.length) return "";
+        return `${EXT.ecoleHead ? EXT.ecoleHead(c, ms) : ""}<div class="m-mods">${ms.map(m => { const d = m.lecons.filter(l => st.done.includes(l.id)).length;
         return `<button type="button" class="m-mod${modDone(m) ? " done" : ""}" data-mmod="${m.id}"><span class="m-mod-img">${m.img === "sigil" ? sigilSVG(spareLetters("je trouve le calme", true).keep, 2, {cercle:true}) : img(m.img)}</span>
-          <span class="m-mod-b"><span class="m-mod-n">${m.n}</span><b>${nb(m.t)}</b><small>${m.sous}</small><span class="m-mod-p"><i style="width:${Math.round(d/m.lecons.length*100)}%"></i></span><span class="m-mod-f">${d}/${m.lecons.length} leçons${st.best[m.id] != null ? ` · quiz ${st.best[m.id]}/${m.quiz.length}` : ""}</span></span></button>`; }).join("")}</div>`;
+          <span class="m-mod-b"><span class="m-mod-n">${m.n}</span><b>${nb(m.t)}</b><small>${m.sous}</small><span class="m-mod-p"><i style="width:${Math.round(d/m.lecons.length*100)}%"></i></span><span class="m-mod-f">${d}/${m.lecons.length} leçons${st.best[m.id] != null ? ` · quiz ${st.best[m.id]}/${m.quiz.length}` : ""}</span></span></button>`; }).join("")}</div>`; }).join("")}`;
     bindLinks(root);
   }
   function renderModule(root){
@@ -501,10 +511,11 @@
   function renderLecon(root){
     const m = MOD(ev.mod), i = ev.lec, l = m.lecons[i]; st.last = {mod:m.id, lec:i}; save();
     const prev = i > 0 ? `${m.id}:${i - 1}` : null, next = i < m.lecons.length - 1 ? `${m.id}:${i + 1}` : null;
-    const exAct = l.ex && l.ex.outil ? (() => { const [k, v] = l.ex.outil.split(":"); return k === "rituel" ? `<button type="button" class="btn small" data-mrite="${v}">Lancer le rituel guidé</button>` : k === "outil" ? `<button type="button" class="btn small" data-mgo="atelier:${v}">Ouvrir l'atelier</button>` : `<button type="button" class="btn small" data-mgo="carnet:new">Ouvrir le carnet</button>`; })() : "";
+    const exAct = l.ex && l.ex.outil ? (() => { const [k, v] = l.ex.outil.split(":"); return k === "rituel" ? `<button type="button" class="btn small" data-mrite="${v}">Lancer le rituel guidé</button>` : k === "outil" ? `<button type="button" class="btn small" data-mgo="atelier:${v}">Ouvrir l'atelier</button>` : k === "cycle" ? `<button type="button" class="btn small" data-mgo="carnet:cycle">Ouvrir le cycle</button>` : `<button type="button" class="btn small" data-mgo="carnet:new">Ouvrir le carnet</button>`; })() : "";
+    const marge = EXT.marge ? EXT.marge(l, m) : "";
     root.innerHTML = `<p class="crumb"><button type="button" class="linkbtn" data-mmod="${m.id}">← Module ${m.n} · ${m.t}</button></p>
       <article class="m-lesson"><header><p class="eyebrow">Leçon ${i + 1} sur ${m.lecons.length}</p><h1>${nb(l.t)}</h1><p class="m-lede">${l.sous}</p></header>
-        <div class="m-idee">${l.idee.map((p, k) => `<p${k === 0 ? ' class="m-lettrine"' : ""}>${p}</p>`).join("")}</div>
+        <div class="m-lgrid${marge ? " has-marge" : ""}"><div class="m-idee">${l.idee.map((p, k) => `<p${k === 0 ? ' class="m-lettrine"' : ""}>${p}</p>`).join("")}</div>${marge}</div>
         <blockquote class="m-source"><p>${l.source.txt}</p><footer>${badge(l.source.st)}<cite>${l.source.ref}</cite></footer></blockquote>
         <figure class="m-schema" data-schema="${l.schema}"></figure>
         ${l.ex ? `<section class="m-ex"><p class="eyebrow">L'exercice · facultatif</p><h3>${l.ex.t}</h3><p>${l.ex.txt}</p>${exAct ? `<div class="m-acts">${exAct}</div>` : ""}</section>` : ""}
@@ -536,9 +547,13 @@
   }
 
   /* ---------- HISTOIRE ---------- */
+  let hv = "chapitres";
   function renderHistoire(){
     const root = q1("#v-m-histoire"); if(!root) return;
-    root.innerHTML = `<header class="m-hero"><p class="eyebrow">Deux mille ans en huit chapitres</p><h1>Histoire de la magie</h1>
+    const htabs = EXT.histTabs.length ? `<nav class="subtabs m-htabs" aria-label="Histoire"><button type="button" class="subtab${hv === "chapitres" ? " on" : ""}" data-mhv="chapitres">Les chapitres</button>${EXT.histTabs.map(x => `<button type="button" class="subtab${hv === x.id ? " on" : ""}" data-mhv="${x.id}">${x.label}</button>`).join("")}</nav>` : "";
+    const xt = EXT.histTabs.find(x => x.id === hv);
+    if(xt){ root.innerHTML = xt.render(htabs); qa("[data-mhv]", root).forEach(b => b.onclick = () => { hv = b.dataset.mhv; renderHistoire(); }); if(xt.bind) xt.bind(root); bindLinks(root); return; }
+    root.innerHTML = htabs + `<header class="m-hero"><p class="eyebrow">Deux mille ans en huit chapitres</p><h1>Histoire de la magie</h1>
         <p class="m-lede">Des papyrus d'Égypte aux chercheurs d'aujourd'hui : la magie savante de l'Occident, ses livres, ses figures, ses procès.</p></header>
       <nav class="m-htoc" aria-label="Les chapitres">${K.HISTOIRE.map(c => `<a href="#${c.id}" data-mh="${c.id}">${c.n}</a>`).join("")}</nav>
       <div class="m-eras">${K.HISTOIRE.map(c => `<section class="m-era" id="${c.id}"><p class="eyebrow">${c.n} · ${c.per}</p><h2>${nb(c.t)}</h2>
@@ -550,13 +565,14 @@
           <ul class="m-biblio"><li>Antoine Faivre, <i>L'Ésotérisme</i>, PUF, « Que sais-je ? »</li><li>Frances Yates, <i>Giordano Bruno et la tradition hermétique</i> (1964), trad. Dervy</li>
           <li>Wouter J. Hanegraaff, <i>Western Esotericism: A Guide for the Perplexed</i>, Bloomsbury, 2013</li><li>Jean-Patrice Boudet, <i>Entre science et nigromance</i>, Publications de la Sorbonne, 2006</li>
           <li>Owen Davies, <i>Grimoires: A History of Magic Books</i>, Oxford University Press, 2009</li></ul></section></div>`;
+    qa("[data-mhv]", root).forEach(b => b.onclick = () => { hv = b.dataset.mhv; renderHistoire(); });
     qa("[data-mh]", root).forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById(a.dataset.mh); if(t) window.scrollTo({top:t.getBoundingClientRect().top + scrollY - 70, behavior:"smooth"}); });
     bindLinks(root);
   }
 
   /* ---------- LE CARNET ---------- */
   let cn = {edit:null, prefill:null, ref:null, tab:"entrees"};
-  const TYPES = [["rituel","Un rituel"],["sigil","Un sigil ou un sceau"],["contemplation","Une contemplation"],["lecture","Une leçon"],["reve","Un rêve"],["autre","Autre chose"]];
+  const TYPES = [["rituel","Un rituel"],["geomancie","Une géomancie"],["sigil","Un sigil ou un sceau"],["contemplation","Une contemplation"],["lecture","Une leçon"],["reve","Un rêve"],["autre","Autre chose"]];
   function stamp(d){
     const H = hoursOf(d), M = moon(d), cur = H && H.cur >= 0 ? H.hours[H.cur] : null;
     return {jour:H ? H.day : null, heure:cur ? cur.pl : null, lune:M ? M.nom : null, croit:M ? M.croit : null};
@@ -589,11 +605,12 @@
     const tab = cn.tab;
     const E = window.ArcanesAstro && window.ArcanesAstro.espace;
     root.innerHTML = (E ? E.bar("magie") : "") + `<header class="m-hero"><p class="eyebrow">Le registre de l'adepte</p><h1>Le carnet</h1><p class="m-lede">Tes pratiques, datées avec leur heure planétaire et leur Lune, et tes sceaux. Tout reste sur cet appareil.</p></header>
-      <section class="m-grade small"><div class="m-grade-seal"><svg viewBox="-50 -50 100 100" aria-hidden="true"><circle r="46"/><circle r="40"/></svg><b>${g.code}</b></div><div><p class="eyebrow">Degré</p><h2>${g.nom}</h2><p class="help m-left">${n} module${n > 1 ? "s" : ""} sur 8 · ${st.carnet.length} entrée${st.carnet.length > 1 ? "s" : ""} · ${st.sceaux.length} sceau${st.sceaux.length > 1 ? "x" : ""}</p></div></section>
+      <section class="m-grade small"><div class="m-grade-seal"><svg viewBox="-50 -50 100 100" aria-hidden="true"><circle r="46"/><circle r="40"/></svg><b>${g.code}</b></div><div><p class="eyebrow">Degré</p><h2>${g.nom}</h2><p class="help m-left">${n} module${n > 1 ? "s" : ""} sur ${K.MODULES.length} · ${st.carnet.length} entrée${st.carnet.length > 1 ? "s" : ""} · ${st.sceaux.length} sceau${st.sceaux.length > 1 ? "x" : ""}</p></div></section>
       <div class="m-acts start"><button type="button" class="btn" data-mgo="carnet:new">Nouvelle entrée</button></div>
-      <nav class="subtabs" aria-label="Le carnet"><button type="button" class="subtab${tab === "entrees" ? " on" : ""}" data-mctab="entrees">Les entrées</button><button type="button" class="subtab${tab === "sceaux" ? " on" : ""}" data-mctab="sceaux">Mes sceaux</button><button type="button" class="subtab${tab === "reglages" ? " on" : ""}" data-mctab="reglages">Lieu et sauvegarde</button></nav>
-      <div class="m-cbody">${tab === "entrees" ? entries() : tab === "sceaux" ? sceaux() : reglages()}</div>`;
+      <nav class="subtabs" aria-label="Le carnet"><button type="button" class="subtab${tab === "entrees" ? " on" : ""}" data-mctab="entrees">Les entrées</button><button type="button" class="subtab${tab === "sceaux" ? " on" : ""}" data-mctab="sceaux">Mes sceaux</button>${EXT.carnetTabs.map(x => `<button type="button" class="subtab${tab === x.id ? " on" : ""}" data-mctab="${x.id}">${x.label}</button>`).join("")}<button type="button" class="subtab${tab === "reglages" ? " on" : ""}" data-mctab="reglages">Lieu et sauvegarde</button></nav>
+      <div class="m-cbody">${tab === "entrees" ? entries() : tab === "sceaux" ? sceaux() : (EXT.carnetTabs.find(x => x.id === tab) || {render:reglages}).render()}</div>`;
     if(E) E.bind(root);
+    const xt = EXT.carnetTabs.find(x => x.id === tab); if(xt && xt.bind) xt.bind(root);
     qa("[data-mctab]", root).forEach(b => b.onclick = () => { cn.tab = b.dataset.mctab; renderCarnet(); });
     qa("[data-mreveal]", root).forEach(b => b.onclick = () => { const p = b.closest(".m-sc").querySelector(".m-sc-txt"); p.hidden = !p.hidden; b.textContent = p.hidden ? "Voir la phrase" : "Cacher la phrase"; });
     qa("[data-mscdel]", root).forEach(b => b.onclick = () => { st.sceaux = st.sceaux.filter(x => x.id !== b.dataset.mscdel); save(); renderCarnet(); });
@@ -883,14 +900,15 @@
     close();
     let ov = q1("#m-rite"); if(!ov){ ov = document.createElement("div"); ov.id = "m-rite"; ov.className = "m-rite"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); document.body.appendChild(ov); }
     const H = hoursOf(new Date()), pl = arg && PL[arg] ? arg : (H && H.cur >= 0 ? H.hours[H.cur].pl : "soleil");
-    let steps = R.etapes;
-    if(R.planet){ const p = PL[pl]; steps = [
+    let steps = R.etapes, sous = "";
+    if(R.build){ const b = R.build(pl, arg); steps = b.steps || b; sous = b.sous || ""; }
+    else if(R.planet){ const p = PL[pl]; steps = [
       {t:"S'installer", txt:`Assieds-toi confortablement. Devant toi, imagine — ou pose — quelque chose de la couleur ${p.nom === "Lune" ? "de la Lune" : "de " + p.nom} : ${p.couleur}.`, vis:"glyph", d:40},
       {t:"Respirer la couleur", txt:`À chaque inspiration, laisse cette couleur emplir ta poitrine. À chaque expiration, laisse-la s'étendre autour de toi.`, vis:"glyph", d:60},
       {t:"Le signe", txt:`Regarde le glyphe ${p.nom === "Lune" ? "de la Lune" : "de " + p.nom}, sans effort, comme on regarde une flamme. ${p.contemple}`, vis:"glyph", d:90},
       {t:"Le verbe", txt:`Répète intérieurement, lentement : « ${cap(p.verbe)} ». Laisse venir les images, sans les retenir.`, dire:cap(p.verbe), vis:"glyph", d:60},
       {t:"Revenir", txt:"Laisse la couleur pâlir. Bouge les mains, ouvre les yeux. Note dans ton carnet ce qui est venu.", vis:"glyph", d:30}]; }
-    rite = {key, R, steps, i:R.souffle ? 0 : -1, auto:false, t0:0, pl, tm:null};
+    rite = {key, R, steps, i:R.souffle ? 0 : -1, auto:false, t0:0, pl, tm:null, sous, arg};
     ov.style.setProperty("--pc", PL[pl].hex);
     ov.hidden = false; document.body.classList.add("locked", "m-riting");
     drawRite();
@@ -904,6 +922,7 @@
     if(k === "cercle" || k === "anges" || k === "etoile") return cercleRitSVG(3, k);
     if(k === "corps") return corpsSVG(n, {labels:true});
     if(k === "glyph") return `<div class="m-rite-glyph" style="color:${PL[pl].hex}"><span class="ag mg">${PL[pl].gl}${T}</span></div>`;
+    if(EXT.vis[k]) return EXT.vis[k](n, pl, a);
     return "";
   }
   function drawRite(){
@@ -913,9 +932,9 @@
       ov.innerHTML = `<div class="m-rite-in"><header><p class="eyebrow">${r.R.statut} · ${r.R.duree}</p><h2>${r.R.nom}</h2><button type="button" class="m-rite-x" data-rx aria-label="Fermer">×</button></header>
         <div class="m-rite-body"><p class="m-rite-intro">${r.R.intro}</p><div class="m-rite-br"></div></div>
         <footer><button type="button" class="btn ghost small" data-rnote>Noter dans le carnet</button></footer></div>`;
-      breath(q1(".m-rite-br", ov), {cycles:r.R.cycles});
+      breath(q1(".m-rite-br", ov), {cycles:r.R.cycles, onEnd:() => { if(EXT.afterRite) try{ EXT.afterRite(r.key, r); }catch(e){} }});
     } else if(r.i < 0){
-      ov.innerHTML = `<div class="m-rite-in"><header><p class="eyebrow">${r.R.statut} · ${r.R.duree}</p><h2>${r.R.nom}${r.R.planet ? ` · ${PL[r.pl].nom}` : ""}</h2><button type="button" class="m-rite-x" data-rx aria-label="Fermer">×</button></header>
+      ov.innerHTML = `<div class="m-rite-in"><header><p class="eyebrow">${r.R.statut} · ${r.R.duree}</p><h2>${r.R.nom}${r.R.planet ? ` · ${PL[r.pl].nom}` : ""}${r.sous ? ` · ${r.sous}` : ""}</h2><button type="button" class="m-rite-x" data-rx aria-label="Fermer">×</button></header>
         <div class="m-rite-body"><div class="m-rite-vis">${riteVis(r.steps[0].vis, r.pl)}</div><p class="m-rite-intro">${r.R.intro}</p><p class="help">${r.steps.length} étapes. Tu peux avancer toi-même, ou laisser le minuteur passer d'une étape à l'autre.</p>
           ${r.R.planet ? `<div class="m-rite-pl">${chipsPl(r.pl, "data-rpl")}</div>` : ""}</div>
         <footer><label class="m-check"><input type="checkbox" data-rauto${r.auto ? " checked" : ""}> Minuteur</label><button type="button" class="btn" data-rgo="0">Commencer</button></footer></div>`;
@@ -929,13 +948,17 @@
           ${last ? `<button type="button" class="btn" data-rnote>Terminer et noter</button>` : `<button type="button" class="btn" data-rgo="${r.i + 1}">Suivant</button>`}</footer></div>`;
       if(r.auto && s.d && !last) r.tm = setTimeout(() => { if(rite === r && r.i === r.steps.indexOf(s)){ r.i++; drawRite(); } }, s.d*1000);
     }
+    if(r.R.onStep) try{ r.R.onStep(r, ov); }catch(e){}
     q1("[data-rx]", ov).onclick = closeRite;
     qa("[data-rgo]", ov).forEach(b => b.onclick = () => { r.i = Math.max(0, +b.dataset.rgo); drawRite(); });
     qa("[data-rauto]", ov).forEach(c => c.onchange = () => { r.auto = c.checked; drawRite(); });
     qa("[data-rpl]", ov).forEach(b => b.onclick = () => { const k = r.key; openRite(k, b.dataset.rpl); });
-    qa("[data-rnote]", ov).forEach(b => b.onclick = () => { const nom = r.R.nom + (r.R.planet ? " · " + PL[r.pl].nom : ""); closeRite(); cn = {edit:"new", prefill:"", ref:null, tab:"entrees", titre:nom}; mView("carnet"); const t = q1('#v-m-carnet input[name="titre"]'); if(t){ t.value = nom; } const ty = q1('#v-m-carnet select[name="type"]'); if(ty) ty.value = r.R.planet ? "contemplation" : "rituel"; });
+    qa("[data-rnote]", ov).forEach(b => b.onclick = () => { const nom = r.R.nom + (r.R.planet ? " · " + PL[r.pl].nom : "") + (r.sous ? " · " + r.sous : "");
+      if(r.R.onEnd) try{ r.R.onEnd(r); }catch(e){}
+      if(EXT.afterRite) try{ EXT.afterRite(r.key, r); }catch(e){}
+      closeRite(); cn = {edit:"new", prefill:"", ref:null, tab:"entrees", titre:nom}; mView("carnet"); const t = q1('#v-m-carnet input[name="titre"]'); if(t){ t.value = nom; } const ty = q1('#v-m-carnet select[name="type"]'); if(ty) ty.value = r.R.planet ? "contemplation" : "rituel"; });
   }
-  function closeRite(){ const ov = q1("#m-rite"); if(rite) clearTimeout(rite.tm); rite = null; if(ov){ ov.hidden = true; ov.innerHTML = ""; } document.body.classList.remove("locked", "m-riting"); }
+  function closeRite(){ const ov = q1("#m-rite"); if(rite){ clearTimeout(rite.tm); if(rite.R.onClose) try{ rite.R.onClose(rite); }catch(e){} } rite = null; if(ov){ ov.hidden = true; ov.innerHTML = ""; } document.body.classList.remove("locked", "m-riting"); }
   document.addEventListener("keydown", e => { if(e.key === "Escape" && rite) closeRite(); });
 
   /* ================================================================
@@ -951,7 +974,8 @@
     qa("[data-mmod]", root).forEach(b => b.onclick = () => { ev = {mod:b.dataset.mmod || null, lec:null, quiz:false}; renderEcole(); window.scrollTo({top:0}); });
     qa("[data-mlec]", root).forEach(b => b.onclick = () => { const [m, i] = b.dataset.mlec.split(":"); ev = {mod:m, lec:+i, quiz:false}; renderEcole(); window.scrollTo({top:0}); });
     qa("[data-mquiz]", root).forEach(b => b.onclick = () => { ev = {mod:b.dataset.mquiz, lec:null, quiz:true}; qz = null; renderEcole(); window.scrollTo({top:0}); });
-    qa("[data-mread]", root).forEach(b => b.onclick = () => { const id = b.dataset.mread; if(!st.done.includes(id)){ st.done.push(id); save(); }
+    qa("[data-mread]", root).forEach(b => b.onclick = () => { const id = b.dataset.mread, g0 = grade().g; if(!st.done.includes(id)){ st.done.push(id); save(); }
+      const g1 = grade().g; if(g1 !== g0 && EXT.onGrade) setTimeout(() => EXT.onGrade(g1, g0), 350);
       const nx = b.dataset.mnext; if(nx.startsWith("quiz:")){ ev = {mod:nx.slice(5), lec:null, quiz:true}; qz = null; } else { const [m, i] = nx.split(":"); ev = {mod:m, lec:+i, quiz:false}; } renderEcole(); window.scrollTo({top:0}); });
     qa("[data-mnote]", root).forEach(b => b.onclick = () => { const l = K.MODULES.flatMap(m => m.lecons).find(x => x.id === b.dataset.mnote); cn = {edit:"new", prefill:l ? l.carnet + "\n" : "", ref:l ? l.t : null, tab:"entrees"}; mView("carnet"); });
     qa("[data-mcn]", root).forEach(b => b.onclick = () => { cn = {edit:b.dataset.mcn || null, prefill:null, ref:null, tab:cn.tab || "entrees"}; renderCarnet(); window.scrollTo({top:0}); });
@@ -962,8 +986,9 @@
   }
   function go(s){
     const [v, a, b] = s.split(":"); close();
+    if(EXT.go[v]) return EXT.go[v](a, b);
     if(v === "atelier"){ at = {tool:a || null, arg:b || null}; mView("atelier"); }
-    else if(v === "carnet"){ cn = a === "new" ? {edit:"new", prefill:null, ref:null, tab:"entrees"} : {edit:null, tab:"entrees"}; mView("carnet"); }
+    else if(v === "carnet"){ cn = a === "new" ? {edit:"new", prefill:null, ref:null, tab:"entrees"} : {edit:null, tab:a || "entrees"}; mView("carnet"); }
     else mView(v);
   }
 
@@ -1039,6 +1064,11 @@
     x.globalAlpha = 1;
   };
   const S0 = () => st;
-  window.ArcanesMagie = {enter, leave, active, view:mView, state:S0, openRite, hoursOf};
+  window.ArcanesMagie = {enter, leave, active, view:mView, state:S0, openRite, hoursOf,
+    _:{EXT, D, K, PL, T, h, cap, nb, f1, gl, pg, badge, img, IMG, CRED, sheet, close, bindLinks, moon, etat, lieu, fmt, HM, uid,
+       heptaSVG, kameaSVG, treeSVG, sigilSVG, spareLetters, corpsSVG, schemas, breath, chipsPl, grade, save, st:() => st,
+       go, mView, renderAtelier, renderEcole, renderCarnet, renderHistoire, renderMoment, setAt:(t, a) => { at = {tool:t, arg:a}; },
+       setEv:(o) => { ev = Object.assign({mod:null, lec:null, quiz:false}, o); }, setCn:(o) => { cn = Object.assign({edit:null, prefill:null, ref:null, tab:"entrees"}, o); },
+       setHv:(v) => { hv = v; }, SEP, sepSheet, pathSheet, planetSheet, active}};
   /* l'entrée directe par l'adresse (#magie-…) est gérée par astro.js, qui tient la pilule des trois arts */
 })();
