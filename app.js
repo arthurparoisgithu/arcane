@@ -4170,7 +4170,11 @@ function showOnboarding(step=0){
 
 /* ---------- Sous-onglets de la section Lames ---------- */
 function subtabsHTML(cur){
-  return `<div class="subtabs" role="group" aria-label="Apprendre">${[["lames","Les lames"],["chemin", DECK_ID === "et" ? "Le chemin d'Etteilla" : DECK_ID === "sb" ? "La procession" : `Le chemin ${deNom(byId("mat").nom)}`],["sym","Les symboles"], deck().tree ? ["arbre","L'Arbre de Vie"] : [deck().own.id, deck().own.short]].map(([k,l])=>`<button type="button" class="subtab${cur===k?" on":""}" data-sub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div>`;
+  /* ordre : Sola Busca et Grand Etteilla : Système, Chemin, Lames, Symboles ; les autres : Chemin, Lames, Arbre de Vie, Symboles */
+  const chemin = ["chemin", DECK_ID === "et" ? "Le chemin d'Etteilla" : DECK_ID === "sb" ? "La procession" : `Le chemin ${deNom(byId("mat").nom)}`];
+  const tabs = deck().tree ? [chemin, ["lames","Lames"], ["arbre","L'Arbre de Vie"], ["sym","Symboles"]]
+    : [[deck().own.id, "Système"], chemin, ["lames","Lames"], ["sym","Symboles"]];
+  return `<div class="subtabs" role="group" aria-label="Apprendre">${tabs.map(([k,l])=>`<button type="button" class="subtab${cur===k?" on":""}" data-sub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div>`;
 }
 function bindSubtabs(root){
   const on = root.querySelector(".subtab.on"), bar = on && on.parentElement;
@@ -7689,7 +7693,7 @@ function renderLames(){
     <section id="mj" class="mj-sec"><h2 class="lsub">Les 22 lames majeures</h2><p class="help">${DECK_ID === "et" ? "Les 21 atouts du Grand Etteilla, de la Création à la vie des hommes, et la Folie. Arcanes range chacun à la place de son équivalent au Marseille." : `Les arcanes majeurs du ${deck().nom.replace(/^Tarot/, "tarot")}, du Mat au Monde.`}</p>
     <div class="mat-row">${lameBtn(CARDS[0])}<p>${DECK_ID === "et" ? "La Folie porte le numéro 78 : Etteilla l'a sortie de la série des atouts et posée tout au bout du jeu, après les mineures." : DECK_ID === "sb" ? "Mato, le fou, est le seul atout sans nom propre. Il porte le zéro et voyage d'une lame à l'autre." : deck().regards ? "Le Mat ne porte pas de numéro. Il voyage d'une lame à l'autre : il peut ouvrir le jeu ou le refermer." : "Le Fou porte le zéro : il est avant le premier pas. Il voyage d'une lame à l'autre et peut ouvrir le jeu ou le refermer."}</p></div>
     <div class="grid-lames">${CARDS.slice(1).map(lameBtn).join("")}</div>
-    <p class="help sym-hint">Pour retrouver les couleurs, animaux et objets communs à plusieurs lames, ouvre <button type="button" class="linkbtn" data-sub="sym">Les symboles</button>.</p></section>`) + mineursHTML();
+    <p class="help sym-hint">Pour retrouver les couleurs, animaux et objets communs à plusieurs lames, ouvre <button type="button" class="linkbtn" data-sub="sym">Symboles</button>.</p></section>`) + mineursHTML();
   root.querySelectorAll(".lame").forEach(b => b.onclick = () => openSheet(b.dataset.id));
   bindSubtabs(root); bindStoc(root);
 }
