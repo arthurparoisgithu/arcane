@@ -189,6 +189,7 @@
   }
   const rnd = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   function sigilSVG(letters, variation = 0, o = {}){
+    if(!o.old && window.MagieSigil) return window.MagieSigil.svg({pieces:window.MagieSigil.auto(letters, variation), style:"plume", sym:"aucune", frame:o.cercle === false ? "aucun" : "cercle", dots:true}, o);
     const r = rnd(7919*(variation + 1) + letters.join("").length*131 + letters.join("").charCodeAt(0));
     const ROT = variation ? [0, 0, 45, -45, 90, -90, 180] : [0, 0, 0, 90, -90];
     const segs = [];
@@ -465,7 +466,7 @@
     const host = `<div class="m-toolhost"></div>`;
     const T0 = at.tool;
     if(T0 === "sceau"){ root.innerHTML = head("Le sceau sur le carré", "Écris un mot, choisis la planète qui lui convient : le mot devient une ligne sur son carré.") + host; schemas.sceau(q1(".m-toolhost", root), {full:true, pl:at.arg}); }
-    else if(T0 === "sigil"){ root.innerHTML = head("Le sigil", "Écris ton intention en une phrase, au présent. Les lettres en double disparaissent, celles qui restent se superposent.") + host; schemas.spare(q1(".m-toolhost", root), {full:true}); }
+    else if(T0 === "sigil"){ root.innerHTML = head("Le sigil", "Écris ton intention en une phrase, au présent. Les lettres en double disparaissent ; celles qui restent deviennent des pièces que tu composes : déplace-les, tourne-les, agrandis-les, efface des traits, jusqu'à ce que le sens disparaisse.") + host; schemas.spare(q1(".m-toolhost", root), {full:true}); }
     else if(T0 === "arbre"){ root.innerHTML = head("L'Arbre de vie", "Touche une sphère ou un sentier. Change l'affichage pour voir les lettres, les lames ou les numéros.") + host; schemas.arbre(q1(".m-toolhost", root), {full:true}); }
     else if(T0 === "corresp"){ root.innerHTML = head("Les correspondances", "Choisis une planète ou un élément : tout ce que la tradition lui rattache, au même endroit.") + host; schemas.corresp(q1(".m-toolhost", root), {pl:at.arg}); }
     else if(T0 === "election"){ root.innerHTML = head("Choisir le moment", "Les heures de la planète choisie, sur les trente prochains jours, classées selon les règles des élections.") + host; schemas.election(q1(".m-toolhost", root), {full:true, pl:at.arg}); }
@@ -626,7 +627,7 @@
   }
   function sceaux(){
     if(!st.sceaux.length) return `<div class="m-empty"><p>Pas encore de sceau.</p><div class="m-acts"><button type="button" class="btn small" data-mgo="atelier:sigil">Faire un sigil</button><button type="button" class="btn ghost small" data-mgo="atelier:sceau">Tracer sur un carré</button></div></div>`;
-    return `<div class="m-scs">${st.sceaux.map(x => `<article class="m-sc"><div class="m-sc-art">${x.kind === "kamea" ? sceauSeul(x.pl, x.mot) : sigilSVG(spareLetters(x.mot, x.sv).keep, x.v || 0)}</div>
+    return `<div class="m-scs">${st.sceaux.map(x => `<article class="m-sc"><div class="m-sc-art">${x.kind === "kamea" ? sceauSeul(x.pl, x.mot) : x.kind === "compo" && window.MagieSigil ? window.MagieSigil.fromSaved(x) : sigilSVG(spareLetters(x.mot, x.sv).keep, x.v || 0, {old:true})}</div>
       <p class="m-sc-d">${x.kind === "kamea" ? `Sur le carré ${PL[x.pl].nom === "Lune" ? "de la Lune" : "de " + PL[x.pl].nom}` : "Sigil"} · ${fmt(new Date(x.t), {day:"numeric", month:"short", year:"numeric"})}</p>
       <p class="m-sc-txt" hidden>« ${h(x.mot)} »</p><div class="m-acts"><button type="button" class="linkbtn" data-mreveal>Voir la phrase</button><button type="button" class="linkbtn danger" data-mscdel="${x.id}">Supprimer</button></div></article>`).join("")}</div>
       <p class="help m-left">Dans la méthode de Spare, on oublie la phrase une fois le sigil chargé : elle reste cachée ici, tu peux la révéler plus tard pour faire le point.</p>`;
@@ -816,6 +817,7 @@
         <figcaption>Les deux voies de la gnose selon Peter Carroll, Liber Null, 1978.</figcaption>`;
     },
     spare(fig, o = {}){
+      if(window.MagieSigil) return window.MagieSigil.editor(fig, o);
       let ph = "Je suis calme et confiant", sv = true, v = 0;
       fig.innerHTML = `<div class="m-form inline"><label>Ta phrase<input type="text" maxlength="80" value="${h(ph)}" data-sph></label><label class="m-check"><input type="checkbox" data-ssv checked> Retirer aussi les voyelles</label></div>
         <p class="m-sp-ph small"></p><div class="m-sp-g big"></div><div class="m-acts"><button type="button" class="btn ghost small" data-sv>Une autre forme</button>${o.full ? `<button type="button" class="btn small" data-ssave>Garder dans le carnet</button>` : ""}</div>
