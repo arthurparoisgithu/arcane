@@ -819,7 +819,7 @@
   function renderMoi(){
     const root = q1("#v-a-moi"), total = ASTRO_COURS.reduce((t, m) => t + m.lecons.length, 0);
     const sel = (name, v) => `<select data-sys="${name}">${Object.entries(SYS_NOM).map(([k, n]) => `<option value="${k}"${v === k ? " selected" : ""}>${cap(n)}</option>`).join("")}</select>`;
-    root.innerHTML = `<header class="a-hero"><p class="eyebrow">Mon espace · astrologie</p><h1>Mon espace</h1><p class="a-lede">Ton lieu, tes thèmes et ta progression. Tout reste sur cet appareil.</p></header>
+    root.innerHTML = espaceBar("astro") + `<header class="a-hero"><p class="eyebrow">Mon espace · astrologie</p><h1>Mon espace</h1><p class="a-lede">Ton lieu, tes thèmes et ta progression. Tout reste sur cet appareil.</p></header>
       <section class="a-card a-set"><h2>Le lieu du ciel du jour</h2><p>Pour calculer l'Ascendant, les maisons et les heures planétaires de l'onglet Aujourd'hui.</p>
         <div class="a-row2"><input id="a-lieu" list="a-cities2" value="${h(st.lieu.nom)}" aria-label="Ville"><datalist id="a-cities2">${window.ArcanesVilles ? "" : cityOpts()}</datalist><button type="button" class="btn small" id="a-lieu-ok">Enregistrer</button></div><p class="help" id="a-lieu-st"></p></section>
       <section class="a-card a-set"><h2>Les réglages de calcul</h2><p>L'école de lecture, Tradition ou Moderne, se choisit là où on voit son effet : sous la roue du Ciel et en tête de Mon thème. Elle vaut partout. Aujourd'hui : <b>${school() === "tradition" ? "Tradition" : "Moderne"}</b>.</p>
@@ -936,7 +936,7 @@
     return p;
   }
   /* Mon espace : un seul espace, deux onglets (tarot, astrologie) */
-  const espaceBar = cur => `<div class="esp-bar" role="tablist" aria-label="Mon espace"><button type="button" role="tab" data-esp="tarot" aria-selected="${cur === "tarot"}">Tarot</button><button type="button" role="tab" data-esp="astro" aria-selected="${cur === "astro"}">Astrologie</button>${window.ArcanesMagie ? `<button type="button" role="tab" data-esp="magie" aria-selected="${cur === "magie"}">Magie</button>` : ""}${window.ArcanesAlchimie ? `<button type="button" role="tab" data-esp="alchimie" aria-selected="${cur === "alchimie"}">Alchimie</button>` : ""}</div>`;
+  const espaceBar = cur => `<div class="esp-bar" role="tablist" aria-label="Mon espace"><button type="button" role="tab" data-esp="tarot" aria-selected="${cur === "tarot"}">Tarot</button><button type="button" role="tab" data-esp="astro" aria-selected="${cur === "astro"}">Astrologie</button>${window.ArcanesMagie ? `<button type="button" role="tab" data-esp="magie" aria-selected="${cur === "magie"}">Magie</button>` : ""}${window.ArcanesAlchimie ? `<button type="button" role="tab" data-esp="alchimie" aria-selected="${cur === "alchimie"}">Alchimie</button>` : ""}</div>${window.ArcanesChemin ? window.ArcanesChemin.chip() : ""}`;
   function bindEspace(root){ qa("[data-esp]", root).forEach(b => b.onclick = () => { if(b.dataset.esp === "alchimie") switchTo("alchimie", "carnet"); else if(b.dataset.esp === "magie") switchTo("magie", "carnet"); else if(b.dataset.esp === "astro") switchTo("astro", "moi"); else switchTo("tarot", "journal"); }); }
 
   function init(){
@@ -958,6 +958,7 @@
     if(brand){ brand.removeAttribute("data-view"); brand.setAttribute("aria-label", "Arcanes, accueil");
       brand.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); if(inAlch()) AL().view("athanor"); else if(inMagie()) MG().view("moment"); else if(st.univers === "astro") aView("ciel"); else if(typeof setView === "function") setView("jour"); }, true);
       pillEl = makePill(); const grp = document.createElement("div"); grp.className = "brand-grp"; brand.before(grp); grp.append(brand, pillEl); }
+    document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("#v-a-moi [data-esp]"); if(!b) return; if(b.dataset.esp === "alchimie") switchTo("alchimie", "carnet"); else if(b.dataset.esp === "magie") switchTo("magie", "carnet"); else if(b.dataset.esp === "tarot") switchTo("tarot", "journal"); });
     window.addEventListener("resize", syncPill);
     if(document.fonts && document.fonts.ready) document.fonts.ready.then(syncPill);
     // un lien interne du tarot alors qu'on est en astrologie : on revient au tarot

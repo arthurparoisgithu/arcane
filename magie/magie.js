@@ -577,7 +577,7 @@
   let ev = {mod:null, lec:null, quiz:false};
   const MOD = id => K.MODULES.find(m => m.id === id);
   const modDone = m => m.lecons.every(l => st.done.includes(l.id));
-  const grade = () => { const n = K.MODULES.filter(modDone).length; let g = D.GRADES[0]; D.GRADES.forEach(x => { if(n >= x.min) g = x; }); return {g, n}; };
+  const grade = () => { const n = K.MODULES.filter(modDone).length; let g = D.GRADES[0]; D.GRADES.forEach(x => { if(n >= x.min) g = x; }); if(window.ArcanesChemin) try{ g = window.ArcanesChemin.grade(); }catch(e){} return {g, n}; };
   function renderEcole(){
     const root = q1("#v-m-ecole"); if(!root) return;
     if(ev.mod && ev.quiz) return renderQuiz(root);
@@ -588,7 +588,7 @@
     root.innerHTML = `<header class="m-hero"><p class="eyebrow">Apprendre la magie</p><h1>L'école</h1>
         <p class="m-lede">${K.MODULES.length > 8 ? "Quatorze modules en deux cercles : d'abord la pratique, de la définition de la magie aux sigils de la magie du chaos ; puis les fondements et les arts, de l'âme du monde à l'art de la mémoire." : "Huit modules, de la définition de la magie jusqu'aux rituels de la Golden Dawn et aux sigils de la magie du chaos."} Chaque leçon donne ses sources, avec leur statut : ce qui est documenté, ce qui relève d'une tradition, ce qui est une lecture moderne.</p></header>
       <section class="m-grade"><div class="m-grade-seal"><svg viewBox="-50 -50 100 100" aria-hidden="true"><circle r="46"/><circle r="40"/><path d="${(() => { const o = [0,3,6,2,5,1,4]; return o.map((i, k) => { const a = (-90 + i*360/7)*rad; return (k ? "L" : "M") + f1(Math.cos(a)*30) + " " + f1(Math.sin(a)*30); }).join("") + "Z"; })()}"/></svg><b>${g.code}</b></div>
-        <div><p class="eyebrow">Ton degré</p><h2>${g.nom}</h2><p class="help m-left">${lus} leçon${lus > 1 ? "s" : ""} sur ${tot} · ${n} module${n > 1 ? "s" : ""} achevé${n > 1 ? "s" : ""} sur ${K.MODULES.length}. Les noms sont ceux des grades de la Golden Dawn ; ici, ils marquent seulement ton chemin.</p>
+        <div><p class="eyebrow">Ton degré</p><h2>${g.nom}</h2><p class="help m-left">${lus} leçon${lus > 1 ? "s" : ""} sur ${tot} · ${n} module${n > 1 ? "s" : ""} achevé${n > 1 ? "s" : ""} sur ${K.MODULES.length}. Ton degré compte les quatre arts d'Arcanes, pas seulement la magie. <button type="button" class="linkbtn" data-chemin>Voir le chemin</button></p>
         ${next ? `<button type="button" class="btn small" data-mlec="${next[0].id}:${next[1]}">${lus ? "Reprendre" : "Commencer"} : ${h(next[0].lecons[next[1]].t)}</button>` : `<p><b>Tu as parcouru tout le cours.</b></p>`}</div></section>
       ${EXT.ecoleMap ? EXT.ecoleMap(K.MODULES, st, next) : ""}
       ${[1, 2].map(c => { const ms = K.MODULES.filter(m => (m.cercle || 1) === c); if(!ms.length) return "";
