@@ -702,7 +702,7 @@
     qa("[data-cyc-stop]", root).forEach(b => b.onclick = () => { if(b.dataset.armed !== "1"){ b.dataset.armed = "1"; b.textContent = "Toucher encore pour arrêter"; return; } const s = st(); delete s.cycle; save(); refresh(); });
     bindLinks(root);
   }
-  const refresh = () => { if(!_.active()) return; const v = st().vue; if(v === "carnet") _.renderCarnet(); if(v === "moment") _.renderMoment(); };
+  const refresh = () => { if(!_.active()) return; const v = st().vue; if(v === "carnet") _.renderCarnet(); if(v === "moment") _.renderMoment(true); };
   X.carnetTabs.push({id:"cycle", label:"Le cycle", render:cycleHTML, bind:bindCycle});
   X.afterRite = key => {
     const s = st(); if(!s.cycle || !s.cycle.debut) return; const n = dayN(); if(n < 1 || n > 28) return;

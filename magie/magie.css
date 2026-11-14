@@ -1187,3 +1187,45 @@ body.m-riting .nav{visibility:hidden}
 @media (prefers-reduced-motion: reduce){.m-sx.draw [pathLength]{animation:none;stroke-dashoffset:0}.m-sx.lit .m-sx-art{animation:none;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--rub) 60%,transparent))}}
 .charging .m-sx-piece{visibility:hidden}
 .m-sx-piece{margin-top:22px}
+
+/* ---------- Le moment : l'horloge qu'on touche et le curseur du temps ---------- */
+.m-h-gl{transition:font-size .3s cubic-bezier(.3,1.5,.5,1)}
+.m-h-disc{transition:transform .3s cubic-bezier(.3,1.5,.5,1),stroke .2s}
+.m-h-node:hover .m-h-disc{transform:scale(1.07)}
+.m-h-node.sel .m-h-disc{transform:scale(1.22);stroke:var(--or);stroke-width:2.4}
+.m-h-node.sel .m-h-gl{font-size:24px}
+.m-h-node.sel .m-h-lab{fill:var(--ink)}
+.m-h-node:focus-visible{outline:none}
+.m-h-node:focus-visible .m-h-disc{stroke:var(--or);stroke-width:2.6}
+.m-h-ray{stroke-width:1.6;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:m-draw .45s cubic-bezier(.3,.7,.3,1) forwards;filter:drop-shadow(0 0 4px currentColor);opacity:.9;pointer-events:none}
+.m-hrg{cursor:pointer;outline:none}
+.m-hr-hit{fill:transparent}
+.m-hrg:hover .m-hr{opacity:.75}
+.m-hrg:focus-visible .m-hr{stroke:var(--or);stroke-width:1.4}
+.m-hr.sel{stroke:var(--ink);stroke-width:.8;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--or) 70%,transparent))}
+.m-scrub{display:flex;align-items:center;gap:10px;max-width:400px;margin:6px auto 0}
+.m-scrub input{flex:1;accent-color:var(--or);height:32px;cursor:pointer}
+.m-scrub-b{width:40px;height:40px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--panel-solid);color:var(--ink);font:400 22px/1 var(--f-ui);cursor:pointer;display:grid;place-items:center;transition:border-color .2s,color .2s,transform .15s}
+.m-scrub-b:hover{border-color:var(--or);color:var(--or)}
+.m-scrub-b:active{transform:scale(.92)}
+.m-scrub-l{margin:4px 0 8px;min-height:24px;font:14.5px var(--f-ui);color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;align-items:center}
+.m-scrub-l b{color:var(--ink);font-weight:600}
+.m-scrub-l .linkbtn{color:var(--or);font-size:14.5px}
+.m-when{display:block;font:500 15px var(--f-ui);letter-spacing:.02em;color:var(--or);margin-bottom:6px;text-transform:none}
+.m-insp{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.3,.8,.3,1),opacity .35s ease,margin .45s ease;opacity:0;margin:0 0 4px;text-align:left}
+.m-insp.open{grid-template-rows:1fr;opacity:1;margin:10px 0 16px}
+.m-insp-body{overflow:hidden;min-height:0}
+.m-insp:not(.open) .m-insp-body{visibility:hidden;transition:visibility 0s .45s}
+.m-insp-in{position:relative;display:grid;grid-template-columns:56px 1fr;gap:14px;padding:18px 44px 18px 18px;border:1px solid color-mix(in srgb,var(--pc) 50%,var(--line));border-radius:6px;background:var(--panel);box-shadow:inset 0 3px 0 var(--pc);animation:m-insp-in .4s ease}
+@keyframes m-insp-in{from{transform:translateY(-6px)}}
+.m-insp-gl{font:400 40px/1 var(--f-sym);color:var(--pc);text-align:center;padding-top:6px}
+.m-insp-in h3{margin:2px 0 6px;font-family:var(--f-display);font-size:24px}
+.m-insp-in p{margin:0 0 8px}
+.m-insp-in .eyebrow{margin:0}
+.m-insp-in .m-acts{margin-top:10px}
+.m-insp-next{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.m-insp-next span{font:600 11.5px var(--f-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-right:4px}
+.m-insp-x{position:absolute;top:8px;right:8px;width:36px;height:36px;border-radius:50%;border:0;background:transparent;color:var(--ink-soft);font:300 24px/1 var(--f-ui);cursor:pointer}
+.m-insp-x:hover{color:var(--ink);background:var(--line2)}
+@media (max-width:520px){.m-insp-in{grid-template-columns:1fr;gap:4px;padding:16px 44px 16px 16px}.m-insp-gl{text-align:left;font-size:32px;padding:0}}
+@media (prefers-reduced-motion: reduce){.m-insp,.m-h-disc,.m-h-gl{transition:none}.m-h-ray{animation:none;stroke-dashoffset:0}.m-insp-in{animation:none}}

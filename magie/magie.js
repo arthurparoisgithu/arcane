@@ -106,8 +106,9 @@
       const H = o.ring.hours, total = o.ring.next - o.ring.rise, a = t => -90 + (t - o.ring.rise)/total*360;
       const arc = (a0, a1, r0, r1) => { const p = (aa, r) => [r*Math.cos(aa*rad), r*Math.sin(aa*rad)], [x0, y0] = p(a0, r1), [x1, y1] = p(a1, r1), [x2, y2] = p(a1, r0), [x3, y3] = p(a0, r0), big = a1 - a0 > 180 ? 1 : 0;
         return `M${f1(x0)} ${f1(y0)}A${r1} ${r1} 0 ${big} 1 ${f1(x1)} ${f1(y1)}L${f1(x2)} ${f1(y2)}A${r0} ${r0} 0 ${big} 0 ${f1(x3)} ${f1(y3)}Z`; };
-      H.forEach((x, i) => { const a0 = a(x.start), a1 = a(x.end) - .6, on = i === o.ring.cur;
-        s += `<path d="${arc(a0, a1, 140, 152)}" class="m-hr${x.jour ? " j" : " n"}${on ? " on" : ""}" style="${on ? `fill:${PL[x.pl].hex}` : ""}"><title>${PL[x.pl].nom}</title></path>`; });
+      H.forEach((x, i) => { const a0 = a(x.start), a1 = a(x.end) - .6, on = i === o.ring.cur, sl = o.sel === "h" + i;
+        s += o.tap ? `<g class="m-hrg${sl ? " sel" : ""}" data-mhr="${i}" role="button" tabindex="0" aria-label="Heure ${x.jour ? i + 1 : i - 11} ${x.jour ? "du jour" : "de la nuit"}, ${PL[x.pl].nom}, ${fmt(x.start, HM)}"><path d="${arc(a0 - .3, a1 + .3, 132, 160)}" class="m-hr-hit"/><path d="${arc(a0, a1, sl ? 138 : 140, sl ? 156 : 152)}" class="m-hr${x.jour ? " j" : " n"}${on ? " on" : ""}${sl ? " sel" : ""}" style="${on || sl ? `fill:${PL[x.pl].hex}` : ""}"/></g>`
+          : `<path d="${arc(a0, a1, 140, 152)}" class="m-hr${x.jour ? " j" : " n"}${on ? " on" : ""}" style="${on ? `fill:${PL[x.pl].hex}` : ""}"><title>${PL[x.pl].nom}</title></path>`; });
       const pr = (o.now - o.ring.rise)/total, na = (-90 + pr*360)*rad;
       s += `<line x1="${f1(Math.cos(na)*134)}" y1="${f1(Math.sin(na)*134)}" x2="${f1(Math.cos(na)*158)}" y2="${f1(Math.sin(na)*158)}" class="m-now"/>`;
       const sa = a(o.ring.set)*rad; s += `<circle cx="${f1(Math.cos(sa)*146)}" cy="${f1(Math.sin(sa)*146)}" r="2.6" class="m-sunset"/>`;
@@ -125,8 +126,14 @@
       const [x0, y0] = P(o.hourFrom), [x1, y1] = P(o.hourPl);
       s += `<line x1="${f1(x0)}" y1="${f1(y0)}" x2="${f1(x1)}" y2="${f1(y1)}" class="m-h-hop"/>`;
     }
+    if(o.sel){ // le rayon qui relie le centre à ce qu'on a touché
+      let tx, ty, col;
+      if(o.sel[0] === "h" && o.ring){ const x = o.ring.hours[+o.sel.slice(1)]; if(x){ const total = o.ring.next - o.ring.rise, mid = (-90 + ((x.start - o.ring.rise) + (x.end - x.start)/2)/total*360)*rad; tx = Math.cos(mid)*136; ty = Math.sin(mid)*136; col = PL[x.pl].hex; } }
+      else if(PL[o.sel]){ [tx, ty] = P(o.sel); const L = Math.hypot(tx, ty); tx *= (L - 20)/L; ty *= (L - 20)/L; col = PL[o.sel].hex; }
+      if(tx != null) s += `<line x1="0" y1="0" x2="${f1(tx)}" y2="${f1(ty)}" class="m-h-ray" style="stroke:${col}" pathLength="1"/>`;
+    }
     D.CHALD.forEach(id => { const [x, y] = P(id), p = PL[id], isDay = o.day === id, isHour = o.hour === id;
-      s += `<g class="m-h-node${isDay ? " day" : ""}${isHour ? " hour" : ""}" data-mpl="${id}" role="button" tabindex="0" aria-label="${p.nom}">
+      s += `<g class="m-h-node${isDay ? " day" : ""}${isHour ? " hour" : ""}${o.sel === id ? " sel" : ""}" ${o.tap ? "data-mnode" : "data-mpl"}="${id}" role="button" tabindex="0" aria-label="${p.nom}"${o.tap ? ` aria-pressed="${o.sel === id}"` : ""}>
         <circle cx="${f1(x)}" cy="${f1(y)}" r="19" class="m-h-disc" style="${isHour ? `fill:${p.hex};stroke:${p.hex}` : ""}"/>
         <text x="${f1(x)}" y="${f1(y + 1)}" class="m-h-gl" style="${isHour ? "fill:#fff" : `fill:${p.hex}`}">${p.gl}${T}</text>
         ${o.labels !== false ? `<text x="${f1(x*1.36)}" y="${f1(y*1.36 + 1)}" class="m-h-lab">${o.dayNames ? cap(p.jour) : p.nom}</text>` : ""}</g>`; });
@@ -391,27 +398,64 @@
 
   /* ---------- LE MOMENT ---------- */
   let momTimer = null;
-  function renderMoment(){
-    const root = q1("#v-m-moment"); if(!root) return;
-    const now = new Date(), H = hoursOf(now), L = lieu();
-    if(!H || H.cur < 0){ root.innerHTML = `<header class="m-hero"><p class="eyebrow">Le moment</p><h1>Les heures planétaires</h1><p class="m-lede">Le lever et le coucher du soleil n'ont pas pu être calculés pour ${h(L.nom)}. Change de lieu dans l'astrologie, onglet Mon espace.</p></header>`; return; }
-    const cur = H.hours[H.cur], hp = PL[cur.pl], dp = PL[H.day], M = moon(now);
-    const rest = Math.round((cur.end - now)/60000);
+  const mo = {off:0, sel:null, raf:0};   // le décalage du curseur du temps (minutes) et ce qu'on a touché sur l'horloge
+  const deP = n => n === "Lune" ? "de la Lune" : "de " + n;
+  const dur = m => { m = Math.round(Math.abs(m)); return m < 60 ? m + " min" : Math.floor(m/60) + " h" + (m % 60 ? " " + String(m % 60).padStart(2, "0") : ""); };
+  function momCtx(){
+    const real = new Date(), now = new Date(real.getTime() + mo.off*60000), H = hoursOf(now);
+    if(!H || H.cur < 0) return null;
+    const cur = H.hours[H.cur];
+    return {real, now, H, cur, hp:PL[cur.pl], dp:PL[H.day], M:moon(now)};
+  }
+  function momHero(c){
+    const {now, H, cur, hp, dp} = c, L = lieu(), rest = Math.round((cur.end - now)/60000);
+    const quand = mo.off === 0 ? "" : mo.off > 0 ? `Dans ${dur(mo.off)}, à ${fmt(now, HM)} : ` : `Il y a ${dur(mo.off)}, à ${fmt(now, HM)} : `;
+    return `<p class="eyebrow">${cap(fmt(now, {weekday:"long", day:"numeric", month:"long"}))} · ${h(L.nom)}</p>
+      <h1>${quand ? `<small class="m-when">${quand}</small>` : ""}L'heure ${deP(hp.nom)}</h1>
+      <p class="m-lede">Jour ${deP(dp.nom)} · ${mo.off === 0 ? `jusqu'à ${fmt(cur.end, HM)}, encore ${dur(rest)}.` : `de ${fmt(cur.start, HM)} à ${fmt(cur.end, HM)}.`}</p>`;
+  }
+  function momClock(c){
+    const {now, H, cur, hp} = c;
     const center = `<g class="m-h-center"><circle r="40" class="m-h-cdisc"/><text y="-6" class="m-h-cgl" style="fill:${hp.hex}">${hp.gl}${T}</text><text y="22" class="m-h-ctx">heure ${cur.jour ? cur.i + 1 : cur.i - 11}</text><text y="32" class="m-h-ctx">${cur.jour ? "du jour" : "de la nuit"}</text></g>`;
-    const prochaines = H.hours.slice(H.cur + 1, H.cur + 5);
-    root.innerHTML = `
-      <header class="m-hero m-hero-moment"><p class="eyebrow">${cap(fmt(now, {weekday:"long", day:"numeric", month:"long"}))} · ${h(L.nom)}</p>
-        <h1>L'heure ${hp.nom === "Lune" ? "de la Lune" : (/^[AEIOUVÉ]/.test(hp.nom) ? "de " : "de ") + hp.nom}</h1>
-        <p class="m-lede">Jour ${dp.nom === "Lune" ? "de la Lune" : "de " + dp.nom} · jusqu'à ${fmt(cur.end, HM)}, encore ${rest < 60 ? rest + " min" : Math.floor(rest/60) + " h " + String(rest % 60).padStart(2, "0")}.</p></header>
-      <section class="m-clock">${heptaSVG({ring:H, now, day:H.day, hour:cur.pl, center, label:"L'horloge planétaire du jour"})}
-        <p class="help">L'anneau extérieur, ce sont les 24 heures du jour planétaire, du lever au lever suivant ; le petit point marque le coucher du soleil. Touche une planète.</p></section>
-      <div class="m-grid2">
-        <article class="m-card m-hourcard" style="--pc:${hp.hex}"><p class="eyebrow">L'heure</p><h2>${pg(cur.pl)} ${hp.nom}</h2>
+    return heptaSVG({ring:H, now, day:H.day, hour:cur.pl, center, tap:true, sel:mo.sel, label:"L'horloge planétaire du jour"});
+  }
+  function momInsp(c){
+    if(!mo.sel) return "";
+    const {now, H} = c;
+    if(mo.sel[0] === "h"){
+      const x = H.hours[+mo.sel.slice(1)]; if(!x) return "";
+      const p = PL[x.pl], past = x.end <= c.real, en = x.start <= c.real && c.real < x.end;
+      return `<div class="m-insp-in" style="--pc:${p.hex}"><span class="m-insp-gl">${p.gl}${T}</span><div>
+        <p class="eyebrow">${x.jour ? `${x.i + 1}ᵉ heure du jour` : `${x.i - 11}ᵉ heure de la nuit`} · ${fmt(x.start, HM)} – ${fmt(x.end, HM)}</p>
+        <h3>L'heure ${deP(p.nom)}</h3><p>${p.mot} Son verbe : <b>${p.verbe}</b>.</p>
+        <p class="help m-left">${en ? "C'est l'heure qui court en ce moment." : past ? `Passée depuis ${dur((c.real - x.end)/60000)}.` : `Elle commence dans ${dur((x.start - c.real)/60000)}.`} Elle dure ${dur((x.end - x.start)/60000)} : les heures planétaires n'ont pas soixante minutes, elles partagent le jour et la nuit en douze parts chacun.</p>
+        <div class="m-acts start">${!en ? `<button type="button" class="btn small" data-mjump="${x.start.getTime() + 60000}">Placer le curseur sur cette heure</button>` : ""}<button type="button" class="btn ghost small" data-mpl="${x.pl}">Toutes ses correspondances</button></div></div>
+        <button type="button" class="m-insp-x" data-mclose aria-label="Fermer">×</button></div>`;
+    }
+    const id = mo.sel, p = PL[id], nexts = [];
+    let t = new Date(now.getTime()), guard = 0;
+    while(nexts.length < 3 && guard++ < 4){ const HH = hoursOf(t); if(!HH) break; HH.hours.forEach(x => { if(x.pl === id && x.end > now && nexts.length < 3 && !nexts.find(n => +n.start === +x.start)) nexts.push(x); }); t = new Date(HH.next.getTime() + 60000); }
+    let E = null; try{ E = etat(id, now, c.cur.jour); }catch(e){}
+    return `<div class="m-insp-in" style="--pc:${p.hex}"><span class="m-insp-gl">${p.gl}${T}</span><div>
+      <p class="eyebrow">${cap(p.jour)}${id === H.day ? " · c'est son jour" : ""}${id === c.cur.pl ? " · c'est son heure" : ""}</p>
+      <h3>${p.nom}</h3><p>${p.mot} Son verbe : <b>${p.verbe}</b>. La tradition lui confie ${p.domaines}.</p>
+      ${E ? `<p class="help m-left">Dans le ciel à cet instant : ${p.nom} en ${h(E.signe.nom)}${E.retro ? ", rétrograde" : ""}${E.fort ? ". La tradition y voit une position forte (domicile ou exaltation)" : E.faible ? ". La tradition y voit une position faible (exil ou chute)" : ""}.</p>` : ""}
+      ${nexts.length ? `<p class="m-insp-next"><span>Ses prochaines heures</span>${nexts.map(x => `<button type="button" class="chip small" data-mjump="${x.start.getTime() + 60000}">${fmt(x.start, {weekday:"short"})} ${fmt(x.start, HM)}</button>`).join("")}</p>` : ""}
+      <div class="m-acts start"><button type="button" class="btn small" data-mrite="contemple:${id}">Cinq minutes avec ${p.nom === "Lune" ? "la Lune" : p.nom}</button><button type="button" class="btn ghost small" data-mpl="${id}">Toutes ses correspondances</button></div></div>
+      <button type="button" class="m-insp-x" data-mclose aria-label="Fermer">×</button></div>`;
+  }
+  function momScrub(c){
+    const lab = mo.off === 0 ? `<b>Maintenant</b> · ${fmt(c.real, HM)}` : `<b>${fmt(c.now, {weekday:"long"})} ${fmt(c.now, HM)}</b> · ${mo.off > 0 ? "dans" : "il y a"} ${dur(mo.off)}`;
+    return `<span class="m-scrub-t" aria-live="polite">${lab}</span>${mo.off !== 0 ? `<button type="button" class="linkbtn" data-mnow>Revenir à maintenant</button>` : ""}`;
+  }
+  function momGrid(c){
+    const {now, H, cur, hp, dp, M} = c, prochaines = H.hours.slice(H.cur + 1, H.cur + 5);
+    return `<article class="m-card m-hourcard" style="--pc:${hp.hex}"><p class="eyebrow">L'heure</p><h2>${pg(cur.pl)} ${hp.nom}</h2>
           <p class="m-verbe">${hp.mot} Son verbe : <b>${hp.verbe}</b>.</p><p>La tradition lui confie ${hp.domaines}.</p>
           <div class="m-tags"><span>${cap(hp.couleur.split(",")[0])}</span><span>${cap(hp.metal.split(" (")[0])}</span><span>${cap(hp.parfum)}</span></div>
           <div class="m-acts"><button type="button" class="btn small" data-mrite="contemple:${cur.pl}">Cinq minutes avec ${hp.nom === "Lune" ? "la Lune" : hp.nom}</button><button type="button" class="btn ghost small" data-mpl="${cur.pl}">Ses correspondances</button></div></article>
         <article class="m-card"><p class="eyebrow">Le jour</p><h2>${pg(H.day)} ${cap(dp.jour)}</h2>
-          <p>Le jour ${dp.nom === "Lune" ? "de la Lune" : "de " + dp.nom}, sous la garde de l'ange <b>${dp.ange}</b> selon l'<i>Heptameron</i>. Il convient à ${dp.domaines.split(", ").slice(0, 3).join(", ")}.</p>
+          <p>Le jour ${deP(dp.nom)}, sous la garde de l'ange <b>${dp.ange}</b> selon l'<i>Heptameron</i>. Il convient à ${dp.domaines.split(", ").slice(0, 3).join(", ")}.</p>
           <p class="help m-left">Lever ${fmt(H.rise, HM)} · coucher ${fmt(H.set, HM)}</p></article>
         ${M ? `<article class="m-card"><p class="eyebrow">La Lune</p><h2>${M.nom}</h2>
           <p>En ${h(M.signe.nom)}, éclairée à ${Math.round(M.ill*100)} %. ${M.croit ? "Elle <b>croît</b> : la tradition y place ce qu'on veut commencer, attirer ou faire grandir." : "Elle <b>décroît</b> : la tradition y place ce qu'on veut terminer, défaire ou éloigner."}</p>
@@ -420,9 +464,40 @@
           <ol class="m-next">${prochaines.map(x => `<li><span class="t">${fmt(x.start, HM)}</span>${pg(x.pl)}<span>${PL[x.pl].nom}</span>${x.jour !== cur.jour && x === prochaines.find(y => y.jour !== cur.jour) ? `<em>${x.jour ? "lever" : "coucher"}</em>` : ""}</li>`).join("")}</ol>
           <details class="m-fold in"><summary><span>Les 24 heures</span><i class="a-chev" aria-hidden="true"></i></summary>
             <div class="m-allh"><div><p class="eyebrow">Jour</p>${H.hours.slice(0, 12).map(x => `<p class="${x.i === H.cur ? "on" : ""}"><span class="t">${fmt(x.start, HM)}</span>${pg(x.pl)} ${PL[x.pl].nom}</p>`).join("")}</div>
-              <div><p class="eyebrow">Nuit</p>${H.hours.slice(12).map(x => `<p class="${x.i === H.cur ? "on" : ""}"><span class="t">${fmt(x.start, HM)}</span>${pg(x.pl)} ${PL[x.pl].nom}</p>`).join("")}</div></div></details></article>
-      </div>
-      ${EXT.moment.map(f => { try{ return f(H, M, now) || ""; }catch(e){ return ""; } }).join("")}
+              <div><p class="eyebrow">Nuit</p>${H.hours.slice(12).map(x => `<p class="${x.i === H.cur ? "on" : ""}"><span class="t">${fmt(x.start, HM)}</span>${pg(x.pl)} ${PL[x.pl].nom}</p>`).join("")}</div></div></details></article>`;
+  }
+  /* repeindre seulement ce qui dépend de l'instant : le titre, l'horloge, le panneau, les cartes */
+  function paintMoment(part){
+    const root = q1("#v-m-moment"); if(!root || !q1(".m-clock", root)) return renderMoment(true);
+    const c = momCtx(); if(!c) return;
+    if(mo.sel && mo.sel[0] === "h" && !c.H.hours[+mo.sel.slice(1)]) mo.sel = null;
+    q1(".m-hero-moment", root).innerHTML = momHero(c);
+    q1(".m-clock-svg", root).innerHTML = momClock(c);
+    q1(".m-scrub-l", root).innerHTML = momScrub(c);
+    const r = q1(".m-scrub input", root); if(r && +r.value !== mo.off) r.value = mo.off;
+    const insp = q1(".m-insp", root), html = momInsp(c);
+    if(part !== "scrub" || html){ q1(".m-insp-body", insp).innerHTML = html || q1(".m-insp-body", insp).innerHTML; }
+    insp.classList.toggle("open", !!html); insp.setAttribute("aria-hidden", html ? "false" : "true");
+    if(part !== "scrub") { q1(".m-grid2", root).innerHTML = momGrid(c); }
+    else { cancelAnimationFrame(mo.gr); mo.gr = requestAnimationFrame(() => { q1(".m-grid2", root).innerHTML = momGrid(c); bindLinks(q1(".m-grid2", root)); }); }
+    bindLinks(insp); bindLinks(q1(".m-grid2", root)); bindLinks(q1(".m-scrub-l", root));
+  }
+  function renderMoment(keep){
+    const root = q1("#v-m-moment"); if(!root) return;
+    if(keep !== true){ mo.off = 0; mo.sel = null; }
+    const L = lieu(), c = momCtx();
+    if(!c){ root.innerHTML = `<header class="m-hero"><p class="eyebrow">Le moment</p><h1>Les heures planétaires</h1><p class="m-lede">Le lever et le coucher du soleil n'ont pas pu être calculés pour ${h(L.nom)}. Change de lieu dans l'astrologie, onglet Mon espace.</p></header>`; return; }
+    root.innerHTML = `
+      <header class="m-hero m-hero-moment">${momHero(c)}</header>
+      <section class="m-clock"><div class="m-clock-svg">${momClock(c)}</div>
+        <div class="m-scrub"><button type="button" class="m-scrub-b" data-mstep="-1" aria-label="Heure planétaire précédente">‹</button>
+          <input type="range" min="-720" max="2160" step="5" value="${mo.off}" aria-label="Avancer ou reculer dans le temps, de douze heures en arrière à un jour et demi en avant">
+          <button type="button" class="m-scrub-b" data-mstep="1" aria-label="Heure planétaire suivante">›</button></div>
+        <p class="m-scrub-l">${momScrub(c)}</p>
+        <div class="m-insp${mo.sel ? " open" : ""}" aria-hidden="${mo.sel ? "false" : "true"}"><div class="m-insp-body">${momInsp(c)}</div></div>
+        <p class="help">L'anneau extérieur, ce sont les 24 heures du jour planétaire, du lever au lever suivant ; le petit point marque le coucher du soleil. Touche une planète ou une heure ; fais glisser le curseur pour voyager dans le temps.</p></section>
+      <div class="m-grid2">${momGrid(c)}</div>
+      ${EXT.moment.map(f => { try{ return f(c.H, c.M, c.real) || ""; }catch(e){ return ""; } }).join("")}
       <p class="eyebrow m-k">Préparer un moment</p>
       <div class="m-quick">
         <button type="button" class="m-qt" data-mgo="atelier:election"><span class="m-qi">${gl("♃")}</span><b>Choisir le moment</b><small>La prochaine bonne fenêtre d'une planète</small></button>
@@ -432,10 +507,28 @@
       </div>
       <p class="m-cross"><button type="button" class="btn ghost small" data-mastro="ciel">Voir le ciel du jour, en astrologie</button></p>`;
     bindLinks(root);
+    const clock = q1(".m-clock", root);
+    const pick = (el, kb) => { const n = el.closest("[data-mnode]"), r = el.closest("[data-mhr]"); if(!n && !r) return false;
+      const v = n ? n.dataset.mnode : "h" + r.dataset.mhr; mo.sel = mo.sel === v ? null : v; paintMoment();
+      const ins = q1(".m-insp", root); if(mo.sel && ins){ const b = ins.getBoundingClientRect(); if(b.top > innerHeight - 160) ins.scrollIntoView({behavior:"smooth", block:"nearest"}); }
+      const back = q1(n ? `[data-mnode="${v}"]` : `[data-mhr="${r.dataset.mhr}"]`, root); if(back && kb) back.focus({preventScroll:true});
+      return true; };
+    clock.addEventListener("click", e => {
+      if(pick(e.target)) return;
+      const j = e.target.closest("[data-mjump]"); if(j){ mo.off = Math.max(-720, Math.min(2160, Math.round((+j.dataset.mjump - Date.now())/60000))); if(mo.sel && mo.sel[0] === "h") mo.sel = null; paintMoment(); return; }
+      if(e.target.closest("[data-mnow]")){ mo.off = 0; paintMoment(); return; }
+      if(e.target.closest("[data-mclose]")){ mo.sel = null; paintMoment(); return; }
+      const st1 = e.target.closest("[data-mstep]"); if(st1){ const c2 = momCtx(); if(!c2) return; const dir = +st1.dataset.mstep;
+        const tgt = dir > 0 ? c2.cur.end.getTime() + 60000 : c2.cur.start.getTime() - 60000; let off = Math.round((tgt - Date.now())/60000);
+        if(dir < 0){ const H2 = hoursOf(new Date(tgt)); if(H2 && H2.cur >= 0) off = Math.round((H2.hours[H2.cur].start.getTime() + 60000 - Date.now())/60000); }
+        mo.off = Math.max(-720, Math.min(2160, off)); if(mo.sel && mo.sel[0] === "h") mo.sel = null; paintMoment(); }
+    });
+    clock.addEventListener("keydown", e => { if((e.key === "Enter" || e.key === " ") && (e.target.closest("[data-mnode]") || e.target.closest("[data-mhr]"))){ e.preventDefault(); pick(e.target, true); } });
+    const rg = q1(".m-scrub input", root);
+    rg.addEventListener("input", () => { mo.off = +rg.value; cancelAnimationFrame(mo.raf); mo.raf = requestAnimationFrame(() => paintMoment("scrub")); });
     clearTimeout(momTimer);
-    momTimer = setTimeout(() => { if(on && st.vue === "moment" && !document.hidden) renderMoment(); }, Math.max(30000, Math.min(cur.end - now + 1500, 300000)));
+    momTimer = setTimeout(() => { if(on && st.vue === "moment" && !document.hidden){ const r2 = q1("#v-m-moment"); if(r2 && r2.contains(document.activeElement) && document.activeElement.type === "range") return; renderMoment(true); } }, Math.max(30000, Math.min(c.cur.end - c.now + 1500, 300000)));
   }
-
   /* ---------- L'ATELIER ---------- */
   let at = {tool:null, arg:null};
   const TOOLS = [
