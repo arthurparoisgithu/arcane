@@ -1833,8 +1833,8 @@ button.pt-astre:hover{border-color:var(--ink);background:color-mix(in srgb,var(-
 .cmp-time b{position:absolute;bottom:11px;left:50%;transform:translateX(-50%);font:600 11px var(--f-ui);letter-spacing:.08em;color:var(--ink-soft);white-space:nowrap}
 .cmp-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;align-items:start}
 .cmp-col{margin:0;display:grid;gap:10px}
-.cmp-art{aspect-ratio:7/12;display:grid;place-items:center;overflow:hidden;border-radius:6px;background:color-mix(in srgb,var(--ink) 4%,transparent)}
-.cmp-art img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 6px 12px rgba(29,35,64,.18))}
+.cmp-art{position:relative;aspect-ratio:1/2;min-height:0;border-radius:6px}
+.cmp-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;display:block;filter:drop-shadow(0 6px 12px rgba(29,35,64,.18))}
 .cmp-lost{width:100%;height:100%;display:grid;place-items:center;border:1px dashed color-mix(in srgb,var(--ink) 25%,transparent);border-radius:6px;font:italic 15px var(--f-text);color:var(--ink-soft)}
 .cmp-col figcaption{display:grid;gap:2px}
 .cmp-date{font:600 11px var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--vermillon)}
