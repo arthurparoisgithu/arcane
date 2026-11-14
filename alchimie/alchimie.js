@@ -94,7 +94,7 @@
         ${hr && hr.m ? `<button type="button" class="al-card al-tcard" data-algo="labo:metaux:${hr.m.id}" style="--mc:${hr.m.hex}">
           <span class="al-tk">L'heure qu'il est</span><span class="al-tg">${glyph(hr.m.id, "draw")}</span>
           <b>Heure de ${h(hr.m.planete.replace(/^l[ae] /, ""))}</b><span class="al-tm">${h(hr.m.nom)}, jusqu'à ${hr.fin.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"})}</span>
-          <span class="al-tx">Chaque heure du jour a sa planète, donc son métal. Le détail est dans la Magie, onglet Le moment.</span>${badge("trad")}</button>` : ""}
+          <span class="al-tx">Chaque heure du jour a sa planète, donc son métal. Le détail est dans la Magie, onglet Aujourd'hui.</span>${badge("trad")}</button>` : ""}
         <article class="al-card al-tcard al-tcard-op">
           <span class="al-tk">L'opération du mois</span><span class="al-tg al-tg-txt">${h(SIGN_FR[si])}</span>
           <b>${h(op[1])}</b><span class="al-tm">${nb(h(op[2]))}</span>
@@ -255,7 +255,7 @@
     histoire:`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10M7 21h10"/><path d="M8 3c0 4.5 4 5.5 4 9s-4 4.5-4 9M16 3c0 4.5-4 5.5-4 9s4 4.5 4 9"/></svg>`,
     carnet:`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="1.6"/><path d="M9 3.5v17M12.2 8h3.6M12.2 11.5h3.6" stroke-width="1.3"/></svg>`
   };
-  const LAB = {athanor:["L'athanor","Athanor"], labo:["Le laboratoire","Labo"], ecole:["L'école","École"], histoire:["Histoire","Histoire"], carnet:["Le carnet","Carnet"]};
+  const LAB = {athanor:["Aujourd'hui","Jour"], labo:["Pratiquer","Pratiquer"], ecole:["Apprendre","Apprendre"], histoire:["Histoire","Histoire"], carnet:["Carnet","Carnet"]};
   const FOOT = `<p class="foot-line">L'alchimie est présentée ici comme une histoire, un patrimoine d'images et un langage symbolique, pour apprendre et réfléchir. Elle ne remplace pas l'avis d'un médecin ou d'un psychologue, et aucune expérience chimique n'est proposée. <button type="button" class="foot-cred" data-credits>Crédits et sources</button></p>`;
   let on = false, inited = false, nav = null, otherFoot = "";
   const active = () => on;

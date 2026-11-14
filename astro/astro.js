@@ -820,7 +820,7 @@
     const root = q1("#v-a-moi"), total = ASTRO_COURS.reduce((t, m) => t + m.lecons.length, 0);
     const sel = (name, v) => `<select data-sys="${name}">${Object.entries(SYS_NOM).map(([k, n]) => `<option value="${k}"${v === k ? " selected" : ""}>${cap(n)}</option>`).join("")}</select>`;
     root.innerHTML = `<header class="a-hero"><p class="eyebrow">Mon espace · astrologie</p><h1>Mon espace</h1><p class="a-lede">Ton lieu, tes thèmes et ta progression. Tout reste sur cet appareil.</p></header>
-      <section class="a-card a-set"><h2>Le lieu du ciel du jour</h2><p>Pour calculer l'Ascendant, les maisons et les heures planétaires de l'onglet Ciel.</p>
+      <section class="a-card a-set"><h2>Le lieu du ciel du jour</h2><p>Pour calculer l'Ascendant, les maisons et les heures planétaires de l'onglet Aujourd'hui.</p>
         <div class="a-row2"><input id="a-lieu" list="a-cities2" value="${h(st.lieu.nom)}" aria-label="Ville"><datalist id="a-cities2">${window.ArcanesVilles ? "" : cityOpts()}</datalist><button type="button" class="btn small" id="a-lieu-ok">Enregistrer</button></div><p class="help" id="a-lieu-st"></p></section>
       <section class="a-card a-set"><h2>Les réglages de calcul</h2><p>L'école de lecture, Tradition ou Moderne, se choisit là où on voit son effet : sous la roue du Ciel et en tête de Mon thème. Elle vaut partout. Aujourd'hui : <b>${school() === "tradition" ? "Tradition" : "Moderne"}</b>.</p>
         <button type="button" class="btn ghost small" data-popen="outils:reglages">Maisons, orbes, zodiaque</button></section>
@@ -850,7 +850,7 @@
     histoire:`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10M7 21h10"/><path d="M8 3c0 4.5 4 5.5 4 9s-4 4.5-4 9M16 3c0 4.5-4 5.5-4 9s4 4.5 4 9"/></svg>`,
     moi:`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.6" r="3.6"/><path d="M4.8 20.2c.9-3.7 3.8-5.8 7.2-5.8s6.3 2.1 7.2 5.8"/></svg>`
   };
-  const LAB = {ciel:["Le ciel","Ciel"], theme:["Mon thème","Thème"], apprendre:["L'école","École"], histoire:["Histoire","Histoire"], moi:["Mon espace","Moi"]};
+  const LAB = {ciel:["Aujourd'hui","Jour"], theme:["Pratiquer","Pratiquer"], apprendre:["Apprendre","Apprendre"], histoire:["Histoire","Histoire"], moi:["Carnet","Carnet"]};
   let tNav, aNav, foot, tarotFoot = "", pillEl = null;
   const ASTRO_FOOT = `<p class="foot-line">L'astrologie est proposée ici comme un langage symbolique et un patrimoine culturel, pour réfléchir et apprendre : elle ne remplace pas l'avis d'un médecin, d'un juriste ou d'un conseiller financier. <button type="button" class="foot-cred" data-credits>Crédits et sources</button></p>`;
   const reduce = () => { try{ return matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){ return false; } };

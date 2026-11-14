@@ -391,7 +391,7 @@
     histoire:`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h10.5a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H8.5"/><path d="M6.5 4.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h9.5a2 2 0 0 0 2-2V8.5"/><path d="M8 11.5h7M8 14.5h5" stroke-width="1.1"/></svg>`,
     carnet:`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3.5h11.5a1.5 1.5 0 0 1 1.5 1.5v14.5a1.5 1.5 0 0 1-1.5 1.5H5z"/><path d="M8 3.5v17"/><path d="M20.5 3.8l-6.2 8.4-.6 2.4 2.1-1.4 6.2-8.4z" stroke-width="1.05"/></svg>`
   };
-  const LAB = {moment:["Le moment","Moment"], atelier:["L'atelier","Atelier"], ecole:["L'école","École"], histoire:["Histoire","Histoire"], carnet:["Le carnet","Carnet"]};
+  const LAB = {moment:["Aujourd'hui","Jour"], atelier:["Pratiquer","Pratiquer"], ecole:["Apprendre","Apprendre"], histoire:["Histoire","Histoire"], carnet:["Carnet","Carnet"]};
   const FOOT = `<p class="foot-line">La magie est présentée ici comme un patrimoine culturel et une pratique symbolique, pour réfléchir et apprendre : elle ne remplace pas l'avis d'un médecin, d'un psychologue, d'un juriste ou d'un conseiller financier. <button type="button" class="foot-cred" data-credits>Crédits et sources</button></p>`;
   let mNav = null, inited = false, on = false, otherFoot = "";
   const active = () => on;

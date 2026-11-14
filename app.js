@@ -769,8 +769,8 @@ function renderApprendre(){
   if(lq.mode === "lesson") root.innerHTML = deckText(lessonHTML(lq.lesson));
   else if(lq.mode === "key") root.innerHTML = lq.lesson.id === "histoire" ? keyHTML(lq.lesson) : deckText(keyHTML(lq.lesson));
   else if(lq.mode === "quiz") root.innerHTML = quizHTML();
-  else root.innerHTML = deckText(learnHomeHTML());
-  bindApprendre();
+  else root.innerHTML = subtabsHTML("quiz") + deckText(learnHomeHTML());
+  bindApprendre(); if(root.querySelector(".subtabs")) bindSubtabs(root);
 }
 
 function learnHomeHTML(){
@@ -4172,8 +4172,8 @@ function showOnboarding(step=0){
 function subtabsHTML(cur){
   /* ordre : Sola Busca et Grand Etteilla : Système, Chemin, Lames, Symboles ; les autres : Chemin, Lames, Arbre de Vie, Symboles */
   const chemin = ["chemin", DECK_ID === "et" ? "Le chemin d'Etteilla" : DECK_ID === "sb" ? "La procession" : `Le chemin ${deNom(byId("mat").nom)}`];
-  const tabs = deck().tree ? [chemin, ["lames","Lames"], ["arbre","L'Arbre de Vie"], ["sym","Symboles"]]
-    : [[deck().own.id, "Système"], chemin, ["lames","Lames"], ["sym","Symboles"]];
+  const tabs = deck().tree ? [chemin, ["lames","Lames"], ["arbre","L'Arbre de Vie"], ["sym","Symboles"], ["quiz","Quiz"]]
+    : [[deck().own.id, "Système"], chemin, ["lames","Lames"], ["sym","Symboles"], ["quiz","Quiz"]];
   return `<div class="subtabs" role="group" aria-label="Apprendre">${tabs.map(([k,l])=>`<button type="button" class="subtab${cur===k?" on":""}" data-sub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div>`;
 }
 function bindSubtabs(root){
@@ -4182,6 +4182,7 @@ function bindSubtabs(root){
   root.querySelectorAll("[data-sub]").forEach(b => b.onclick = () => {
     const k = b.dataset.sub;
     if(k === "chemin") setView("chemin");
+    else if(k === "quiz"){ lq.mode = "home"; setView("apprendre"); }
     else { lamesSub = k; if(state.view !== "lames") setView("lames"); else renderLames(); window.scrollTo({top:0}); }
   });
 }
@@ -7550,7 +7551,7 @@ function revealCards(container, animate){
 }
 
 /* ---------- Vues ---------- */
-const NAV_OF = {chemin:"lames"};
+const NAV_OF = {chemin:"lames", apprendre:"lames"};
 function setView(v){
   if(state.view === "tirer" && v !== "tirer") ritClear();
   state.view = v;
