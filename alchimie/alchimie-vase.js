@@ -43,8 +43,8 @@ window.AlchVase = (() => {
   const HUES = [[60,220,190],[120,90,230],[240,200,70],[70,200,110],[230,90,170],[80,150,240]];
 
   function create(cv, o = {}){
-    const S = Object.assign({p:0, heat:.2, fire:true, dry:0, stone:false, crown:false, crack:0, shake:0, ink:"206,170,104"}, o);
-    const V = {p:S.p, heat:S.heat, dry:S.dry, stone:S.stone ? 1 : 0};
+    const S = Object.assign({p:0, heat:.2, fire:true, dry:0, stone:false, crown:false, crack:0, shake:0, wind:0, ink:"206,170,104"}, o);
+    const V = {p:S.p, heat:S.heat, dry:S.dry, stone:S.stone ? 1 : 0, wind:0};
     const calm = reduce();
     let bub = [], vap = [], drp = [], flm = [], spk = [], t = 0, last = 0, raf = 0, alive = true, vis = true, k = 1;
     const acc = {b:0, v:0, d:0, f:0}, x = cv.getContext("2d"), api = {S, V, onFrame:null};
@@ -58,7 +58,7 @@ window.AlchVase = (() => {
     function update(dt){
       t += dt;
       V.p += (S.p - V.p)*Math.min(1, dt*1.15); V.heat += (S.heat - V.heat)*Math.min(1, dt*6); V.dry += (S.dry - V.dry)*Math.min(1, dt*1.4);
-      V.stone += ((S.stone ? 1 : 0) - V.stone)*Math.min(1, dt*1.2);
+      V.stone += ((S.stone ? 1 : 0) - V.stone)*Math.min(1, dt*1.2); V.wind += ((S.wind || 0) - V.wind)*Math.min(1, dt*4);
       if(S.shake > 0) S.shake = Math.max(0, S.shake - dt*1.8);
       const L = api.L = lerp(318, 408, V.dry) - V.heat*5, q = calm ? .35 : 1, wet = 1 - V.dry*.85;
       acc.b += dt*(1.5 + V.heat*V.heat*52)*wet*q;
@@ -72,7 +72,7 @@ window.AlchVase = (() => {
       bub = bub.filter(b => { b.y -= b.v*dt*(.6 + V.heat*.9); b.x += Math.sin(t*5 + b.w)*10*dt; return b.y > L + 1; });
       vap = vap.filter(p => { p.life += dt; p.y -= p.v*dt; p.x += Math.sin(t*1.3 + p.w)*9*dt; const hw = Math.max(3, halfW(p.y) - p.r*.35); p.x = clamp(p.x, 200 - hw, 200 + hw); return p.life < p.max && p.y > 58; });
       drp = drp.filter(d => { d.v += 34*dt; d.y += d.v*dt; return d.y < L; });
-      flm = flm.filter(f => { f.life += dt; f.x += f.vx*dt; f.y += f.vy*dt; if(f.y < 450 && Math.abs(f.x - 200) < 74){ f.vy *= 1 - 4*dt; f.vx += Math.sign(f.x - 200 || R() - .5)*300*dt; } return f.life < f.max; });
+      flm = flm.filter(f => { f.life += dt; f.vx += V.wind*190*dt; f.x += f.vx*dt; f.y += f.vy*dt; if(f.y < 450 && Math.abs(f.x - 200) < 74){ f.vy *= 1 - 4*dt; f.vx += Math.sign(f.x - 200 || R() - .5)*300*dt; } return f.life < f.max; });
       spk = spk.filter(s => { s.life += dt; s.x += s.vx*dt; s.y += s.vy*dt; s.vy += 120*dt; return s.life < s.max; });
     }
 
@@ -102,7 +102,7 @@ window.AlchVase = (() => {
       x.globalCompositeOperation = "lighter";
       if(S.fire){ const hh = 14 + V.heat*84;
         for(let i = 0; i < 9; i++){ const cx = 158 + i*10.5 + Math.sin(t*3.1 + i*1.9)*3, w = 9 + V.heat*7 + (i % 3)*1.5, mid = 1 - Math.abs(i - 4)/6.5,
-            hg = hh*mid*(.62 + .38*Math.sin(t*(6.5 + i*.83) + i*2.4))*(.85 + .15*Math.sin(t*13 + i)), sw = Math.sin(t*4.3 + i*1.3)*(4 + V.heat*7), by = 487;
+            hg = hh*mid*(.62 + .38*Math.sin(t*(6.5 + i*.83) + i*2.4))*(.85 + .15*Math.sin(t*13 + i)), sw = Math.sin(t*4.3 + i*1.3)*(4 + V.heat*7) + V.wind*(20 + 8*Math.sin(t*17 + i)), by = 487;
           for(let pass = 0; pass < 2; pass++){ const k2 = pass ? .52 : 1, ww = w*k2, h2 = hg*(pass ? .58 : 1);
             const gr = x.createLinearGradient(0, by, 0, by - h2);
             if(pass){ gr.addColorStop(0, "rgba(255,250,225,.8)"); gr.addColorStop(.6, "rgba(255,225,140,.45)"); gr.addColorStop(1, "rgba(255,200,90,0)"); }

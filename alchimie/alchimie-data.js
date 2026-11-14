@@ -317,7 +317,45 @@ window.ALCH_DATA = (() => {
       {x:33, y:65, t:"Les chiffres à l'envers", x2:"Trois lignes étranges. Lis-les de droite à gauche : Genèse 28, 11-12 ; Genèse 27, 28 et 39 ; Deutéronome 33, 13 et 28. Le premier passage est le songe de Jacob. Les deux autres parlent de « la rosée du ciel ». Or les planches suivantes montrent un couple qui recueille la rosée dans des draps tendus."},
       {x:90, y:5, t:"La Lune et les étoiles", x2:"C'est la nuit, le moment où la rosée se dépose. Dans ce livre, tout commence par elle."},
       {x:82, y:85, t:"Les rosiers", x2:"Deux branches de rosier nouées encadrent la scène. La rose est une des fleurs préférées des alchimistes : le Rosaire des philosophes lui doit son nom."},
-      {x:55, y:94, t:"La Rochelle, 1677", x2:"« Rupellae » : à La Rochelle, chez Pierre Savouret, avec privilège du roi. Un livre d'alchimie imprimé tout à fait légalement, sous Louis XIV."}]}
+      {x:55, y:94, t:"La Rochelle, 1677", x2:"« Rupellae » : à La Rochelle, chez Pierre Savouret, avec privilège du roi. Un livre d'alchimie imprimé tout à fait légalement, sous Louis XIV."}]},
+    {img:"m:lab", court:"Prier et travailler", src:"Khunrath, Amphitheatrum sapientiae aeternae · 1595 – 1609", t:"L'oratoire et le laboratoire",
+     intro:"Une seule pièce, deux moitiés. À gauche on prie, à droite on travaille au fourneau. C'est l'image la plus célèbre de l'alchimiste, et un programme : l'un ne va pas sans l'autre.",
+     pts:[
+      {x:14, y:45, t:"L'oratoire", x2:"À gauche, une tente dressée comme une chapelle. C'est l'oratoire, le lieu de la prière. Pour Khunrath, médecin et luthérien fervent, l'art est d'abord un don de Dieu : on le demande avant de le chercher."},
+      {x:24, y:82, t:"L'alchimiste à genoux", x2:"Il est à genoux, les bras ouverts, tourné vers la tente. On ne le voit pas au fourneau : la gravure le montre au moment où il s'arrête de travailler."},
+      {x:80, y:42, t:"Le laboratoire", x2:"À droite, le fourneau, les cornues et les fioles sur leur étagère. Les deux colonnes de la cheminée portent chacune un mot : Raison et Expérience. Les mêmes mots que dans l'emblème XLII de Maier."},
+      {x:47, y:52, t:"La porte du fond", x2:"Au-dessus de la porte, au bout de la salle, une devise en latin : « Dormiens vigila », en dormant, veille. Même le repos fait partie du travail."},
+      {x:50, y:92, t:"La table aux instruments", x2:"Au premier plan, une table couverte d'instruments de musique. Une inscription explique leur présence : la musique sacrée chasse la tristesse et les mauvais esprits. On dit souvent que « laboratoire » réunit labor et oratoire. C'est un joli jeu de mots, pas une étymologie."}]},
+    {img:"clef", court:"Le lion et le serpent", src:"Basile Valentin, douzième clef · gravure de Merian", t:"La dernière clef",
+     intro:"La dernière des douze clefs. Le texte parle de la fin de l'Œuvre : il faut unir la pierre à de l'or pur, « comme le levain à la pâte ». L'image, elle, montre un atelier où chaque objet veut dire quelque chose.",
+     pts:[
+      {x:12, y:45, t:"Le fourneau", x2:"Un fourneau en forme de tonneau, en plein feu. À la fin de l'Œuvre, le feu est au plus fort : c'est le quatrième degré, la flamme nue."},
+      {x:36, y:13, t:"Le Soleil et la Lune", x2:"Accrochés au mur comme deux enseignes : l'or et l'argent, le soufre et le mercure, le roi et la reine. Les deux principes président à l'opération."},
+      {x:35, y:37, t:"Les fleurs et le signe", x2:"Dans un pot, deux fleurs, et au-dessus le signe du mercure. La matière « fleurit » : les alchimistes parlent de fleurs pour ce qui monte et se dépose en cristaux sur les parois du vase."},
+      {x:55, y:40, t:"L'artiste", x2:"Il ne regarde ni le feu ni les fleurs : il nous regarde. D'une main il désigne le pot, comme on montre un résultat."},
+      {x:85, y:36, t:"La balance", x2:"Sur la table, une balance. Le poids est l'obsession des recettes sérieuses : combien de pierre pour combien d'or. C'est aussi par la balance que la chimie remplacera l'alchimie, deux siècles plus tard."},
+      {x:72, y:74, t:"Le lion et le serpent", x2:"Un lion dévore un serpent. On sait lire ce genre de scène : dévorer, c'est absorber. Le fixe (le lion, sans ailes, bien campé) avale le volatil (le serpent). La matière ne s'envolera plus."}]},
+    {img:"p_union", court:"Le roi et la reine", src:"Splendor solis, quatrième planche · XVIe siècle", t:"Les deux principes",
+     intro:"Avant les sept vases, le Splendor solis présente les deux personnages de toute l'histoire. Tout ce qui est à gauche répond à ce qui est à droite.",
+     pts:[
+      {x:30, y:15, t:"La Lune", x2:"Au-dessus de la reine, une Lune au visage bleu. Elle est froide et humide : c'est le côté de l'eau, de l'argent, du mercure."},
+      {x:67, y:15, t:"Le Soleil", x2:"Au-dessus du roi, un Soleil rouge. Il est chaud et sec : c'est le côté du feu, de l'or, du soufre."},
+      {x:31, y:45, t:"La reine", x2:"Vêtue de bleu et de blanc, elle parle la première : sa main est levée vers le roi. Dans le manuscrit, sa banderole porte les mots « lait de vierge », un des noms de couverture du mercure des philosophes."},
+      {x:68, y:46, t:"Le roi", x2:"Vêtu de rouge, il tient un sceptre où s'enroule une banderole. On y lit, dans le manuscrit : « Coagule le masculin. » Dissoudre et coaguler : les deux gestes de l'art, un par personnage."},
+      {x:50, y:88, t:"Sous leurs pieds", x2:"Regarde sur quoi ils se tiennent. Elle, sur une boule sombre : la terre, la matière noire du début. Lui, sur un feu. L'Œuvre devra les réunir : les textes parlent de mariage, et les images suivantes le montrent."}]}
+  ];
+  /* ---------- les niveaux du Grand Œuvre et les défis du jour ---------- */
+  const NIVEAUX = [
+    {id:"apprenti", nom:"Apprenti", x:"Le feu est docile et les zones sont larges.", cool:.86, band:1.14, vent:0, buche:0},
+    {id:"compagnon", nom:"Compagnon", x:"Des courants d'air refroidissent le feu.", cool:1, band:1, vent:1, buche:0},
+    {id:"maitre", nom:"Maître", x:"Zones étroites, courants d'air, bûches qui s'embrasent.", cool:1.16, band:.8, vent:1.35, buche:1}
+  ];
+  const DEFIS = [
+    {id:"fragile", nom:"Le vase fragile", x:"Conduis l'Œuvre jusqu'au rouge sans une seule fêlure."},
+    {id:"oeil", nom:"À l'œil", x:"La zone à tenir n'est plus affichée. Fie-toi aux bulles, aux vapeurs et à la couleur."},
+    {id:"montre", nom:"Contre la montre", x:"Atteins le rouge en moins de deux minutes trente."},
+    {id:"vent", nom:"Grand vent", x:"Les courants d'air sont deux fois plus fréquents."},
+    {id:"vif", nom:"Feu vif", x:"Le feu retombe bien plus vite : il faut souffler souvent, et court."}
   ];
   const CRED = {
     p_noir:"Le soleil noir, d'après le Splendor solis, aquarelle de E. A. Ibbs (Wellcome Collection, CC BY 4.0)",
@@ -341,5 +379,5 @@ window.ALCH_DATA = (() => {
     "m:lab":"Heinrich Khunrath, l'oratoire-laboratoire, Amphitheatrum sapientiae aeternae, 1609"
   };
 
-  return {G, METAUX, PHASES, OEUVRE, FEUX, ETAPES, OPS, PORTES, ELEMENTS, SIGNES, PIECES, BESTIAIRE, GLOSS, HIST, VRAI, PLANCHES, CRED, EMBLEMES};
+  return {G, METAUX, PHASES, OEUVRE, FEUX, ETAPES, OPS, PORTES, ELEMENTS, SIGNES, PIECES, BESTIAIRE, GLOSS, HIST, VRAI, PLANCHES, CRED, EMBLEMES, NIVEAUX, DEFIS};
 })();

@@ -21,7 +21,7 @@
 
   /* ---------- mémoire ---------- */
   const STORE = "arcanes.alchimie.v1";
-  const DEF = () => ({vue:"athanor", done:[], oeuvre:null, archives:[], planches:[], grand:{n:0, best:null, last:null, felures:0}, signes:0});
+  const DEF = () => ({vue:"athanor", done:[], oeuvre:null, archives:[], planches:[], grand:{n:0, best:null, last:null, felures:0, bestL:{}}, signes:0, defis:[], niveau:0});
   const load = () => { try{ const v = JSON.parse(localStorage.getItem(STORE) || "{}"); const s = Object.assign(DEF(), v && typeof v === "object" ? v : {}); s.grand = Object.assign(DEF().grand, s.grand || {}); return s; }catch(e){ return DEF(); } };
   let st = load();
   const save = () => { try{ localStorage.setItem(STORE, JSON.stringify(st)); }catch(e){} };
@@ -135,16 +135,17 @@
   let ev = {lec:null}, quizSt = {};
   const LECS = K.flatMap(m => m.lec.map(l => Object.assign({mod:m}, l)));
   const lecOf = id => LECS.find(l => l.id === id);
-  const MODIMG = {m1:["table","50% 30%"], m2:["clef","30% 40%"], m3:["p_union","50% 22%"], m4:["ata42","20% 30%"]};
+  const MODIMG = {m1:["table","50% 30%"], m2:["clef","30% 40%"], m3:["p_union","50% 22%"], m4:["ata42","20% 30%"], m5:["wright","50% 70%"]};
+  const NOMBRE = n => ["zéro","une","deux","trois","quatre","cinq","six","sept","huit","neuf","dix","onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit"][n] || String(n);
   function renderEcole(){
     const root = q1("#v-al-ecole"); if(!root) return;
     if(ev.lec && lecOf(ev.lec)) return renderLecon(root, lecOf(ev.lec));
     const n = st.done.length, tot = LECS.length, next = LECS.find(l => !st.done.includes(l.id));
-    root.innerHTML = `<header class="al-hero"><p class="eyebrow">Douze leçons, quatre modules</p><h1>L'école</h1>${rule4}
+    root.innerHTML = `<header class="al-hero"><p class="eyebrow">${cap(NOMBRE(LECS.length))} leçons, ${NOMBRE(K.length)} modules</p><h1>L'école</h1>${rule4}
         <p class="al-lede">Un cours d'alchimie pour comprendre de quoi il s'agit vraiment : les idées, le laboratoire, le Grand Œuvre, les textes et les images. Chaque leçon se lit en six minutes et se termine par une pratique sans danger.</p>
         <div class="al-prog" role="img" aria-label="${n} leçons sur ${tot}"><i style="width:${Math.round(n/tot*100)}%"></i></div>
         <p class="help al-left">${n ? `${n} leçon${n > 1 ? "s" : ""} sur ${tot}.` : "Tu n'as pas encore commencé."} ${next ? `<button type="button" class="linkbtn" data-algo="ecole:${next.id}">${n ? "Continuer" : "Commencer"} : ${h(next.t)}</button>` : "Tu as tout lu. Bravo."}</p></header>
-      ${K.map((m, i) => `<section class="al-mod"><div class="al-mod-h"><span class="al-mod-n">${["I","II","III","IV"][i]}</span><div><h2>${h(m.t)}</h2><p>${h(m.sous)}</p></div><img class="al-mod-img" src="${IMG(MODIMG[m.id][0])}" style="object-position:${MODIMG[m.id][1]}" alt="" loading="lazy" decoding="async"></div>
+      ${K.map((m, i) => `<section class="al-mod"><div class="al-mod-h"><span class="al-mod-n">${["I","II","III","IV","V","VI"][i]}</span><div><h2>${h(m.t)}</h2><p>${h(m.sous)}</p></div><img class="al-mod-img" src="${IMG(MODIMG[m.id][0])}" style="object-position:${MODIMG[m.id][1]}" alt="" loading="lazy" decoding="async"></div>
         <div class="al-lecs">${m.lec.map(l => `<button type="button" class="al-card al-lec ${st.done.includes(l.id) ? "done" : ""}" data-algo="ecole:${l.id}"><span class="al-lec-t">${h(l.t)}</span><span class="al-lec-a">${nb(h(l.acc))}</span><span class="al-lec-m">${st.done.includes(l.id) ? "Lue" : l.dur + " min"}</span></button>`).join("")}</div></section>`).join("")}
       <section><h2 class="al-k">Le bestiaire</h2><p class="al-p al-narrow">Les animaux des images alchimiques ne sont pas un décor. Chacun désigne une matière, une étape ou un geste.</p>
         <dl class="al-dl al-dl-2">${D.BESTIAIRE.map(b => `<div><dt>${h(b[0])}</dt><dd>${nb(h(b[1]))}</dd></div>`).join("")}</dl></section>
@@ -228,7 +229,7 @@
         ${o ? `<div class="al-card al-oe-card"><p class="eyebrow">${h(D.OEUVRE[o.phase].nom)} · commencée le ${fmtD(o.debut)}</p><h3>« ${h(o.sujet)} »</h3>${notes(o) || `<p class="al-p">Aucune note pour l'instant.</p>`}<div class="al-acts"><button type="button" class="btn small" data-algo="labo:oeuvre">Reprendre</button></div></div>`
           : `<div class="al-card"><p class="al-p">Aucune Œuvre en cours. Tu peux en commencer une dans le laboratoire : tu choisis ce que tu veux transformer, et l'outil t'accompagne à travers les quatre couleurs.</p><div class="al-acts"><button type="button" class="btn small" data-algo="labo:oeuvre">Commencer mon Œuvre</button></div></div>`}</section>
       ${st.archives.length ? `<section><h2 class="al-k">Les Œuvres accomplies</h2>${st.archives.map(a => `<details class="al-card al-arch"><summary><span>« ${h(a.sujet)} »</span><small>${fmtD(a.debut)} → ${fmtD(a.fin)}</small></summary>${notes(a)}</details>`).join("")}</section>` : ""}
-      <section><h2 class="al-k">Le Grand Œuvre</h2><div class="al-card"><p class="al-p">${g.n ? `Tu as conduit le feu jusqu'au rouge ${g.n} fois. Ton meilleur temps : ${fmtT(g.best)}. Le vase s'est fêlé ${g.felures || 0} fois en tout.` : "Tu n'as pas encore conduit le feu jusqu'au rouge."}</p><div class="al-acts"><button type="button" class="btn small ghost" data-algo="labo:jeu">${g.n ? "Rejouer" : "Essayer"}</button><button type="button" class="btn small ghost" data-algo="labo:planches">Voir les planches</button></div></div></section>
+      <section><h2 class="al-k">Le Grand Œuvre</h2><div class="al-card"><p class="al-p">${g.n ? `Tu as conduit le feu jusqu'au rouge ${g.n} fois. Ton meilleur temps : ${fmtT(g.best)}. Le vase s'est fêlé ${g.felures || 0} fois en tout.` : "Tu n'as pas encore conduit le feu jusqu'au rouge."} ${(st.defis || []).length ? `Défis du jour réussis : ${st.defis.length}.` : ""}</p><div class="al-acts"><button type="button" class="btn small ghost" data-algo="labo:jeu">${g.n ? "Rejouer" : "Essayer"}</button><button type="button" class="btn small ghost" data-algo="labo:planches">Voir les planches</button></div></div></section>
       <section class="al-card"><h3>La sauvegarde</h3><p class="al-p">La sauvegarde d'Arcanes emporte aussi ton carnet d'alchimie. Elle se fait depuis l'espace du tarot.</p>
         <div class="al-acts"><button type="button" class="linkbtn danger" data-alreset>Effacer mes données d'alchimie</button></div></section>`;
     if(E) E.bind(root);

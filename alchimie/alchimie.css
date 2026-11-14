@@ -182,6 +182,20 @@ button.al-tcard:hover{transform:translateY(-2px);border-color:color-mix(in srgb,
 .al-g-stats dt{font:700 10.5px var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
 .al-g-stats dd{margin:2px 0 0;font:400 25px var(--f-display)}
 
+.al-seg.al-g-niv{grid-template-columns:repeat(3,1fr);max-width:420px;margin:16px 0 8px}
+.al-g-niv button{padding:10px 6px;font-size:15px}
+.al-g-nivx{font:400 14.5px/1.4 var(--f-ui);color:var(--ink-soft);margin:0 0 6px;min-height:1.4em}
+.al-g-defi{margin-top:22px;max-width:480px;border-left:3px solid var(--al-acc)}
+.al-g-defi.ok{border-left-color:#3f9a78}
+.al-g-defi .btn{margin-top:4px}
+.al-g-verdict{font:600 16px/1.4 var(--f-ui);padding:10px 14px;border-radius:10px;border:1px solid currentColor;margin:0 0 14px;max-width:60ch}
+.al-g-verdict.ok{color:#74c2ad} .al-g-verdict.ko{color:var(--vermillon)}
+.al-g-wind{position:absolute;left:0;right:0;top:14%;margin:0;text-align:center;font:700 11px var(--f-ui);letter-spacing:.2em;text-transform:uppercase;color:#bfe3ff;opacity:0;transition:opacity .3s;pointer-events:none;text-shadow:0 0 12px #6fb7ff}
+.al-game.windy .al-g-wind{opacity:1}
+.al-game.windy .al-g-stage{box-shadow:inset 0 0 0 6px rgba(0,0,0,.35),inset 0 0 0 7px rgba(150,200,255,.5),0 30px 60px -30px rgba(0,0,0,.6)}
+.al-game[data-defi="oeil"] .al-gauge-band{opacity:0}
+.al-game[data-defi="oeil"] .al-gauge.ok .al-gauge-needle{box-shadow:0 0 10px #fff}
+
 /* ---------- mon Œuvre ---------- */
 .al-oe{display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);gap:28px;align-items:start}
 .al-oe-niche{padding-top:26px;position:sticky;top:16px}
@@ -427,7 +441,7 @@ button.al-tcard:hover{transform:translateY(-2px);border-color:color-mix(in srgb,
   .al-game .al-vase{max-width:min(340px,calc(42vh*400/520));transition:max-width .5s}
   .al-game:not([data-state="play"]) .al-vase{max-width:min(300px,calc(27vh*400/520))}
   .al-game:not([data-state="play"]) .al-gauge{opacity:0}
-  .al-game[data-state="intro"] .al-vase{max-width:min(300px,calc(21vh*400/520))}
+  .al-game[data-state="intro"] .al-vase{max-width:min(300px,calc(18vh*400/520))}
   .al-game[data-state="intro"] .al-g-stage{padding-top:14px}
   .al-game[data-state="intro"] .al-g-steps{margin-bottom:12px}
   .al-game{scroll-margin-top:8px}

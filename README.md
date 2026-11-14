@@ -4,8 +4,8 @@ Une application pour apprendre et pratiquer quatre arts : le **tarot**, l'**astr
 
 - **Tarot** : sept jeux historiques (Marseille de Conver, Waite-Smith, Sola Busca, Grand Etteilla, Wirth…), tirages, cours, histoire, journal.
 - **Astrologie** : le ciel du jour calculé sur l'appareil avec tes transits en tête, l'Observatoire en quatre ateliers (point de vue Terre ou Soleil, rétrogradations, aspects, Lune), la comparaison de deux thèmes, thème natal (lieux de naissance dans toutes les communes de France et les villes du monde) avec lecture guidée, lames de tarot du thème, maisons expliquées en clair, calendrier de l'année et journal des transits, école, histoire.
-- **Magie** : heures planétaires, carrés d'Agrippa, atelier du sigil, Arbre de vie, géomancie, rituels guidés, cycle de 28 jours, cours en quatorze modules et quarante-deux leçons.
-- **Alchimie** : l'athanor (métal du jour, opération du mois), le Grand Œuvre à conduire au soufflet dans un vase animé, « Mon Œuvre » (une pratique en quatre couleurs avec journal), la roue des métaux, le carré des éléments, la table des signes, huit planches du Splendor solis à gagner et trois emblèmes commentés, un cours de douze leçons, une histoire illustrée.
+- **Magie** : heures planétaires, carrés d'Agrippa, atelier du sigil, Arbre de vie, géomancie, rituels guidés, cycle de 28 jours, cours en quatorze modules et quarante-deux leçons sur la carte d'un château, « Composer un rituel » (intention, planète, heure, lame, métal, sigil).
+- **Alchimie** : l'athanor (métal du jour, opération du mois), le Grand Œuvre à conduire au soufflet dans un vase animé, « Mon Œuvre » (une pratique en quatre couleurs avec journal), la roue des métaux, le carré des éléments, la table des signes, huit planches du Splendor solis à gagner et six emblèmes commentés, un cours de quinze leçons, une histoire illustrée. Le jeu a trois niveaux et un défi par jour.
 
 Tout fonctionne dans le navigateur, sans serveur ni compte : les données personnelles (journal, thèmes, carnet) restent sur l'appareil. Une sauvegarde se fait depuis Mon espace.
 

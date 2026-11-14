@@ -4908,7 +4908,7 @@ function mergeBackup(d){
   const MA = okObj(cur.magie), MB = okObj(d.magie), byT = (a, b, k) => { const m = new Map(); [...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])].forEach(x => { if(x && x[k] != null && !m.has(x[k])) m.set(x[k], x); }); return [...m.values()]; };
   const magieM = Object.assign({}, MB, MA, { done: uni(MA.done, MB.done), best: mergeBest(MA.best, MB.best), carnet: byT(MA.carnet, MB.carnet, "id").sort((a,b) => b.t - a.t).slice(0, 400), sceaux: byT(MA.sceaux, MB.sceaux, "id").slice(0, 200), fiches: uni(MA.fiches, MB.fiches) });
   const LA = okObj(cur.alchimie), LB = okObj(d.alchimie), GA = okObj(LA.grand), GB = okObj(LB.grand);
-  const alchM = Object.assign({}, LB, LA, { done: uni(LA.done, LB.done), planches: uni(LA.planches, LB.planches), archives: byT(LA.archives, LB.archives, "id").slice(0, 40), signes: Math.max(LA.signes|0, LB.signes|0),
+  const alchM = Object.assign({}, LB, LA, { done: uni(LA.done, LB.done), planches: uni(LA.planches, LB.planches), archives: byT(LA.archives, LB.archives, "id").slice(0, 40), signes: Math.max(LA.signes|0, LB.signes|0), defis: uni(LA.defis, LB.defis).sort().slice(-400),
     grand: { n: Math.max(GA.n|0, GB.n|0), best: [GA.best, GB.best].filter(v => typeof v === "number").sort((a,b) => a - b)[0] ?? null, last: Math.max(GA.last|0, GB.last|0) || null, felures: Math.max(GA.felures|0, GB.felures|0) } });
   const added = journalM.length - cur.journal.length;
   const ok = writeKey(BACKUP_KEYS.journal, journalM.slice(0, 200)) && writeKey(BACKUP_KEYS.custom, [...cs.values()]) && writeKey(BACKUP_KEYS.learn, learnM)

@@ -13,15 +13,17 @@
      LE GRAND ŒUVRE : conduire le feu au soufflet, du noir au rouge
      ================================================================ */
   function jeu(root){
-    const E = D.ETAPES, N = E.length;
+    const E0 = D.ETAPES, N = E0.length, NV = D.NIVEAUX, today = new Date().toISOString().slice(0, 10), DJ = D.DEFIS[Math.floor(Date.now()/864e5) % D.DEFIS.length];
     let state = "intro", i = 0, heat = .1, prog = 0, danger = 0, blow = false, elapsed = 0, breaks = 0, lock = 0, vase = null, lastMsg = "";
+    let niv = Math.min(NV.length - 1, Math.max(0, st().niveau | 0)), defi = null, lost = false, wind = 0, nextEv = 8, evT = 0, evMsg = "";
     root.innerHTML = `<div class="al-game" data-state="intro">
       <div class="al-niche al-g-stage">
         <canvas class="al-vase" data-vase aria-label="Le vase sur son feu"></canvas>
         <div class="al-gauge" aria-hidden="true"><div class="al-gauge-track">${D.FEUX.map(f => `<span style="bottom:${f.de*100}%;height:${(f.a - f.de)*100}%"><em>${h(f.nom.replace(/^L[ae]s? /, ""))}</em></span>`).join("")}<i class="al-gauge-band"></i><i class="al-gauge-needle"></i></div></div>
+        <p class="al-g-wind" aria-hidden="true">Courant d'air</p>
       </div>
       <div class="al-g-panel">
-        <ol class="al-g-steps" aria-label="Les cinq étapes">${E.map((e, k) => `<li data-k="${k}" style="--pc:${phaseOf(e.ph).hex};--pc2:${phaseOf(e.ph).clair}"><i></i><span>${h(phaseOf(e.ph).lat)}</span></li>`).join("")}</ol>
+        <ol class="al-g-steps" aria-label="Les cinq étapes">${E0.map((e, k) => `<li data-k="${k}" style="--pc:${phaseOf(e.ph).hex};--pc2:${phaseOf(e.ph).clair}"><i></i><span>${h(phaseOf(e.ph).lat)}</span></li>`).join("")}</ol>
         <div class="al-g-info" data-info></div>
         <div class="al-g-live">
           <div class="al-g-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="Avancement de l'étape"><i></i></div>
@@ -37,60 +39,83 @@
     const setState = s => { state = s; game.dataset.state = s; };
     const steps = () => qa(".al-g-steps li", root).forEach((li, k) => { li.classList.toggle("done", k < i || state === "fin"); li.classList.toggle("cur", k === i && state !== "fin" && state !== "intro"); });
     const say = t => { if(t !== lastMsg){ lastMsg = t; msg.textContent = t; } };
+    /* l'étape telle qu'elle se joue : la zone et le refroidissement dépendent du niveau et du défi */
+    const eff = k => { const e = E0[k], L = NV[niv], c = (e.de + e.a)/2, hw = (e.a - e.de)/2*L.band; return {ph:e.ph, de:c - hw, a:c + hw, dur:e.dur, cool:e.cool*L.cool*(defi && defi.id === "vif" ? 1.4 : 1), dire:e.dire, fait:e.fait}; };
+    const ventF = () => Math.max(NV[niv].vent, defi && defi.id === "vent" ? 1 : 0)*(defi && defi.id === "vent" ? 2 : 1);
 
     function intro(){
-      setState("intro"); steps();
+      setState("intro"); steps(); const s = st(), fait = (s.defis || []).includes(today), g = s.grand;
       info.innerHTML = `<p class="eyebrow">Jeu · environ trois minutes</p><h1>Le Grand Œuvre</h1>${rule4}
-        <p class="al-p">Tu conduis le feu. La matière doit passer par cinq couleurs, et chacune demande sa chaleur : très douce pour le noir, forte pour le rouge.</p>
-        <p class="al-p">Maintiens le soufflet pour attiser, relâche pour laisser retomber. Garde l'aiguille dans la zone claire. Trop de feu, et le vase se fêle.</p>
+        <p class="al-p">Tu conduis le feu, du noir au rouge : cinq couleurs, cinq chaleurs. Maintiens le soufflet pour attiser, relâche pour laisser retomber, et garde l'aiguille dans la zone claire. Trop de feu, et le vase se fêle.</p>
+        <div class="al-seg al-g-niv" role="group" aria-label="Niveau">${NV.map((L, k) => `<button type="button" data-niv="${k}" aria-pressed="${k === niv}">${h(L.nom)}</button>`).join("")}</div>
+        <p class="al-g-nivx" data-nivx></p>
         <button type="button" class="btn big" data-start>Allumer le feu</button>
+        <div class="al-card al-g-defi${fait ? " ok" : ""}"><p class="al-src-k">Le défi du jour${fait ? " · réussi" : ""}</p><h3>${h(DJ.nom)}</h3><p class="al-p">${nb(h(DJ.x))}</p>
+          <button type="button" class="btn small ghost" data-defi>${fait ? "Le refaire" : "Relever le défi"}</button></div>
         <p class="help al-left">Les alchimistes qui ne juraient que par le soufflet avaient un surnom moqueur : les « souffleurs ». Les vrais maîtres, disaient les textes, savent surtout attendre.</p>`;
-      q1("[data-start]", info).onclick = start;
+      const nx = () => { const L = NV[niv], b = g.bestL && g.bestL[L.id]; q1("[data-nivx]", info).textContent = L.x + (b != null ? ` Ton meilleur temps : ${fmtT(b)}.` : ""); qa("[data-niv]", info).forEach((x, k) => x.setAttribute("aria-pressed", k === niv)); };
+      qa("[data-niv]", info).forEach(x => x.onclick = () => { niv = +x.dataset.niv; s.niveau = niv; save(); nx(); }); nx();
+      q1("[data-start]", info).onclick = () => start(null);
+      q1("[data-defi]", info).onclick = () => start(DJ);
     }
-    function start(){ i = 0; heat = .1; prog = 0; danger = 0; elapsed = 0; breaks = 0; Object.assign(vase.S, {p:0, dry:0, stone:false, crown:false, crack:0}); stage(); }
+    function start(d){ defi = d; lost = false; i = 0; heat = .1; prog = 0; danger = 0; elapsed = 0; breaks = 0; wind = 0; evT = 0; nextEv = 7 + Math.random()*5; game.dataset.defi = d ? d.id : "";
+      Object.assign(vase.S, {p:0, dry:0, stone:false, crown:false, crack:0, wind:0}); stage(); }
     function stage(){
-      const e = E[i], ph = phaseOf(e.ph); prog = 0; danger = 0; setState("play"); steps();
-      info.innerHTML = `<p class="eyebrow">Étape ${i + 1} sur ${N} · ${h(ph.lat)}</p><h2>${h(ph.nom)}</h2><p class="al-g-dire">${nb(h(e.dire))}</p>`;
+      const e = eff(i), ph = phaseOf(e.ph); prog = 0; danger = 0; setState("play"); steps();
+      info.innerHTML = `<p class="eyebrow">Étape ${i + 1} sur ${N} · ${h(ph.lat)} · ${h(defi ? defi.nom : NV[niv].nom)}</p><h2>${h(ph.nom)}</h2><p class="al-g-dire">${nb(h(e.dire))}</p>`;
       band.style.bottom = e.de*100 + "%"; band.style.height = (e.a - e.de)*100 + "%"; band.style.setProperty("--pc", ph.id === "noir" ? "#8c7fa6" : ph.hex);
       fill.style.setProperty("--pc", ph.id === "noir" ? "#8c7fa6" : ph.hex); fill.style.width = "0%";
       if(window.innerWidth <= 860) try{ game.scrollIntoView({behavior:"smooth", block:"start"}); }catch(x){}
     }
     function won(){
-      const e = E[i], ph = phaseOf(e.ph), P = D.PLANCHES[ph.planche], isNew = gagne(ph.planche), last = i === N - 1;
-      vase.S.p = ph.p; vase.burst(ph.id); blow = false; btn.classList.remove("on");
+      const e = eff(i), ph = phaseOf(e.ph), P = D.PLANCHES[ph.planche], isNew = gagne(ph.planche), last = i === N - 1;
+      vase.S.p = ph.p; vase.S.wind = 0; vase.burst(ph.id); blow = false; btn.classList.remove("on"); game.classList.remove("windy");
       if(last){ vase.S.stone = true; vase.S.crown = true; vase.S.dry = .92; }
       setState("plate"); steps(); qa(".al-g-steps li", root)[i].classList.add("done");
       info.innerHTML = `<div class="al-reward"><button type="button" class="al-reward-img" data-alplanche="${ph.planche}" aria-label="Agrandir la planche"><img src="${IMG(P.img)}" alt="${h(P.t)}"></button>
           <div><p class="eyebrow">${isNew ? "Planche gagnée" : "Planche"} · ${h(P.t)}</p><h2>${h(e.fait)}</h2><p class="al-p">${nb(h(ph.texte))}</p><p class="al-reward-src">${badge(ph.st)} ${nb(h(ph.src))}</p></div></div>
-        <button type="button" class="btn big" data-next>${last ? "Voir la pierre" : "Continuer : " + h(phaseOf(E[i + 1].ph).nom.toLowerCase())}</button>`;
+        <button type="button" class="btn big" data-next>${last ? "Voir la pierre" : "Continuer : " + h(phaseOf(E0[i + 1].ph).nom.toLowerCase())}</button>`;
       q1("[data-next]", info).onclick = () => { if(last) fin(); else { i++; stage(); } };
     }
     function fin(){
-      const s = st(), g = s.grand, t = Math.round(elapsed); g.n++; g.last = Date.now(); g.felures = (g.felures || 0) + breaks; const rec = g.best == null || t < g.best; if(rec) g.best = t; save();
+      const s = st(), g = s.grand, t = Math.round(elapsed), L = NV[niv]; g.n++; g.last = Date.now(); g.felures = (g.felures || 0) + breaks;
+      g.bestL = g.bestL || {}; const rec = g.bestL[L.id] == null || t < g.bestL[L.id]; if(rec) g.bestL[L.id] = t; if(g.best == null || t < g.best) g.best = t;
+      const ok = defi && !lost && (defi.id !== "montre" || t < 150); s.defis = s.defis || []; if(ok && !s.defis.includes(today)) s.defis.push(today); save();
       setState("fin"); steps();
       info.innerHTML = `<p class="eyebrow">L'Œuvre est accomplie</p><h1>La pierre</h1>${rule4}
+        ${defi ? `<p class="al-g-verdict ${ok ? "ok" : "ko"}">${ok ? `Défi du jour réussi : ${h(defi.nom)}.` : `Défi manqué : ${h(defi.nom)}. ${defi.id === "montre" ? "Il fallait moins de deux minutes trente." : defi.id === "fragile" ? "Le vase s'est fêlé." : ""} Tu peux le retenter.`}</p>` : ""}
         <p class="al-p">La matière est rouge, fixe, et ne craint plus le feu. Dans les textes, il ne reste qu'un geste : la « projection ». On jette un peu de pierre sur un métal fondu, et il devient or.</p>
         <p class="al-p">Personne n'y est jamais parvenu. Mais en cherchant, les alchimistes ont inventé le laboratoire.</p>
-        <dl class="al-g-stats"><div><dt>Ton temps</dt><dd>${fmtT(t)}${rec && g.n > 1 ? " · record" : ""}</dd></div><div><dt>Fêlures</dt><dd>${breaks}</dd></div><div><dt>Œuvres conduites</dt><dd>${g.n}</dd></div></dl>
-        <div class="al-acts"><button type="button" class="btn" data-algo="labo:oeuvre">${s.oeuvre ? "Reprendre mon Œuvre" : "Commencer mon Œuvre"}</button><button type="button" class="btn ghost" data-again>Recommencer</button><button type="button" class="btn ghost" data-algo="labo:planches">Voir les planches</button></div>
+        <dl class="al-g-stats"><div><dt>Ton temps</dt><dd>${fmtT(t)}${rec && g.n > 1 ? " · record" : ""}</dd></div><div><dt>Fêlures</dt><dd>${breaks}</dd></div><div><dt>Niveau</dt><dd>${h(L.nom)}</dd></div></dl>
+        <div class="al-acts"><button type="button" class="btn" data-again>Recommencer</button>${niv < NV.length - 1 && !breaks ? `<button type="button" class="btn ghost" data-up>Essayer en ${h(NV[niv + 1].nom.toLowerCase())}</button>` : ""}<button type="button" class="btn ghost" data-algo="labo:oeuvre">${s.oeuvre ? "Reprendre mon Œuvre" : "Commencer mon Œuvre"}</button><button type="button" class="btn ghost" data-algo="labo:planches">Voir les planches</button></div>
         <p class="help al-left">Le vrai Grand Œuvre, lui, se fait sur soi : c'est une lecture moderne, et c'est l'outil « Mon Œuvre ».</p>`;
-      q1("[data-again]", info).onclick = start;
+      q1("[data-again]", info).onclick = () => { vase.S.stone = false; vase.S.crown = false; vase.S.dry = 0; vase.S.p = 0; intro(); };
+      const up = q1("[data-up]", info); if(up) up.onclick = () => { niv++; s.niveau = niv; save(); start(null); };
     }
     vase && (vase.onFrame = dt => {
       if(state !== "play"){ const tg = state === "intro" ? .14 : state === "fin" ? .22 : heat; heat += (tg - heat)*Math.min(1, dt*.8); vase.S.heat = heat; if(vase.S.crack > 0) vase.S.crack = Math.max(0, vase.S.crack - dt*.5); needle.style.bottom = heat*100 + "%"; return; }
-      const e = E[i], ph = phaseOf(e.ph), prev = i ? phaseOf(E[i - 1].ph).p : 0;
-      elapsed += dt; if(lock > 0) lock -= dt;
+      const e = eff(i), ph = phaseOf(e.ph), prev = i ? phaseOf(E0[i - 1].ph).p : 0, vf = ventF();
+      elapsed += dt; if(lock > 0) lock -= dt; if(evT > 0) evT -= dt;
+      // les imprévus : un courant d'air qui refroidit, une bûche qui s'embrase
+      if(vf > 0 && lock <= 0){ nextEv -= dt*vf;
+        if(nextEv <= 0 && wind <= 0){ nextEv = 9 + Math.random()*8;
+          if(NV[niv].buche && Math.random() < .35){ heat = Math.min(1, heat + .09); evMsg = "Une bûche s'embrase. Laisse retomber."; evT = 2.4; vase.burst("feu"); }
+          else { wind = 2.3; evMsg = "Un courant d'air ! Souffle."; evT = 2.6; } } }
+      if(wind > 0){ wind -= dt; heat -= e.cool*(.6 + heat*1.2)*dt*1.7; }
+      vase.S.wind = wind > 0 ? 1 : 0; game.classList.toggle("windy", wind > 0);
       heat = clamp(heat + (blow ? .36 : 0)*dt - e.cool*(.6 + heat*1.2)*dt, 0, 1);
       const inB = heat >= e.de && heat <= e.a, hot = heat > e.a + .02;
       if(inB) prog = Math.min(1, prog + dt/e.dur);
       danger = hot ? danger + dt/1.9 : Math.max(0, danger - dt*1.3);
       if(vase.S.crack > 0) vase.S.crack = Math.max(0, vase.S.crack - dt*.35);
-      if(danger >= 1){ danger = 0; breaks++; prog = Math.max(0, prog - .45); heat = Math.max(.05, e.de - .1); vase.S.crack = 1; vase.S.shake = 1; lock = 2.8; blow = false; btn.classList.remove("on"); try{ navigator.vibrate && navigator.vibrate(120); }catch(x){} }
+      if(danger >= 1){ danger = 0; breaks++; prog = Math.max(0, prog - .45); heat = Math.max(.05, e.de - .1); vase.S.crack = 1; vase.S.shake = 1; lock = 2.8; blow = false; btn.classList.remove("on"); try{ navigator.vibrate && navigator.vibrate(120); }catch(x){}
+        if(defi && defi.id === "fragile" && !lost){ lost = true; toast("Défi manqué : le vase s'est fêlé. Tu peux finir l'Œuvre quand même."); } }
       vase.S.heat = heat; vase.S.shake = Math.max(vase.S.shake, danger*.55);
       vase.S.p = lerp(prev, ph.p, ease(prog)); if(ph.id === "rouge") vase.S.dry = prog*.92;
       needle.style.bottom = heat*100 + "%"; fill.style.width = prog*100 + "%"; bar.setAttribute("aria-valuenow", Math.round(prog*100));
       gauge.classList.toggle("hot", hot); gauge.classList.toggle("ok", inB);
-      say(lock > 0 ? "Le vase s'est fêlé. On reprend, plus doucement." : hot ? "Trop de feu ! Relâche." : inB ? "C'est le bon feu. Tiens-le." : heat < e.de - .09 ? "Le feu dort. Souffle." : heat < e.de ? "Presque. Encore un peu." : "Laisse retomber un peu.");
+      const blind = defi && defi.id === "oeil";
+      say(lock > 0 ? "Le vase s'est fêlé. On reprend, plus doucement." : hot ? "Trop de feu ! Relâche." : evT > 0 ? evMsg : blind ? (inB ? "La matière travaille." : "Regarde les bulles et les vapeurs.") : inB ? "C'est le bon feu. Tiens-le." : heat < e.de - .09 ? "Le feu dort. Souffle." : heat < e.de ? "Presque. Encore un peu." : "Laisse retomber un peu.");
       if(prog >= 1) won();
     });
     const down = e => { if(state !== "play") return; e.preventDefault(); blow = true; btn.classList.add("on"); heat = Math.min(1, heat + .012); try{ btn.setPointerCapture(e.pointerId); }catch(x){} };
@@ -103,7 +128,7 @@
     intro();
     return () => { document.removeEventListener("keydown", kd); document.removeEventListener("keyup", ku); window.removeEventListener("blur", up); if(vase) vase.destroy(); };
   }
-  reg("jeu", {t:"Le Grand Œuvre", genre:"Jeu · 3 min", x:"Conduis le feu au soufflet, du noir au rouge. Chaque couleur atteinte te donne une planche du Splendor solis.",
+  reg("jeu", {t:"Le Grand Œuvre", genre:"Jeu · 3 min", x:"Conduis le feu au soufflet, du noir au rouge. Trois niveaux, un défi par jour, et une planche du Splendor solis à chaque couleur.",
     ico:ico(`<path d="M21 6v10c0 4-9 6-9 15a12 12 0 0 0 24 0c0-9-9-11-9-15V6"/><path d="M19 6h10"/><path d="M24 42c-3-2-3-5 0-8 3 3 3 6 0 8z" fill="currentColor" stroke="none"/><path d="M14 30c3-2 6 2 10 0s7 2 10 0"/>`), render:jeu});
 
   /* ================================================================
@@ -351,7 +376,7 @@
     const draw = () => {
       const s = st(), ks = Object.keys(D.PLANCHES), E = D.EMBLEMES;
       root.innerHTML = `<header class="al-hero sm"><p class="eyebrow">Les images de l'art</p><h1>Les planches</h1>${rule4}
-          <p class="al-lede">L'alchimie a parlé par images. Gagne les planches du Splendor solis dans le laboratoire, et apprends à lire trois grands emblèmes, détail par détail.</p>
+          <p class="al-lede">L'alchimie a parlé par images. Gagne les planches du Splendor solis dans le laboratoire, et apprends à lire six grands emblèmes, détail par détail.</p>
           <div class="subtabs" role="tablist"><button type="button" role="tab" class="subtab ${tab === "pl" ? "on" : ""}" data-tab="pl" aria-selected="${tab === "pl"}">Ma collection · ${s.planches.length}/${ks.length}</button><button type="button" role="tab" class="subtab ${tab === "emb" ? "on" : ""}" data-tab="emb" aria-selected="${tab === "emb"}">Emblèmes commentés</button></div></header>
         ${tab === "pl" ? `<div class="al-plates">${ks.map(k => { const P = D.PLANCHES[k], ok = s.planches.includes(k);
             return ok ? `<button type="button" class="al-plate ok" data-alplanche="${k}"><img src="${IMG(P.img)}" alt="${h(P.t)}" loading="lazy" decoding="async"><span>${h(P.t)}</span></button>`
@@ -377,6 +402,6 @@
     });
     draw();
   }
-  reg("planches", {t:"Les planches", genre:"Collection · lecture d'images", x:"Huit planches du Splendor solis à gagner, et trois emblèmes commentés détail par détail.",
+  reg("planches", {t:"Les planches", genre:"Collection · lecture d'images", x:"Huit planches du Splendor solis à gagner, et six emblèmes commentés détail par détail.",
     ico:ico(`<rect x="9" y="5" width="30" height="38" rx="1.5"/><rect x="13" y="9" width="22" height="30" rx="1" opacity=".5"/><path d="M22 15v6c0 2-5 3.500-5 8a7 7 0 0 0 14 0c0-4.500-5-6-5-8v-6"/>`), render:planches});
 })();
