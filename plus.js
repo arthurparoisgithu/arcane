@@ -48,6 +48,16 @@
   ]
  ],
  [
+  "L'alchimie",
+  [
+   "Planches du Splendor solis : huit aquarelles d'E. A. Ibbs d'après le manuscrit de Londres (1582), <a href=\"https://wellcomecollection.org/search/works?query=Ibbs%20Trismosin\" target=\"_blank\" rel=\"noopener\">Wellcome Collection</a>. Domaine public, sauf le soleil noir et l'aigle à trois têtes, sous licence <a href=\"https://creativecommons.org/licenses/by/4.0/deed.fr\" target=\"_blank\" rel=\"noopener\">CC BY 4.0</a> (images recadrées).",
+   "Emblèmes : Michael Maier, <i>Atalanta fugiens</i> (1617), gravures de Matthäus Merian, emblèmes <a href=\"https://wellcomecollection.org/works?query=L0029171\" target=\"_blank\" rel=\"noopener\">XXI (Wellcome Collection)</a> et <a href=\"https://commons.wikimedia.org/wiki/File:Michael_Maier_Atalanta_Fugiens_Emblem_42.jpeg\" target=\"_blank\" rel=\"noopener\">XLII</a> ; <a href=\"https://commons.wikimedia.org/wiki/File:Mutus_liber_1677_1.jpg\" target=\"_blank\" rel=\"noopener\"><i>Mutus Liber</i>, première planche (1677)</a>. Domaine public.",
+   "Histoire : <a href=\"https://commons.wikimedia.org/wiki/File:Zosimos_distillation_equipment.jpg\" target=\"_blank\" rel=\"noopener\">appareils de Zosime</a> (BnF, grec 2327) ; <a href=\"https://commons.wikimedia.org/wiki/File:Chrysopoea_of_Cleopatra_1.png\" target=\"_blank\" rel=\"noopener\">Chrysopée de Cléopâtre</a> ; <a href=\"https://commons.wikimedia.org/wiki/File:Man_Florence,_Ashburnham_1166_fol_12r.jpg\" target=\"_blank\" rel=\"noopener\">« Geber », manuscrit Ashburnham 1166</a> ; <a href=\"https://wellcomecollection.org/works?query=M0012393\" target=\"_blank\" rel=\"noopener\">Table d'émeraude de Khunrath</a> (Wellcome Collection, CC BY 4.0) ; <a href=\"https://commons.wikimedia.org/wiki/File:Roi_et_Reine_Alchimie.jpg\" target=\"_blank\" rel=\"noopener\">Rosaire des philosophes</a> ; <a href=\"https://commons.wikimedia.org/wiki/File:Musaeum_Hermeticum,_XII_Clavis_by_Matthaeus_Merian.jpg\" target=\"_blank\" rel=\"noopener\">douzième clef de Basile Valentin</a> ; <a href=\"https://commons.wikimedia.org/wiki/File:JosephWright-Alchemist.jpg\" target=\"_blank\" rel=\"noopener\">Joseph Wright of Derby, <i>L'Alchimiste</i> (1771)</a>. Œuvres du domaine public.",
+   "Sources du cours : Lawrence M. Principe, <i>The Secrets of Alchemy</i> (2013) ; Didier Kahn, <i>Le Fixe et le Volatil</i> (2016) ; William R. Newman, <i>Newton the Alchemist</i> (2019) ; Bernard Joly, <i>Histoire de l'alchimie</i> (2013). Les opérations par signe suivent Dom Pernety, <i>Dictionnaire mytho-hermétique</i> (1758). Les citations de la Table d'émeraude et des devises de Maier sont traduites du latin pour Arcanes.",
+   "« Mon Œuvre » est une pratique moderne, inspirée de la lecture de l'alchimie par C. G. Jung (<i>Psychologie et Alchimie</i>, 1944). Le vase animé, les signes et les jeux sont dessinés pour Arcanes."
+  ]
+ ],
+ [
   "La magie",
   [
    "Heures planétaires et phases de la Lune calculées sur l'appareil avec Astronomy Engine (Don Cross, licence MIT), pour le lieu choisi en astrologie.",

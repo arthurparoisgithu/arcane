@@ -876,8 +876,9 @@
     window.scrollTo({top:0});
   }
   const MG = () => window.ArcanesMagie, inMagie = () => !!(MG() && MG().active());
+  const AL = () => window.ArcanesAlchimie, inAlch = () => !!(AL() && AL().active());
   function enterAstro(v, silent){
-    if(inMagie()) MG().leave();
+    if(inMagie()) MG().leave(); if(inAlch()) AL().leave();
     st.univers = "astro"; save();
     tNav.hidden = true; aNav.hidden = false;
     if(foot) foot.innerHTML = ASTRO_FOOT;
@@ -885,7 +886,7 @@
     if(!silent) aView(v || st.vue || "ciel");
   }
   function enterTarot(v){
-    if(inMagie()) MG().leave();
+    if(inMagie()) MG().leave(); if(inAlch()) AL().leave();
     st.univers = "tarot"; save();
     tNav.hidden = false; aNav.hidden = true;
     if(foot && tarotFoot) foot.innerHTML = tarotFoot;
@@ -893,17 +894,26 @@
     if(typeof setView === "function") setView(v || "jour");
   }
   /* Changer d'art, avec un fondu enchaîné quand le navigateur sait le faire */
-  const curU = () => inMagie() ? "magie" : document.documentElement.classList.contains("u-astro") ? "astro" : "tarot";
+  const curU = () => inAlch() ? "alchimie" : inMagie() ? "magie" : document.documentElement.classList.contains("u-astro") ? "astro" : "tarot";
+  function enterAlch(v){
+    if(!AL()) return;
+    if(inMagie()) MG().leave();
+    if(document.documentElement.classList.contains("u-astro")){ document.documentElement.classList.remove("u-astro", "u-night"); document.body.classList.remove("u-astro", "u-night"); }
+    if(foot && tarotFoot && aNav && !aNav.hidden) foot.innerHTML = tarotFoot;
+    st.univers = "alchimie"; save();
+    AL().enter(v); redraw(); syncPill();
+  }
   function enterMagie(v){
     if(!MG()) return;
+    if(inAlch()) AL().leave();
     if(document.documentElement.classList.contains("u-astro")){ document.documentElement.classList.remove("u-astro", "u-night"); document.body.classList.remove("u-astro", "u-night"); }
     if(foot && tarotFoot && aNav && !aNav.hidden) foot.innerHTML = tarotFoot;
     st.univers = "magie"; save();
     MG().enter(v); redraw(); syncPill();
   }
   function switchTo(u, v){
-    if(u === curU()){ if(v){ if(u === "magie") MG().view(v); else if(u === "astro") aView(v); else if(typeof setView === "function") setView(v); } return; }
-    const go = () => { if(u === "magie") enterMagie(v); else if(u === "astro") enterAstro(v || (VIEWS.includes(st.vue) ? st.vue : "ciel")); else enterTarot(v); };
+    if(u === curU()){ if(v){ if(u === "alchimie") AL().go(v); else if(u === "magie") MG().view(v); else if(u === "astro") aView(v); else if(typeof setView === "function") setView(v); } return; }
+    const go = () => { if(u === "alchimie") enterAlch(v); else if(u === "magie") enterMagie(v); else if(u === "astro") enterAstro(v || (VIEWS.includes(st.vue) ? st.vue : "ciel")); else enterTarot(v); };
     if(document.startViewTransition && !reduce()){ try{ document.startViewTransition(go); return; }catch(e){} }
     go();
   }
@@ -917,7 +927,8 @@
   }
   function makePill(){
     const p = document.createElement("div"); p.className = "u-pill"; p.setAttribute("role", "tablist"); p.setAttribute("aria-label", "Choisir un art");
-    p.innerHTML = `<i class="u-ind" aria-hidden="true"></i><button type="button" role="tab" data-u="tarot">Tarot</button><button type="button" role="tab" data-u="astro"><span class="u-l">Astrologie</span><span class="u-s">Astro</span></button>${window.ArcanesMagie ? `<button type="button" role="tab" data-u="magie">Magie</button>` : ""}`;
+    p.innerHTML = `<i class="u-ind" aria-hidden="true"></i><button type="button" role="tab" data-u="tarot">Tarot</button><button type="button" role="tab" data-u="astro"><span class="u-l">Astrologie</span><span class="u-s">Astro</span></button>${window.ArcanesMagie ? `<button type="button" role="tab" data-u="magie">Magie</button>` : ""}${window.ArcanesAlchimie ? `<button type="button" role="tab" data-u="alchimie">Alchimie</button>` : ""}`;
+    if(window.ArcanesAlchimie) p.classList.add("four");
     qa("[data-u]", p).forEach(b => b.onclick = () => switchTo(b.dataset.u));
     p.addEventListener("keydown", e => { if(!["ArrowLeft","ArrowRight","Home","End"].includes(e.key)) return; e.preventDefault();
       const U = qa("[data-u]", p).map(b => b.dataset.u), i = U.indexOf(curU());
@@ -925,8 +936,8 @@
     return p;
   }
   /* Mon espace : un seul espace, deux onglets (tarot, astrologie) */
-  const espaceBar = cur => `<div class="esp-bar" role="tablist" aria-label="Mon espace"><button type="button" role="tab" data-esp="tarot" aria-selected="${cur === "tarot"}">Tarot</button><button type="button" role="tab" data-esp="astro" aria-selected="${cur === "astro"}">Astrologie</button>${window.ArcanesMagie ? `<button type="button" role="tab" data-esp="magie" aria-selected="${cur === "magie"}">Magie</button>` : ""}</div>`;
-  function bindEspace(root){ qa("[data-esp]", root).forEach(b => b.onclick = () => { if(b.dataset.esp === "magie") switchTo("magie", "carnet"); else if(b.dataset.esp === "astro") switchTo("astro", "moi"); else switchTo("tarot", "journal"); }); }
+  const espaceBar = cur => `<div class="esp-bar" role="tablist" aria-label="Mon espace"><button type="button" role="tab" data-esp="tarot" aria-selected="${cur === "tarot"}">Tarot</button><button type="button" role="tab" data-esp="astro" aria-selected="${cur === "astro"}">Astrologie</button>${window.ArcanesMagie ? `<button type="button" role="tab" data-esp="magie" aria-selected="${cur === "magie"}">Magie</button>` : ""}${window.ArcanesAlchimie ? `<button type="button" role="tab" data-esp="alchimie" aria-selected="${cur === "alchimie"}">Alchimie</button>` : ""}</div>`;
+  function bindEspace(root){ qa("[data-esp]", root).forEach(b => b.onclick = () => { if(b.dataset.esp === "alchimie") switchTo("alchimie", "carnet"); else if(b.dataset.esp === "magie") switchTo("magie", "carnet"); else if(b.dataset.esp === "astro") switchTo("astro", "moi"); else switchTo("tarot", "journal"); }); }
 
   function init(){
     tNav = q1(".top .nav"); if(!tNav) return;
@@ -945,20 +956,22 @@
     // l'en-tête : le logo ramène à l'accueil de l'art en cours, la pilule change d'art
     const brand = q1(".brand");
     if(brand){ brand.removeAttribute("data-view"); brand.setAttribute("aria-label", "Arcanes, accueil");
-      brand.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); if(inMagie()) MG().view("moment"); else if(st.univers === "astro") aView("ciel"); else if(typeof setView === "function") setView("jour"); }, true);
+      brand.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); if(inAlch()) AL().view("athanor"); else if(inMagie()) MG().view("moment"); else if(st.univers === "astro") aView("ciel"); else if(typeof setView === "function") setView("jour"); }, true);
       pillEl = makePill(); const grp = document.createElement("div"); grp.className = "brand-grp"; brand.before(grp); grp.append(brand, pillEl); }
     window.addEventListener("resize", syncPill);
     if(document.fonts && document.fonts.ready) document.fonts.ready.then(syncPill);
     // un lien interne du tarot alors qu'on est en astrologie : on revient au tarot
     if(typeof setView === "function"){ const sv = setView; window.setView = setView = function(v){
-        if(inMagie()) MG().leave();
-        if(document.documentElement.classList.contains("u-astro") || st.univers === "magie"){ st.univers = "tarot"; save(); tNav.hidden = false; aNav.hidden = true; if(foot && tarotFoot) foot.innerHTML = tarotFoot; setAmbiance(false); }
+        if(inMagie()) MG().leave(); if(inAlch()) AL().leave();
+        if(document.documentElement.classList.contains("u-astro") || st.univers === "magie" || st.univers === "alchimie"){ st.univers = "tarot"; save(); tNav.hidden = false; aNav.hidden = true; if(foot && tarotFoot) foot.innerHTML = tarotFoot; setAmbiance(false); }
         const r = sv.apply(this, arguments);
         if(v === "journal"){ const j = document.getElementById("v-journal"); if(j && !q1(".esp-bar", j)){ j.insertAdjacentHTML("afterbegin", espaceBar("tarot")); bindEspace(j); } }
         return r; }; }
     const h0 = (window.__arcanesHash || "").replace("#", "");
-    if(h0.startsWith("magie-") && MG()) enterMagie(h0.slice(6));
+    if(h0.startsWith("alchimie-") && AL()) enterAlch(h0.slice(9));
+    else if(h0.startsWith("magie-") && MG()) enterMagie(h0.slice(6));
     else if(h0.startsWith("astro-")) enterAstro(h0.slice(6));
+    else if(st.univers === "alchimie" && AL() && !VIEWS_T.includes(h0)) enterAlch();
     else if(st.univers === "magie" && MG() && !VIEWS_T.includes(h0)) enterMagie();
     else if(st.univers === "astro" && !VIEWS_T.includes(h0)) enterAstro(VIEWS.includes(st.vue) ? st.vue : "ciel");
     else syncPill();

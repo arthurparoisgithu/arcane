@@ -4847,14 +4847,14 @@ function placerTreeHTML(q, a){
 }
 
 /* ===== Sauvegarde et restauration : un fichier JSON avec toutes les données d'Arcanes ===== */
-const BACKUP_KEYS = { journal:"arcanes.journal.v1", learn:"arcanes.learn.v1", ritual:"arcanes.ritual.v1", profile:"arcanes.profile.v1", prefs:"arcanes.prefs.v1", custom:"arcanes.custom.v1", astro:"arcanes.astro.v1", magie:"arcanes.magie.v1" };
+const BACKUP_KEYS = { journal:"arcanes.journal.v1", learn:"arcanes.learn.v1", ritual:"arcanes.ritual.v1", profile:"arcanes.profile.v1", prefs:"arcanes.prefs.v1", custom:"arcanes.custom.v1", astro:"arcanes.astro.v1", magie:"arcanes.magie.v1", alchimie:"arcanes.alchimie.v1" };
 function readKey(k, def){ try{ const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? def : v; }catch(e){ return def; } }
 function writeKey(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 
 function backupData(){
   return { app:"arcanes", format:1, date:new Date().toISOString(), data:{
     journal: readKey(BACKUP_KEYS.journal, []), learn: readKey(BACKUP_KEYS.learn, {}), ritual: readKey(BACKUP_KEYS.ritual, []),
-    profile: readKey(BACKUP_KEYS.profile, {}), prefs: readKey(BACKUP_KEYS.prefs, {}), custom: readKey(BACKUP_KEYS.custom, []), astro: readKey(BACKUP_KEYS.astro, {}), magie: readKey(BACKUP_KEYS.magie, {}) } };
+    profile: readKey(BACKUP_KEYS.profile, {}), prefs: readKey(BACKUP_KEYS.prefs, {}), custom: readKey(BACKUP_KEYS.custom, []), astro: readKey(BACKUP_KEYS.astro, {}), magie: readKey(BACKUP_KEYS.magie, {}), alchimie: readKey(BACKUP_KEYS.alchimie, {}) } };
 }
 function backupSummary(d){
   const j = Array.isArray(d.journal) ? d.journal.length : 0, c = Array.isArray(d.custom) ? d.custom.filter(x => x && !x.deleted).length : 0;
@@ -4906,9 +4906,12 @@ function mergeBackup(d){
   const astroM = Object.assign({}, B, A, { themes:[...th.values()].slice(0, 40), done: uni(A.done, B.done), best: mergeBest(A.best, B.best), des:[...des.values()].sort((a,b) => b.t - a.t).slice(0, 30) });
   const MA = okObj(cur.magie), MB = okObj(d.magie), byT = (a, b, k) => { const m = new Map(); [...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])].forEach(x => { if(x && x[k] != null && !m.has(x[k])) m.set(x[k], x); }); return [...m.values()]; };
   const magieM = Object.assign({}, MB, MA, { done: uni(MA.done, MB.done), best: mergeBest(MA.best, MB.best), carnet: byT(MA.carnet, MB.carnet, "id").sort((a,b) => b.t - a.t).slice(0, 400), sceaux: byT(MA.sceaux, MB.sceaux, "id").slice(0, 200), fiches: uni(MA.fiches, MB.fiches) });
+  const LA = okObj(cur.alchimie), LB = okObj(d.alchimie), GA = okObj(LA.grand), GB = okObj(LB.grand);
+  const alchM = Object.assign({}, LB, LA, { done: uni(LA.done, LB.done), planches: uni(LA.planches, LB.planches), archives: byT(LA.archives, LB.archives, "id").slice(0, 40), signes: Math.max(LA.signes|0, LB.signes|0),
+    grand: { n: Math.max(GA.n|0, GB.n|0), best: [GA.best, GB.best].filter(v => typeof v === "number").sort((a,b) => a - b)[0] ?? null, last: Math.max(GA.last|0, GB.last|0) || null, felures: Math.max(GA.felures|0, GB.felures|0) } });
   const added = journalM.length - cur.journal.length;
   const ok = writeKey(BACKUP_KEYS.journal, journalM.slice(0, 200)) && writeKey(BACKUP_KEYS.custom, [...cs.values()]) && writeKey(BACKUP_KEYS.learn, learnM)
-    && writeKey(BACKUP_KEYS.ritual, uni(cur.ritual, d.ritual).sort().slice(-400)) && writeKey(BACKUP_KEYS.profile, profileM) && writeKey(BACKUP_KEYS.prefs, prefsM) && writeKey(BACKUP_KEYS.astro, astroM) && writeKey(BACKUP_KEYS.magie, magieM);
+    && writeKey(BACKUP_KEYS.ritual, uni(cur.ritual, d.ritual).sort().slice(-400)) && writeKey(BACKUP_KEYS.profile, profileM) && writeKey(BACKUP_KEYS.prefs, prefsM) && writeKey(BACKUP_KEYS.astro, astroM) && writeKey(BACKUP_KEYS.magie, magieM) && writeKey(BACKUP_KEYS.alchimie, alchM);
   return {ok, added};
 }
 
@@ -7797,6 +7800,7 @@ function drawBackground(){
   const nStars = Math.round(w*h/5200);
   for(let i=0;i<nStars;i++){ const r = rnd()*1.2+.25; x.globalAlpha = .25 + rnd()*.6; x.beginPath(); x.arc(rnd()*w, rnd()*h, r, 0, Math.PI*2); x.fill(); }
   x.globalAlpha = 1;
+  if(document.documentElement.classList.contains("u-alch") && typeof window.alchBackdrop === "function"){ try{ window.alchBackdrop(x, w, h, v); }catch(e){} x.globalAlpha = 1; return; }
   if(document.documentElement.classList.contains("u-magie") && typeof window.magieBackdrop === "function"){ try{ window.magieBackdrop(x, w, h, v); }catch(e){} x.globalAlpha = 1; return; }
   if(document.documentElement.classList.contains("u-astro") && typeof window.astroBackdrop === "function"){ try{ window.astroBackdrop(x, w, h, v); }catch(e){} x.globalAlpha = 1; return; }
   /* Le motif du jeu : l'Arbre de Vie, la roue du zodiaque d'Etteilla, ou la sphère céleste du Sola Busca */
