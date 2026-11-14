@@ -496,6 +496,8 @@
         <p class="m-scrub-l">${momScrub(c)}</p>
         <div class="m-insp${mo.sel ? " open" : ""}" aria-hidden="${mo.sel ? "false" : "true"}"><div class="m-insp-body">${momInsp(c)}</div></div>
         <p class="help">L'anneau extérieur, ce sont les 24 heures du jour planétaire, du lever au lever suivant ; le petit point marque le coucher du soleil. Touche une planète ou une heure ; fais glisser le curseur pour voyager dans le temps.</p></section>
+      ${EXT.momentCta ? EXT.momentCta(c) : ""}
+      <details class="m-more"${EXT.momentCta ? "" : " open"}><summary><span>Le jour en détail</span><small>L'heure, le jour, la Lune, les heures qui viennent, le cycle</small></summary>
       <div class="m-grid2">${momGrid(c)}</div>
       ${EXT.moment.map(f => { try{ return f(c.H, c.M, c.real) || ""; }catch(e){ return ""; } }).join("")}
       <p class="eyebrow m-k">Préparer un moment</p>
@@ -505,8 +507,8 @@
         <button type="button" class="m-qt" data-mrite="lbrp"><span class="m-qi"><svg viewBox="-12 -12 24 24" aria-hidden="true"><path d="M-6.5 8.5L0 -10 6.5 8.5 -9.5 -2.5 9.5 -2.5Z"/></svg></span><b>Le Pentagramme</b><small>Faire place nette, 10 minutes</small></button>
         <button type="button" class="m-qt" data-mgo="carnet:new"><span class="m-qi">${ICO.carnet}</span><b>Écrire</b><small>Une entrée datée à cette heure</small></button>
       </div>
-      <p class="m-cross"><button type="button" class="btn ghost small" data-mastro="ciel">Voir le ciel du jour, en astrologie</button></p>`;
-    bindLinks(root);
+      <p class="m-cross"><button type="button" class="btn ghost small" data-mastro="ciel">Voir le ciel du jour, en astrologie</button></p></details>`;
+    bindLinks(root); if(EXT.momentBind) EXT.momentBind(root, c);
     const clock = q1(".m-clock", root);
     const pick = (el, kb) => { const n = el.closest("[data-mnode]"), r = el.closest("[data-mhr]"); if(!n && !r) return false;
       const v = n ? n.dataset.mnode : "h" + r.dataset.mhr; mo.sel = mo.sel === v ? null : v; paintMoment();
@@ -549,6 +551,7 @@
   }
   function renderAtelier(){
     const root = q1("#v-m-atelier"); if(!root) return;
+    if(!at.tool && EXT.atelierHome){ root.innerHTML = EXT.atelierHome(TOOLS.concat(EXT.tools), ic => EXT.toolIcon[ic] || toolIcon(ic)); bindLinks(root); if(EXT.atelierBind) EXT.atelierBind(root); return; }
     if(!at.tool){
       root.innerHTML = `<header class="m-hero"><p class="eyebrow">Les instruments</p><h1>L'atelier</h1><p class="m-lede">Les outils de la magie savante, à manipuler. Rien ne s'envoie nulle part : tout est calculé sur ton appareil.</p></header>
         <figure class="m-medal">${img("lab", "Le laboratoire-oratoire de Khunrath", "m-medal-img")}<figcaption>${CRED.lab}</figcaption></figure>
@@ -587,6 +590,7 @@
       <section class="m-grade"><div class="m-grade-seal"><svg viewBox="-50 -50 100 100" aria-hidden="true"><circle r="46"/><circle r="40"/><path d="${(() => { const o = [0,3,6,2,5,1,4]; return o.map((i, k) => { const a = (-90 + i*360/7)*rad; return (k ? "L" : "M") + f1(Math.cos(a)*30) + " " + f1(Math.sin(a)*30); }).join("") + "Z"; })()}"/></svg><b>${g.code}</b></div>
         <div><p class="eyebrow">Ton degré</p><h2>${g.nom}</h2><p class="help m-left">${lus} leçon${lus > 1 ? "s" : ""} sur ${tot} · ${n} module${n > 1 ? "s" : ""} achevé${n > 1 ? "s" : ""} sur ${K.MODULES.length}. Les noms sont ceux des grades de la Golden Dawn ; ici, ils marquent seulement ton chemin.</p>
         ${next ? `<button type="button" class="btn small" data-mlec="${next[0].id}:${next[1]}">${lus ? "Reprendre" : "Commencer"} : ${h(next[0].lecons[next[1]].t)}</button>` : `<p><b>Tu as parcouru tout le cours.</b></p>`}</div></section>
+      ${EXT.ecoleMap ? EXT.ecoleMap(K.MODULES, st, next) : ""}
       ${[1, 2].map(c => { const ms = K.MODULES.filter(m => (m.cercle || 1) === c); if(!ms.length) return "";
         return `${EXT.ecoleHead ? EXT.ecoleHead(c, ms) : ""}<div class="m-mods">${ms.map(m => { const d = m.lecons.filter(l => st.done.includes(l.id)).length;
         return `<button type="button" class="m-mod${modDone(m) ? " done" : ""}" data-mmod="${m.id}"><span class="m-mod-img">${m.img === "sigil" ? sigilSVG(spareLetters("je trouve le calme", true).keep, 2, {cercle:true}) : img(m.img)}</span>
@@ -1129,6 +1133,7 @@
     try{ history.replaceState(null, "", "#magie-" + v); }catch(e){}
     if(v !== "moment") clearTimeout(momTimer);
     if(v === "moment") renderMoment(); if(v === "atelier") renderAtelier(); if(v === "ecole") renderEcole(); if(v === "histoire") renderHistoire(); if(v === "carnet") renderCarnet();
+    if(EXT.onView) try{ EXT.onView(v); }catch(e){}
     window.scrollTo({top:0});
   }
   function init(){
