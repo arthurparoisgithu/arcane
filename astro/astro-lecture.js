@@ -39,6 +39,7 @@ window.AstroLecture = H => {
     maisons:["Dans quel domaine de ta vie mets-tu le plus d'énergie en ce moment ?"],
     aspects:["Quelle tension intérieure revient souvent dans ta vie ? Qu'est-ce qu'elle t'a appris ?"],
     chaines:["Si une seule planète tenait les rênes de ton thème, laquelle choisirais-tu, et pourquoi ?"],
+    lames:["Parmi ces cartes, laquelle te ressemble le plus ? Laquelle te surprend ?"],
     synth:["Laquelle de ces cinq phrases te ressemble le plus ? Laquelle te ressemble le moins ?", "Qu'aimerais-tu développer dans l'année qui vient ?"]
   };
 
@@ -82,8 +83,44 @@ window.AstroLecture = H => {
     return out;
   }
 
+  /* ---------- les lames de tarot du thème (correspondances de la Golden Dawn) ---------- */
+  const SIGN_LAME = ["empereur","pape","amoureux","chariot","force","ermite","justice","sansnom","temperance","diable","etoile","lune"];
+  const PL_LAME = {soleil:"soleil", lune:"papesse", mercure:"bateleur", venus:"imperatrice", mars:"maisondieu", jupiter:"roue", saturne:"monde", uranus:"mat", neptune:"pendu", pluton:"jugement"};
+  const SUITE = ["batons","deniers","epees","coupes"], SUITE_NOM = {batons:"Bâtons", deniers:"Deniers", epees:"Épées", coupes:"Coupes"};
+  const CHALD = ["mars","soleil","venus","mercure","lune","saturne","jupiter"];
+  const tarotOK = () => typeof byId === "function" && typeof cardSVG === "function";
+  const cardNom = id => { try{ return (typeof nomIn === "function" && typeof DECK_ID !== "undefined" ? nomIn(DECK_ID, id) : null) || byId(id).nom; }catch(e){ return id; } };
+  function lamesOf(ch, t){
+    const sc = school(), L = [];
+    const ks = C.si(ch.P.soleil.lon), dec = Math.floor((C.norm(ch.P.soleil.lon) % 30)/10), di = ks*3 + dec;
+    const suit = SUITE[ks % 4], rank = 2 + (ks % 3)*3 + dec, decR = CHALD[di % 7];
+    L.push({role:"Ta lame solaire", id:SIGN_LAME[ks], why:`La lame ${SG[ks].du}, le signe de ton Soleil : elle montre la direction vers laquelle tu grandis.`});
+    L.push({role:"La carte de ton décan", id:suit + rank, why:`Ton Soleil était entre ${dec*10}° et ${dec*10 + 10}° ${SG[ks].du}, dans le ${dec + 1}${dec ? "ᵉ" : "ᵉʳ"} décan, gouverné par ${PL[decR].court}. La Golden Dawn y place le ${rank} de ${SUITE_NOM[suit]}. C'est ta carte la plus personnelle : elle change tous les dix jours.`});
+    const km = C.si(ch.P.lune.lon);
+    L.push({role:"La lame de ta Lune", id:SIGN_LAME[km], why:`La lame du signe de ta Lune, ${SG[km].nom} : tes besoins, ta vie intérieure, ce qui te rassure.`});
+    if(ch.heure){ const ka = C.si(ch.asc); L.push({role:"La lame de ton Ascendant", id:SIGN_LAME[ka], why:`La lame du signe qui se levait à ta naissance, ${SG[ka].nom} : ta porte d'entrée dans le monde, l'impression que tu donnes.`}); }
+    const r = ch.heure ? C.rulerOf(C.si(ch.asc), sc) : C.dominants(ch, sc)[0].id;
+    if(PL_LAME[r]) L.push({role:"La lame de ta planète maîtresse", id:PL_LAME[r], why:ch.heure ? `${PL[r].court} gouverne ton Ascendant : c'est le fil conducteur de ton thème${["uranus","neptune","pluton"].includes(r) ? " (correspondance moderne)" : ""}.` : `${PL[r].court} est la planète qui domine ton thème${["uranus","neptune","pluton"].includes(r) ? " (correspondance moderne)" : ""}.`});
+    if(typeof birthCalc === "function" && t && t.y){ try{ const iso = `${t.y}-${String(t.m).padStart(2, "0")}-${String(t.d).padStart(2, "0")}`, b = birthCalc(iso);
+      if(b && b.card) L.push({role:"Ta lame de naissance", id:b.card.id, birth:true, why:`Une autre tradition, la numérologie du tarot popularisée par Mary K. Greer : on additionne les chiffres de la date de naissance (${b.calc}). Ce n'est pas de l'astrologie, mais elle complète le portrait.`}); }catch(e){} }
+    return L;
+  }
+  function lamesHTML(ch, t, o = {}){
+    if(!tarotOK()) return "";
+    const L = lamesOf(ch, t).filter(x => byId(x.id));
+    const ids = L.map(x => x.id), rep = ids.filter((x, i) => ids.indexOf(x) !== i);
+    return `<div class="a-lames${o.compact ? " compact" : ""}">${L.map(x => { const c = byId(x.id);
+      return `<article class="a-lame${rep.includes(x.id) ? " rep" : ""}"><button type="button" class="a-lame-img" data-lsheet="${x.id}" aria-label="Ouvrir la fiche ${h(cardNom(x.id))}">${cardSVG(c)}</button>
+        <div><p class="eyebrow">${x.role}</p><h4>${h(cardNom(x.id))}</h4>${c.mots ? `<p class="a-lame-m">${c.mots.slice(0, 3).join(" · ")}</p>` : ""}<p class="help">${x.why}</p>
+        ${x.birth ? `<button type="button" class="linkbtn" data-lbirth>Voir ma lame de naissance dans le tarot</button>` : ""}</div></article>`; }).join("")}</div>
+      ${rep.length ? `<p class="help a-lame-rep">${[...new Set(rep)].map(id => `<b>${h(cardNom(id))}</b>`).join(", ")} revient plusieurs fois : c'est une lame qui compte particulièrement pour toi.</p>` : ""}
+      <p class="help">Correspondances de la Golden Dawn, reprises dans le Waite-Smith. Dans le Tarot de Marseille, La Justice porte le VIII et La Force le XI : c'est la carte qui compte ici, pas son numéro. Touche une carte pour lire sa fiche.</p>`;
+  }
+
   /* ---------- les étapes ---------- */
-  function steps(ch){
+  let T0 = null;
+  function steps(ch, t){
+    if(t) T0 = t;
     const sc = school(), S = [];
     const deeper = (id) => { const p = ch.P[id], k = C.si(p.lon), sg = SG[k], hs = ch.heure && p.house ? D.HOUSES[p.house - 1] : null, d = C.TRAD7.includes(id) ? C.dignities(id, p.lon, ch.diurne) : {list:[C.modState(id, p.lon)].filter(Boolean), score:0};
       const asp = C.aspects(ch, sc).filter(x => (x.a === id || x.b === id) && PL[x.a] && PL[x.b]).sort((a, b) => a.orb - b.orb).slice(0, 4);
@@ -147,6 +184,10 @@ window.AstroLecture = H => {
           <ul class="a-chains">${out.map(c => `<li>${c.chain.map((id, i) => `<span class="a-ch${finals.includes(id) ? " fin" : ""}">${pg(id)} ${PL[id].court}</span>`).join(`<i aria-hidden="true">→</i>`)}${c.loop && !finals.includes(c.end) ? `<i aria-hidden="true">↺</i><span class="help">boucle</span>` : ""}</li>`).join("")}</ul>`,
         loin:`<p>Ce procédé, la <b>dispositorship</b> des astrologues anglais, vient de la tradition : une planète « reçue » dans le domicile d'une autre lui est soumise, et en reçoit la couleur. Il n'y a un dispositeur final unique que si une seule planète est en domicile et que toutes les chaînes y mènent ; sinon, on parle de plusieurs centres, ou d'une <b>réception mutuelle</b> quand deux planètes sont chacune dans le domicile de l'autre.</p>
           <p class="help">Maîtres ${sc === "tradition" ? "traditionnels (sans Uranus, Neptune ni Pluton)" : "modernes (Uranus maître du Verseau, Neptune des Poissons, Pluton du Scorpion)"}.</p>`}); }
+    if(tarotOK()) S.push({k:"lames", t:"Tes lames de tarot", hl:["soleil", "lune"],
+      clair:`<p class="lead">Le tarot et l'astrologie se sont rencontrés à la fin du XIXe siècle : la Golden Dawn a donné à chaque signe, à chaque planète et à chaque décan sa carte. Voici celles qui te correspondent.</p>${lamesHTML(ch, T0)}`,
+      loin:`<p><b>D'où viennent ces correspondances.</b> En 1888, l'ordre de la Golden Dawn relie les 22 arcanes majeurs aux 22 lettres hébraïques, et donc aux trois éléments, aux sept planètes et aux douze signes. Les cartes numérotées de 2 à 10 vont aux 36 décans, en suivant l'ordre chaldéen des planètes. Ce système n'est pas historique : le tarot est né en Italie vers 1440, sans lien avec l'astrologie. Mais il donne un langage commun aux deux arts.</p>
+        <p><b>Uranus, Neptune et Pluton</b> n'existent pas dans le système d'origine. Les astrologues modernes leur ont donné Le Mat, Le Pendu et Le Jugement, qui portaient les trois éléments.</p>`});
     S.push({k:"synth", t:"Ton thème en cinq phrases", hl:[],
       clair:`<ol class="a-cinq">${cinq(ch).map(x => `<li>${x}</li>`).join("")}</ol>
         <p class="help">Ces phrases sont assemblées à partir des positions : elles résument, elles ne disent pas tout. Un thème se comprend surtout dans le temps, en le confrontant à ce que tu vis.</p>`,
@@ -159,7 +200,7 @@ window.AstroLecture = H => {
   let gs = {theme:null, i:0};
   function guide(ch, t){
     if(gs.theme !== t.id){ gs = {theme:t.id, i:0}; }
-    const S = steps(ch); gs.i = Math.max(0, Math.min(S.length - 1, gs.i));
+    const S = steps(ch, t); gs.i = Math.max(0, Math.min(S.length - 1, gs.i));
     const s = S[gs.i], notes = (lec().notes[t.id] || {})[s.k] || "", Q = QUEST[s.k] || [];
     return `<div class="a-guide" data-gstep="${gs.i}">
       <ol class="a-gnav" aria-label="Les étapes de la lecture">${S.map((x, i) => `<li><button type="button" data-gi="${i}" class="${i === gs.i ? "on" : i < gs.i ? "done" : ""}" aria-current="${i === gs.i ? "step" : "false"}" aria-label="Étape ${i + 1} : ${h(x.t)}"><span>${i + 1}</span><small>${h(x.t.replace(/^(Ton|Ta|Tes) /, "").replace(/ en .*/, ""))}</small></button></li>`).join("")}</ol>
@@ -271,7 +312,7 @@ window.AstroLecture = H => {
     const tz = (t.lieu && t.lieu.tz) || undefined, I = school() === "tradition" ? [...C.TRAD7, "noeudn"] : [...C.MOD10, "noeudn"];
     const born = `${t.d}/${String(t.m).padStart(2, "0")}/${t.y}${t.heure ? ` à ${String(t.h).padStart(2, "0")} h ${String(t.mi).padStart(2, "0")}` : ", heure inconnue"}`;
     const B = C.balance(ch), T = tight(ch).slice(0, 8), notes = lec().notes[t.id] || {};
-    const S = steps(ch);
+    const S = steps(ch, t);
     let el = document.getElementById("a-print"); if(el) el.remove();
     el = document.createElement("div"); el.id = "a-print";
     el.innerHTML = `<header><p class="eyebrow">Arcanes · thème natal · lecture ${school()}</p><h1>${h(t.nom)}</h1><p>${born} · ${h(t.lieu.nom)}</p></header>
@@ -301,6 +342,8 @@ window.AstroLecture = H => {
   }
   function bind(root, ch, t, tab, rerender){
     const body = q1(".a-thbody", root); if(!body) return;
+    qa("[data-lsheet]", body).forEach(b => b.onclick = () => { if(typeof openSheet === "function") openSheet(b.dataset.lsheet); });
+    qa("[data-lbirth]", body).forEach(b => b.onclick = () => { const A = window.ArcanesAstro; if(A && A.switchTo) A.switchTo("tarot", "journal"); setTimeout(() => { const el = document.getElementById("birth"); if(el) el.scrollIntoView({block:"start"}); }, 350); });
     if(tab === "guide"){
       highlight(root, ch);
       const go = i => { gs.i = i; body.innerHTML = guide(ch, t); bind(root, ch, t, tab, rerender);
@@ -323,5 +366,5 @@ window.AstroLecture = H => {
       qa("[data-jdel]", body).forEach(b => b.onclick = () => { lec().journal = lec().journal.filter(j => j.id !== b.dataset.jdel); save(); body.innerHTML = annee(ch, t); bind(root, ch, t, tab, rerender); });
     } else { const w = q1(".a-thwheel", root); if(w && tab !== "guide"){ w.classList.remove("a-focus"); } }
   }
-  return {guide, annee, bind, print};
+  return {guide, annee, bind, print, lames:lamesHTML};
 };

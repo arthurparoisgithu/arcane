@@ -1099,3 +1099,20 @@ details[open]>summary .a-chev{transform:rotate(180deg)}
 @keyframes obs-rot{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){.obs-cta-art svg{animation:none}}
 @media (max-width:520px){.obs-cta{grid-template-columns:72px 1fr;gap:14px;padding:16px}}
+
+/* ---------- les lames du thème ---------- */
+.a-lames{display:grid;gap:14px;margin:14px 0 10px}
+@media (min-width:760px){.a-lames{grid-template-columns:1fr 1fr}}
+.a-lames.compact{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.a-lame{display:grid;grid-template-columns:86px 1fr;gap:14px;align-items:start;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+.a-lame.rep{border-color:color-mix(in srgb,var(--vermillon) 45%,var(--line))}
+.a-lame-img{padding:0;border:0;background:none;cursor:pointer;border-radius:6px;overflow:hidden;display:block;box-shadow:0 6px 16px rgba(0,0,0,.18);transition:transform .25s}
+.a-lame-img:hover,.a-lame-img:focus-visible{transform:translateY(-3px) rotate(-1deg)}
+.a-lame-img svg{display:block;width:100%;height:auto}
+.a-lame .eyebrow{margin:0 0 2px}
+.a-lame h4{font-family:var(--f-display);font-weight:400;font-size:21px;margin:0 0 4px;line-height:1.15}
+.a-lame-m{margin:0 0 6px;font:13.5px var(--f-ui);color:var(--ink-soft)}
+.a-lame .help{margin:0 0 4px;font-size:14.5px}
+.a-lame .linkbtn{font-size:14px;padding:4px 0}
+.a-lame-rep{margin-top:4px}
+@media print{.a-lame{break-inside:avoid}.a-lame-img{box-shadow:none}}
