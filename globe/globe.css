@@ -96,6 +96,38 @@ body.gl-open{overflow:hidden}
 .gl-tour b{font:400 22px/1.1 var(--f-display)}
 .gl-tour span{font:400 15px/1.4 var(--f-text);color:var(--gl-soft)}
 .gl-tour small{font:700 10.5px var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--gl-red)}
+/* l'image d'en-tête, qui s'avance lentement */
+.gl-hero{margin:-22px -22px 18px;position:relative}
+.gl-hero-in{position:relative;overflow:hidden;height:236px;background:#d9c79c;border-radius:14px 14px 0 0;box-shadow:inset 0 -1px 0 rgba(90,60,20,.3)}
+.gl-hero-in img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;opacity:0;transform:scale(1.12);transition:opacity .8s ease,transform 14s cubic-bezier(.2,.6,.3,1);mix-blend-mode:multiply;filter:sepia(.22) contrast(1.04)}
+.gl-hero-in.on img{opacity:1;transform:scale(1)}
+.gl-hero-in::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(244,233,203,0) 55%,rgba(244,233,203,.55));pointer-events:none}
+.gl-hero figcaption{font:400 12px/1.35 var(--f-ui);color:var(--gl-soft);padding:8px 22px 0}
+.gl-hero figcaption span{display:block;font-size:11px;letter-spacing:.04em;opacity:.8;margin-top:2px}
+.gl-hero.small{margin:16px 0 6px}
+.gl-hero.small .gl-hero-in{height:190px;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(90,60,20,.25)}
+.gl-hero.small figcaption{padding:7px 0 0}
+.gl-panel.has-hero .gl-px{background:rgba(244,233,203,.92)}
+.gl-lead{font-size:18px;line-height:1.55}
+.gl-figs,.gl-txts{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.gl-figs li{padding:9px 12px;border-left:3px solid var(--gl-red);background:rgba(255,250,235,.5);border-radius:0 10px 10px 0}
+.gl-figs b{font:600 15.5px var(--f-ui)} .gl-figs small{font:400 13px var(--f-ui);color:var(--gl-soft);margin-left:8px}
+.gl-figs span{display:block;font:400 15px/1.4 var(--f-text);margin-top:2px}
+.gl-txts li{font:400 16px/1.4 var(--f-text);padding-left:16px;position:relative}
+.gl-txts li::before{content:"";position:absolute;left:0;top:.6em;width:7px;height:7px;transform:rotate(45deg);background:var(--gl-red)}
+.gl-txts small{font:400 13px var(--f-ui);color:var(--gl-soft)}
+.gl-reste{margin-top:18px;padding:4px 16px 12px;border-radius:12px;background:rgba(140,35,24,.06);border:1px solid rgba(140,35,24,.18)}
+.gl-reste h3{margin-top:12px!important}
+/* les coins gravés du cabinet */
+.glb::after{content:"";position:absolute;inset:10px;pointer-events:none;z-index:1;border:1px solid rgba(217,179,106,.18);border-radius:6px;
+  background:
+    radial-gradient(circle at 0 0,transparent 21px,rgba(217,179,106,.35) 22px,transparent 23px) top left/48px 48px no-repeat,
+    radial-gradient(circle at 100% 0,transparent 21px,rgba(217,179,106,.35) 22px,transparent 23px) top right/48px 48px no-repeat,
+    radial-gradient(circle at 0 100%,transparent 21px,rgba(217,179,106,.35) 22px,transparent 23px) bottom left/48px 48px no-repeat,
+    radial-gradient(circle at 100% 100%,transparent 21px,rgba(217,179,106,.35) 22px,transparent 23px) bottom right/48px 48px no-repeat}
+@media (max-width:859px){ .glb::after{display:none} .gl-hero{margin:-18px -18px 16px} .gl-hero-in{height:190px;border-radius:18px 18px 0 0} .gl-hero figcaption{padding:8px 18px 0} }
+@media (prefers-reduced-motion: reduce){ .gl-hero-in img{transition:opacity .3s;transform:none} }
+
 /* la carte du bas : parcours et jeu */
 .gl-card{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(540px,calc(100% - 24px));padding:16px 18px;border-radius:14px;background:var(--gl-paper);color:var(--gl-ink);box-shadow:0 26px 60px -18px #000,inset 0 0 0 1px rgba(90,60,20,.35);z-index:3;user-select:text;-webkit-user-select:text}
 .gl-card[hidden]{display:none}
