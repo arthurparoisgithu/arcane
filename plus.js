@@ -48,6 +48,14 @@
   ]
  ],
  [
+  "Le globe des traditions",
+  [
+   "Fond de carte : <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> (domaine public), tracés des côtes simplifiés pour Arcanes. Projection : <a href=\"https://github.com/d3/d3-geo\" target=\"_blank\" rel=\"noopener\">d3-geo</a> de Mike Bostock (licence ISC). L'habillage de carte ancienne, les sceaux et les vingt-six symboles sont dessinés pour Arcanes.",
+   "Les notices sont rédigées pour Arcanes. Pour vérifier et aller plus loin : Wouter J. Hanegraaff (dir.), <i>Dictionary of Gnosis and Western Esotericism</i> (Brill, 2005) ; Antoine Faivre, <i>L'Ésotérisme</i> (PUF) ; Jean-Pierre Brach et Jérôme Rousse-Lacordaire (dir.), <i>Études d'histoire de l'ésotérisme</i> (Cerf, 2007) ; les listes du <a href=\"https://ich.unesco.org/fr/listes\" target=\"_blank\" rel=\"noopener\">patrimoine culturel immatériel de l'UNESCO</a>.",
+   "Les traditions vivantes, en particulier celles des peuples autochtones, sont présentées comme des religions et des cultures. Arcanes n'en reproduit ni les objets sacrés ni le détail des cérémonies. Les emplacements des sceaux sont des repères, pas des frontières."
+  ]
+ ],
+ [
   "L'alchimie",
   [
    "Planches du Splendor solis : huit aquarelles d'E. A. Ibbs d'après le manuscrit de Londres (1582), <a href=\"https://wellcomecollection.org/search/works?query=Ibbs%20Trismosin\" target=\"_blank\" rel=\"noopener\">Wellcome Collection</a>. Domaine public, sauf le soleil noir et l'aigle à trois têtes, sous licence <a href=\"https://creativecommons.org/licenses/by/4.0/deed.fr\" target=\"_blank\" rel=\"noopener\">CC BY 4.0</a> (images recadrées).",

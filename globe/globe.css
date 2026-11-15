@@ -1,0 +1,122 @@
+/* ===== Arcanes · Le globe des traditions =====
+   Un cabinet sombre, un globe de parchemin cerclé de laiton, des fiches comme des feuillets manuscrits. */
+.gl-banner{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;width:100%;text-align:left;margin:18px 0 6px;padding:14px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);font:inherit;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s}
+.gl-banner:hover{transform:translateY(-2px);border-color:#a8822e;box-shadow:0 14px 30px -20px rgba(120,80,20,.7)}
+.gl-banner svg{width:58px;height:58px;flex:none}
+.gl-banner svg .s{fill:#efe1b9;stroke:#3b2a1a;stroke-width:1.4}
+.gl-banner svg .r{fill:none;stroke:#b08a38;stroke-width:3}
+.gl-banner svg .g{fill:none;stroke:rgba(70,48,22,.4);stroke-width:.8}
+.gl-banner svg .l{fill:#e2cf9c;stroke:#3b2a1a;stroke-width:1}
+.gl-banner svg .d{fill:#a5432a;stroke:#2a1408;stroke-width:.8} .gl-banner svg .d2{fill:#2f4f8f;stroke:#141a2a;stroke-width:.8}
+.gl-banner b{display:block;font:400 25px/1.1 var(--f-display)}
+.gl-banner small{display:block;font:400 14.5px/1.4 var(--f-ui);color:var(--ink-soft);margin-top:3px}
+.gl-banner i{font:700 11px var(--f-ui);font-style:normal;letter-spacing:.14em;text-transform:uppercase;padding:9px 14px;border:1px solid currentColor;border-radius:999px;white-space:nowrap}
+.gl-veil{position:fixed;inset:0;z-index:410;display:grid;place-content:center;justify-items:center;gap:16px;background:rgba(12,9,6,.92);color:#f1e3bd;font:400 20px var(--f-display);text-align:center;padding:24px}
+.gl-veil-o{width:64px;height:64px;border-radius:50%;border:2px solid #b08a38;border-top-color:transparent;animation:gl-spin 1.1s linear infinite}
+@keyframes gl-spin{to{transform:rotate(360deg)}}
+body.gl-open{overflow:hidden}
+
+.glb::before{content:"";position:absolute;left:0;right:0;top:0;height:150px;background:linear-gradient(rgba(10,7,4,.82),rgba(10,7,4,.5) 55%,rgba(10,7,4,0));pointer-events:none;z-index:1}
+.gl-top,.gl-tools{z-index:2}
+.glb{--gl-paper:#f4e9cb;--gl-ink:#2a1a0c;--gl-soft:#6b5233;--gl-red:#8c2318;--gl-gold:#d9b36a;position:fixed;inset:0;z-index:400;overflow:hidden;color:#f1e3bd;
+  background:radial-gradient(120% 90% at 50% 46%,#33271a 0%,#1a130c 52%,#080604 100%);font-family:var(--f-ui);user-select:none;-webkit-user-select:none}
+.glb[hidden]{display:none}
+.gl-cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;outline:none}
+.gl-cv:active{cursor:grabbing}
+.gl-cv:focus-visible{box-shadow:inset 0 0 0 2px var(--gl-gold)}
+.gl-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 8px;pointer-events:none}
+.gl-top>*{pointer-events:auto}
+.gl-x,.gl-px{width:42px;height:42px;border-radius:50%;border:1px solid rgba(217,179,106,.5);background:rgba(20,14,8,.7);color:#f1e3bd;font:400 22px/1 var(--f-ui);cursor:pointer;flex:none}
+.gl-title b{display:block;font:400 24px/1 var(--f-display);letter-spacing:.01em;color:#f6e7bd}
+.gl-title small{font:500 12.5px var(--f-ui);color:#b9a781;letter-spacing:.04em}
+.gl-tools{position:absolute;left:0;right:0;top:calc(62px + env(safe-area-inset-top,0px));display:flex;gap:7px;padding:0 14px;overflow-x:auto;scrollbar-width:none}
+.gl-tools::-webkit-scrollbar{display:none}
+.gl-tools button,.gl-filters button{flex:none;padding:8px 14px;border-radius:999px;border:1px solid rgba(217,179,106,.42);background:rgba(20,14,8,.72);color:#f1e3bd;font:600 13.5px var(--f-ui);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:7px}
+.gl-tools button:hover,.gl-tools button[aria-expanded="true"]{border-color:var(--gl-gold);color:var(--gl-gold)}
+.gl-filters{position:absolute;left:14px;right:14px;top:calc(106px + env(safe-area-inset-top,0px));display:flex;flex-wrap:wrap;gap:6px;padding:12px;border-radius:14px;border:1px solid rgba(217,179,106,.3);background:rgba(16,11,6,.94);max-width:560px;z-index:3}
+.gl-filters[hidden]{display:none}
+.gl-filters button{opacity:.45;font-size:13px;padding:7px 11px}
+.gl-filters button.on{opacity:1}
+.gl-filters button.all{opacity:1;border-style:dashed}
+.gl-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.gl-dot.lz{border-radius:0;transform:rotate(45deg) scale(.8);background:#efe0b8;box-shadow:0 0 0 2px #8c2318}
+.gl-zoom{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:grid;gap:6px;z-index:2}
+.gl-zoom button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(217,179,106,.45);background:rgba(20,14,8,.75);color:#f1e3bd;font:400 20px/1 var(--f-ui);cursor:pointer}
+.gl-hint{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;font:italic 400 15px var(--f-text);color:#b9a781;pointer-events:none;transition:opacity .4s}
+.glb.gl-has-panel .gl-hint,.glb.gl-has-card .gl-hint{opacity:0}
+
+/* les fiches : un feuillet de parchemin */
+.gl-panel{position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top,0px));bottom:14px;width:392px;border-radius:14px;background:var(--gl-paper);color:var(--gl-ink);box-shadow:0 30px 70px -20px #000,inset 0 0 0 1px rgba(90,60,20,.35),inset 0 0 60px rgba(150,110,50,.18);display:flex;flex-direction:column;z-index:4;user-select:text;-webkit-user-select:text;animation:gl-in .35s cubic-bezier(.2,.8,.2,1)}
+.gl-panel[hidden]{display:none}
+@keyframes gl-in{from{opacity:0;transform:translateX(24px)}}
+.gl-panel-in{overflow-y:auto;padding:22px 22px 26px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.gl-px{position:absolute;right:10px;top:10px;width:36px;height:36px;background:rgba(244,233,203,.9);color:var(--gl-ink);border-color:rgba(90,60,20,.4);z-index:2}
+.gl-eye{display:flex;align-items:center;gap:8px;font:700 11px var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--gl-soft);margin:0 44px 6px 0}
+.gl-panel h2{font:400 31px/1.05 var(--f-display);margin:0 30px 8px 0;text-wrap:balance}
+.gl-panel h3,.gl-card h3{font:700 11.5px var(--f-ui);letter-spacing:.13em;text-transform:uppercase;color:var(--gl-red);margin:22px 0 9px;display:flex;align-items:center;gap:8px}
+.gl-dates{font:italic 400 16.5px var(--f-text);color:var(--gl-soft);margin:0 0 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.gl-p{font:400 17px/1.55 var(--f-text);margin:0 0 10px;text-wrap:pretty}
+.gl-note{font:400 14px/1.45 var(--f-ui);color:var(--gl-soft);border-left:3px solid var(--gl-red);padding:2px 0 2px 12px;margin:12px 0 0}
+.gl-st{display:inline-flex;align-items:center;gap:6px;font:700 10px/1 var(--f-ui);font-style:normal;letter-spacing:.11em;text-transform:uppercase;padding:5px 8px 4px;border-radius:999px;border:1px solid currentColor;color:#1f5f54;white-space:nowrap}
+.gl-st::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.gl-st-trad{color:#8a6620} .gl-st-mod{color:#2f4f8f} .gl-st-leg{color:#a8371f}
+.gl-route{list-style:none;margin:0 0 12px;padding:0 0 0 14px;border-left:2px dashed rgba(140,35,24,.5);display:grid;gap:4px}
+.gl-route li{position:relative;opacity:.42;transition:opacity .4s}
+.gl-route li.on,.gl-route li.cur{opacity:1}
+.gl-route li::before{content:"";position:absolute;left:-20px;top:13px;width:9px;height:9px;border-radius:50%;background:var(--gl-paper);border:2px solid var(--gl-red)}
+.gl-route li.cur::before,.gl-route li.on:last-of-type::before{background:var(--gl-red)}
+.gl-route button{display:grid;grid-template-columns:86px 1fr;gap:10px;width:100%;text-align:left;padding:7px 8px;border:0;border-radius:8px;background:none;color:inherit;font:400 15px/1.4 var(--f-text);cursor:pointer}
+.gl-route button:hover,.gl-route li.cur button{background:rgba(140,35,24,.09)}
+.gl-route b{font:700 12px/1.5 var(--f-ui);color:var(--gl-red)}
+.gl-route strong{display:block;font:600 15.5px var(--f-ui)}
+.gl-btn{padding:9px 16px;border-radius:999px;border:1px solid rgba(90,60,20,.5);background:none;color:var(--gl-ink);font:600 14px var(--f-ui);cursor:pointer}
+.gl-btn:hover{border-color:var(--gl-red);color:var(--gl-red)}
+.gl-btn.main{background:var(--gl-red);border-color:var(--gl-red);color:#fff3d6}
+.gl-arc{display:flex;gap:8px;flex-wrap:wrap}
+.gl-link{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;width:100%;text-align:left;padding:9px 10px;margin-bottom:5px;border:1px solid rgba(90,60,20,.22);border-radius:10px;background:rgba(255,250,235,.45);color:inherit;font:inherit;cursor:pointer}
+.gl-link[hidden]{display:none}
+.gl-link:hover{border-color:var(--gl-red)}
+.gl-link b{display:block;font:600 15.5px/1.25 var(--f-ui)}
+.gl-link small{font:400 13px var(--f-ui);color:var(--gl-soft)}
+.gl-syms{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.gl-sym{display:grid;justify-items:center;gap:6px;padding:12px 6px 9px;border:1px solid rgba(90,60,20,.22);border-radius:10px;background:rgba(255,250,235,.45);color:var(--gl-ink);font:500 12.5px/1.2 var(--f-ui);text-align:center;cursor:pointer}
+.gl-sym:hover{border-color:var(--gl-red);color:var(--gl-red)}
+.gl-gly{width:44px;height:44px;display:block;overflow:visible}
+.gl-gly path{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.gl-gly path.f{fill:currentColor} .gl-gly path.f2{fill:var(--gl-paper)}
+.gl-sym-big{display:grid;place-items:center;padding:8px 0 16px;color:var(--gl-red)}
+.gl-sym-big .gl-gly{width:min(190px,48vw);height:min(190px,48vw)}
+.gl-sym-big .gl-gly path{stroke-width:2.6}
+.gl-gly.draw path{stroke-dasharray:1;stroke-dashoffset:1;fill-opacity:0;animation:gl-draw .9s cubic-bezier(.5,0,.2,1) forwards;animation-delay:calc(var(--i)*.2s + .1s)}
+@keyframes gl-draw{to{stroke-dashoffset:0;fill-opacity:1}}
+.gl-search input{width:100%;font:400 16px var(--f-ui);color:var(--gl-ink);background:rgba(255,250,235,.7);border:1px solid rgba(90,60,20,.4);border-radius:999px;padding:10px 16px;margin:6px 0 4px}
+.gl-grp[hidden]{display:none}
+.gl-tour{display:grid;gap:4px;width:100%;text-align:left;padding:14px 16px;margin-bottom:8px;border:1px solid rgba(90,60,20,.3);border-radius:12px;background:rgba(255,250,235,.5);color:inherit;font:inherit;cursor:pointer}
+.gl-tour:hover{border-color:var(--gl-red)}
+.gl-tour b{font:400 22px/1.1 var(--f-display)}
+.gl-tour span{font:400 15px/1.4 var(--f-text);color:var(--gl-soft)}
+.gl-tour small{font:700 10.5px var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--gl-red)}
+/* la carte du bas : parcours et jeu */
+.gl-card{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(540px,calc(100% - 24px));padding:16px 18px;border-radius:14px;background:var(--gl-paper);color:var(--gl-ink);box-shadow:0 26px 60px -18px #000,inset 0 0 0 1px rgba(90,60,20,.35);z-index:3;user-select:text;-webkit-user-select:text}
+.gl-card[hidden]{display:none}
+.gl-card h3{font:400 25px/1.1 var(--f-display);letter-spacing:0;text-transform:none;color:var(--gl-ink);margin:0 0 6px;align-items:baseline;flex-wrap:wrap}
+.gl-card h3 small{font:700 11.5px var(--f-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--gl-red)}
+.gl-card .gl-p{font-size:16px;margin:0}
+.gl-card-nav{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+.glb.gl-is-game .gl-tools,.glb.gl-is-game .gl-filters{display:none}
+
+@media (max-width:859px){
+  .gl-title b{font-size:21px}
+  .gl-zoom{top:auto;bottom:calc(52px + env(safe-area-inset-bottom,0px));transform:none}
+  .glb.gl-has-panel .gl-zoom,.glb.gl-has-card .gl-zoom{display:none}
+  .gl-panel{left:0;right:0;top:auto;bottom:0;width:auto;height:56%;border-radius:18px 18px 0 0;animation-name:gl-up}
+  @keyframes gl-up{from{opacity:0;transform:translateY(30px)}}
+  .gl-panel-in{padding:18px 18px calc(24px + env(safe-area-inset-bottom,0px))}
+  .gl-panel h2{font-size:27px}
+  .glb.gl-has-panel .gl-tools{display:none}
+  .gl-banner{grid-template-columns:auto 1fr;padding:12px 14px;gap:12px}
+  .gl-banner i{display:none}
+  .gl-banner svg{width:48px;height:48px}
+  .gl-banner b{font-size:22px}
+}
+@media (prefers-reduced-motion: reduce){ .gl-gly.draw path{animation:none;stroke-dashoffset:0;fill-opacity:1} .gl-panel{animation:none} }
