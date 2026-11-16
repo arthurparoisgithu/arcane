@@ -808,36 +808,25 @@
   /* =================================================================
      HISTOIRE
      ================================================================= */
-  const HIMG = [
-    ["h0","Un « journal astronomique » babylonien de 331-330 av. J.-C., qui note aussi la mort d'Alexandre. British Museum."],
-    ["h1","Claude Ptolémée, gravure. Wellcome Collection (CC BY 4.0)."],
-    ["h2","L'Atlas Farnèse, copie romaine du IIe siècle : le plus ancien globe céleste conservé. Musée archéologique de Naples. Photo Yair Haklai (CC BY-SA 4.0)."],
-    ["h3","Abu Ma'shar, De magnis coniunctionibus, édition latine imprimée à Augsbourg en 1489. Observatoire de Paris."],
-    ["h4","L'homme zodiacal des Très Riches Heures du duc de Berry, par les frères de Limbourg, vers 1411-1416. Musée Condé, Chantilly."],
-    ["h5","Jean-Baptiste Morin de Villefranche, gravure d'Étienne Desrochers, XVIIIe siècle."],
-    ["h6","Un thème dressé au début du XXe siècle, publié dans The Life and Work of Alan Leo (1919)."],
-    ["h7","William Lilly en 1660, gravure. Wellcome Collection (CC BY 4.0)."],
-    ["h8","La gravure dite de Flammarion, publiée dans L'Atmosphère (Paris, 1888)."]];
   let histObs = null;
   function renderHist(){
-    const root = q1("#v-a-histoire");
-    root.innerHTML = `<header class="a-hero"><p class="eyebrow">Plus de deux mille ans de regards sur le ciel</p><h1>Une histoire de l'astrologie</h1><p class="a-lede">Des présages de Babylone aux traductions d'aujourd'hui, en passant par Alexandrie, Bagdad, les universités médiévales et la psychologie. Et ce qu'en disent les études scientifiques.</p></header>
-      <nav class="a-htoc" aria-label="Les époques">${ASTRO_HIST.map((e, i) => `<a href="#a-era-${i}" data-era="${i}"><span>${ROM[i + 1]}</span>${e.t.split(" :")[0].replace("Le Moyen Âge latin et la Renaissance", "Moyen Âge et Renaissance")}</a>`).join("")}</nav>
-      <div class="a-tl">${ASTRO_HIST.map((e, i) => { const im = HIMG[i];
-        return `<section class="a-era2${i % 2 ? " alt" : ""}" id="a-era-${i}"><span class="a-era-n" aria-hidden="true">${ROM[i + 1]}</span><p class="a-erad">${e.d}</p><h2>${e.t}</h2>
-          <p class="lead a-era-lead">${e.p[0]}</p>
-          <details class="a-fold a-erafold"><summary><span><b>Lire le chapitre</b><small>${e.gens.length ? e.gens.map(g => g[0]).join(" · ") : "La suite"}</small></span><i class="a-chev" aria-hidden="true"></i></summary><div class="a-fold-b">
-          <div class="a-era-body"><div class="a-era-txt">${e.p.slice(1).map(p => `<p>${p}</p>`).join("")}</div>
-          ${im ? `<figure class="a-era-fig"><img src="${IMG(im[0])}" alt="" loading="lazy"><figcaption>${im[1]}</figcaption></figure>` : ""}</div>
-          ${e.gens.length ? `<div class="a-gens">${e.gens.map(([n, t]) => `<article class="a-gen"><h3>${n}</h3><p>${t}</p></article>`).join("")}</div>` : ""}</div></details></section>`; }).join("")}</div>
-      <div class="a-acts a-hend"><button type="button" class="btn" data-hquiz>Tester mes connaissances</button></div>`;
-    const toc = q1(".a-htoc", root);
-    qa(".a-htoc a", root).forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById(a.getAttribute("href").slice(1)); if(t) t.scrollIntoView({behavior:reduce() ? "auto" : "smooth", block:"start"}); });
+    const root = q1("#v-a-histoire"), HX = window.ArcanesHistoire;
+    const CH = JSON.parse(JSON.stringify(window.ASTRO_HISTOIRE || []).replace(/"@(h\d)"/g, (m, k) => JSON.stringify(IMG(k))));
+    root.innerHTML = HX.render({pfx:"ah", eyebrow:"Vingt-cinq siècles de regards sur le ciel", titre:"Une histoire de l'astrologie",
+      lede:"Des présages de Babylone aux applications d'aujourd'hui, par Alexandrie, Bagdad, les universités du Moyen Âge et la psychologie. Qui l'a inventée, comment elle a voyagé, pourquoi elle est sortie des sciences, et ce qu'en disent les études.",
+      avant:"<b>Comment lire.</b> Chaque chapitre donne les lieux, le récit, les figures et les réponses aux questions qu'on se pose. Touche une image pour l'agrandir.",
+      chapitres:CH,
+      fin:`<section class="hx-fin"><h2>Pour vérifier et aller plus loin</h2><ul>
+        <li>Francesca Rochberg, <i>The Heavenly Writing</i>, Cambridge University Press, 2004</li>
+        <li>Auguste Bouché-Leclercq, <i>L'Astrologie grecque</i>, 1899</li>
+        <li>Tamsyn Barton, <i>Ancient Astrology</i>, Routledge, 1994</li>
+        <li>Jean-Patrice Boudet, <i>Entre science et nigromance</i>, Publications de la Sorbonne, 2006</li>
+        <li>Nicholas Campion, <i>A History of Western Astrology</i>, 2 vol., Continuum, 2008-2009</li>
+        <li>Chris Brennan, <i>Hellenistic Astrology</i>, Amor Fati, 2017</li>
+        <li>Geoffrey Dean et Ivan Kelly, « Is Astrology Relevant to Consciousness and Psi? », <i>Journal of Consciousness Studies</i>, 2003</li></ul>
+        <div class="a-acts a-hend"><button type="button" class="btn" data-hquiz>Tester mes connaissances</button></div></section>`});
+    HX.bind(root);
     q1("[data-hquiz]", root).onclick = () => { startQuiz("histoire"); aView("quiz"); };
-    if(histObs) histObs.disconnect();
-    if("IntersectionObserver" in window){ histObs = new IntersectionObserver(es => es.forEach(en => { if(!en.isIntersecting) return; const i = en.target.id.split("-").pop();
-        qa("a", toc).forEach(a => { const on = a.dataset.era === i; a.classList.toggle("on", on); if(on && toc.scrollWidth > toc.clientWidth) toc.scrollTo({left:a.offsetLeft - 16, behavior:"smooth"}); }); }), {rootMargin:"-30% 0px -60% 0px"});
-      qa(".a-era2", root).forEach(s => histObs.observe(s)); }
   }
 
   /* =================================================================

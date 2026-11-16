@@ -757,7 +757,7 @@
      ================================================================ */
   X.go.lec = id => { const m = K.MODULES.find(m => m.lecons.some(l => l.id === id)); if(!m) return; _.setEv({mod:m.id, lec:m.lecons.findIndex(l => l.id === id)}); _.mView("ecole"); };
   X.go.biblio = id => { bv = id || null; _.setHv("biblio"); _.mView("histoire"); };
-  X.go.hist = id => { bv = null; _.setHv("chapitres"); _.mView("histoire"); setTimeout(() => { const t = document.getElementById(id); if(t){ window.scrollTo({top:t.getBoundingClientRect().top + scrollY - 70}); const d = t.querySelector("details"); if(d) d.open = true; } }, 60); };
+  X.go.hist = id => { bv = null; _.setHv("chapitres"); _.mView("histoire"); setTimeout(() => { const t = document.getElementById("mh-" + id) || document.getElementById(id); if(t) window.scrollTo({top:t.getBoundingClientRect().top + scrollY - 64}); }, 80); };
   X.go.outil = (k, a) => { _.setAt(k, a || null); _.mView("atelier"); };
   X.go.rituel = k => M.openRite(k);
   X.go.cycle = () => { _.setCn({tab:"cycle"}); _.mView("carnet"); };

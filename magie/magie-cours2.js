@@ -184,7 +184,7 @@ const MODULES = [
     ex:{ t:"Dessiner la Monade", txt:"Regarde la Monade se construire, puis dessine-la à main levée, étape par étape, en disant le nom de chaque partie.", outil:"outil:monade" },
     carnet:"Si je devais résumer ce que je cherche en un seul signe, il ressemblerait à :",
     marge:[ {t:"Le livre", txt:"<i>Monas hieroglyphica</i>, Anvers, 1564, dédié à l'empereur Maximilien II."},
-            {t:"Voir aussi", txt:"John Dee, au chapitre IV de l'Histoire.", go:"hist:h4"} ] }
+            {t:"Voir aussi", txt:"John Dee, au chapitre VIII de l'Histoire.", go:"hist:h8"} ] }
   ],
   quiz:[
     { q:"Selon le Sefer Yetsirah, par combien de voies le monde a-t-il été créé ?", r:["32 : dix nombres et vingt-deux lettres","22","10","72"], ok:0, exp:"Les dix sephiroth et les vingt-deux lettres." },
@@ -306,7 +306,7 @@ const BIBLIO = [
   { id:"poimandres", t:"Poimandrès", auteur:"Corpus Hermeticum, traité I", date:"Égypte romaine, IIe-IIIe siècle", trad:"Traduction de Louis Ménard (1866)",
     com:["Le premier traité du <i>Corpus Hermeticum</i>, celui que Ficin traduisit pour Cosme de Médicis. Hermès y reçoit une vision de la création de la bouche de Poimandrès, « l'intelligence souveraine ».",
          "En 1614, le philologue Isaac Casaubon montra que ces textes datent des premiers siècles de notre ère, et non de l'Égypte des pharaons. Ils n'en restent pas moins l'une des sources de la pensée hermétique."],
-    go:["lec:m10l1","hist:h1"] },
+    go:["lec:m10l1","hist:h3"] },
   { id:"asclepios", t:"Les statues animées", auteur:"Asclépius, 23-24 et 37-38", date:"Égypte romaine, IIe-IIIe siècle", trad:"Traduction de Louis Ménard (1866)",
     com:["Le passage le plus célèbre et le plus discuté de la littérature hermétique : les Égyptiens savaient faire descendre des dieux dans des statues, en les attirant par des herbes, des pierres, des parfums et de la musique.",
          "Augustin le condamne dans <i>La Cité de Dieu</i> ; Ficin le discute avec prudence au livre III de <i>La Vie</i>. Toute la théorie du talisman en découle."],

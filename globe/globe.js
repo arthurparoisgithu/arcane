@@ -18,15 +18,17 @@
   const banner = () => { const b = document.createElement("button"); b.type = "button"; b.className = "gl-banner"; b.setAttribute("data-globe", "");
     b.innerHTML = `${MINI}<span><b>Le globe des traditions</b><small>Une carte ancienne à faire tourner : 76 traditions spirituelles et ésotériques, leurs voyages, leurs symboles et 36 événements.</small></span><i aria-hidden="true">Ouvrir</i>`; return b; };
   function place(v){
-    if(!v || !v.firstElementChild || v.querySelector(":scope > .gl-banner")) return;
-    const anchor = v.querySelector(":scope > header") || v.firstElementChild; anchor.after(banner());
+    if(!v || !v.firstElementChild || v.querySelector(".gl-banner")) return;
+    const anchor = v.querySelector(".hx-top") || v.querySelector(":scope > header") || v.firstElementChild; anchor.after(banner());
   }
   const IDS = ["v-histoire", "v-a-histoire", "v-m-histoire", "v-al-histoire"];
   function watch(){ IDS.forEach(id => { const v = document.getElementById(id); if(!v) return; place(v); if(v._gl) return; v._gl = 1; new MutationObserver(() => place(v)).observe(v, {childList:true}); }); }
   function init(){
     watch(); const main = document.querySelector("main"); if(main) new MutationObserver(watch).observe(main, {childList:true});   // les vues de la magie et de l'alchimie naissent plus tard
     document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-globe]"); if(b){ e.preventDefault(); open(b.dataset.globe || null); } });
-    if(DEEP) setTimeout(() => open(), 500);
+    if(DEEP){ setTimeout(() => open(), 500);
+      // le lien direct n'ouvre le globe qu'une fois : on nettoie l'adresse pour que l'app rouvre ensuite sur son accueil
+      try { const u = new URL(location.href); u.searchParams.delete("globe"); if(u.hash === "#globe") u.hash = ""; history.replaceState(null, "", u.pathname + (u.searchParams.toString() ? "?" + u.searchParams : "") + u.hash); } catch(e){} }
   }
   window.ArcanesGlobe = {open};
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(init, 0)); else setTimeout(init, 0);

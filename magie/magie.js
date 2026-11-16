@@ -677,20 +677,24 @@
     const htabs = EXT.histTabs.length ? `<nav class="subtabs m-htabs" aria-label="Histoire"><button type="button" class="subtab${hv === "chapitres" ? " on" : ""}" data-mhv="chapitres">Les chapitres</button>${EXT.histTabs.map(x => `<button type="button" class="subtab${hv === x.id ? " on" : ""}" data-mhv="${x.id}">${x.label}</button>`).join("")}</nav>` : "";
     const xt = EXT.histTabs.find(x => x.id === hv);
     if(xt){ root.innerHTML = xt.render(htabs); qa("[data-mhv]", root).forEach(b => b.onclick = () => { hv = b.dataset.mhv; renderHistoire(); }); if(xt.bind) xt.bind(root); bindLinks(root); return; }
-    root.innerHTML = htabs + `<header class="m-hero"><p class="eyebrow">Deux mille ans en huit chapitres</p><h1>Histoire de la magie</h1>
-        <p class="m-lede">Des papyrus d'Égypte aux chercheurs d'aujourd'hui : la magie savante de l'Occident, ses livres, ses figures, ses procès.</p></header>
-      <nav class="m-htoc" aria-label="Les chapitres">${K.HISTOIRE.map(c => `<a href="#${c.id}" data-mh="${c.id}">${c.n}</a>`).join("")}</nav>
-      <div class="m-eras">${K.HISTOIRE.map(c => `<section class="m-era" id="${c.id}"><p class="eyebrow">${c.n} · ${c.per}</p><h2>${nb(c.t)}</h2>
-        ${c.img ? `<figure class="m-era-fig">${img(c.img, "")}<figcaption>${CRED[c.img] || ""}</figcaption></figure>` : ""}
-        <p class="m-lede">${c.lead}</p>
-        <details class="m-fold"><summary><span><b>Lire le chapitre</b><small>${c.gens.map(g => g[0].split(" (")[0]).join(" · ")}</small></span><i class="a-chev" aria-hidden="true"></i></summary>
-          <div class="m-fold-b">${c.p.map(p => `<p>${p}</p>`).join("")}<div class="m-gens">${c.gens.map(([n, t]) => `<article class="m-gen"><h3>${n}</h3><p>${t}</p></article>`).join("")}</div></div></details></section>`).join("")}
-        <section class="m-era"><p class="eyebrow">Pour aller plus loin</p><h2>Quelques livres sérieux</h2>
-          <ul class="m-biblio"><li>Antoine Faivre, <i>L'Ésotérisme</i>, PUF, « Que sais-je ? »</li><li>Frances Yates, <i>Giordano Bruno et la tradition hermétique</i> (1964), trad. Dervy</li>
-          <li>Wouter J. Hanegraaff, <i>Western Esotericism: A Guide for the Perplexed</i>, Bloomsbury, 2013</li><li>Jean-Patrice Boudet, <i>Entre science et nigromance</i>, Publications de la Sorbonne, 2006</li>
-          <li>Owen Davies, <i>Grimoires: A History of Magic Books</i>, Oxford University Press, 2009</li></ul></section></div>`;
+    const HX = window.ArcanesHistoire, CH = window.MAGIE_HISTOIRE || [];
+    root.innerHTML = htabs + HX.render({pfx:"mh", eyebrow:"Trente siècles en onze chapitres", titre:"Histoire de la magie",
+      lede:"Des tablettes de Mésopotamie aux bibliothèques d'aujourd'hui : d'où vient le mot, qui étaient les mages, ce qu'ils faisaient vraiment, et comment leurs livres sont arrivés jusqu'à nous.",
+      avant:"<b>Comment lire.</b> Chaque chapitre donne les lieux, le récit, les figures et les réponses aux questions qu'on se pose. Touche une image pour l'agrandir. Ce qui relève de la légende est toujours signalé comme tel.",
+      chapitres:CH,
+      fin:`<section class="hx-fin"><h2>Pour vérifier et aller plus loin</h2><ul>
+        <li>Fritz Graf, <i>La Magie dans l'Antiquité gréco-romaine</i>, Les Belles Lettres, 1994</li>
+        <li>Garth Fowden, <i>Hermès l'Égyptien</i>, Les Belles Lettres, 2000</li>
+        <li>Richard Kieckhefer, <i>Magic in the Middle Ages</i>, Cambridge University Press, 1989</li>
+        <li>Jean-Patrice Boudet, <i>Entre science et nigromance</i>, Publications de la Sorbonne, 2006</li>
+        <li>Frances Yates, <i>Giordano Bruno et la tradition hermétique</i> (1964), Dervy</li>
+        <li>Brian Levack, <i>La Grande Chasse aux sorcières en Europe</i>, Champ Vallon, 1991</li>
+        <li>Owen Davies, <i>Grimoires: A History of Magic Books</i>, Oxford University Press, 2009</li>
+        <li>Antoine Faivre, <i>L'Ésotérisme</i>, PUF, « Que sais-je ? »</li>
+        <li>Wouter J. Hanegraaff, <i>Western Esotericism: A Guide for the Perplexed</i>, Bloomsbury, 2013</li></ul>
+        <p class="hx-note">Les gravures viennent de la Wellcome Collection, de l'Art Institute of Chicago et du Cleveland Museum of Art, sous licence libre ; la source figure sous chaque image.</p></section>`});
+    HX.bind(root);
     qa("[data-mhv]", root).forEach(b => b.onclick = () => { hv = b.dataset.mhv; renderHistoire(); });
-    qa("[data-mh]", root).forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById(a.dataset.mh); if(t) window.scrollTo({top:t.getBoundingClientRect().top + scrollY - 70, behavior:"smooth"}); });
     bindLinks(root);
   }
 
