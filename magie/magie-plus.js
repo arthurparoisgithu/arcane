@@ -272,19 +272,29 @@
   const hval = w => [...w].reduce((a, c) => a + (HV[c] || 0), 0);
   const latv = w => [...String(w).normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase()].filter(c => c >= "A" && c <= "Z").map(c => [c, c.charCodeAt(0) - 64]);
   function gemaTool(host, o = {}){
-    let mode = "he", w = "אחד", fr = "Arcanes";
+    let mode = "he", w = "אחד", fr = "Arcanes", meth = "std";
+    const K = window.MAGIE_KAB, G = K && K.GEM;
     const render = () => {
       if(mode === "he"){
-        const v = hval(w), same = C2.EXEMPLES_GEMATRIE.filter(x => x.w !== w && hval(x.w) === v);
+        const v = hval(w), MOTS = K ? K.MOTS : C2.EXEMPLES_GEMATRIE.map(x => [x.w, x.tr, x.fr]);
+        const same = MOTS.filter(x => x[0] !== w && hval(x[0]) === v), near = w ? MOTS.filter(x => Math.abs(hval(x[0]) - v) === 1).slice(0, 4) : [];
+        const M = K ? K.METHODES.find(m => m.id === meth) : null;
+        const EX = K ? ["אחד","אהבה","יהוה","משיח","נחש","יין","סוד","אלהים","אמת","חי","שלום","אדם","לב","קבלה"] : C2.EXEMPLES_GEMATRIE.map(x => x.w);
+        const tr = x => (MOTS.find(m => m[0] === x) || [])[2] || "";
         host.innerHTML = `<div class="sc-seg m-seg" role="group"><button type="button" data-gm="he" aria-pressed="true">Hébreu</button><button type="button" data-gm="fr" aria-pressed="false">Français, guématrie simple</button></div>
           <div class="m-gem"><div class="m-gem-w" dir="rtl" lang="he">${w ? [...w].map(c => `<span>${c}</span>`).join("") : `<em>Touche des lettres</em>`}</div>
-          <p class="m-gem-sum">${w ? [...w].map(c => `<span><b lang="he">${c}</b>${HV[c] || 0}</span>`).join("<i>+</i>") + `<i>=</i><strong>${v}</strong>` : ""}</p>
-          ${same.length ? `<p class="m-gem-same">Même valeur que ${same.map(x => `<b lang="he">${x.w}</b> (${x.tr}, « ${x.fr} »)`).join(", ")}.</p>` : ""}
+          <p class="m-gem-sum">${w ? [...w].filter(c => c !== " ").map(c => `<span><b lang="he">${c}</b>${HV[c] || 0}</span>`).join("<i>+</i>") + `<i>=</i><strong>${v}</strong>` : ""}</p>
+          ${same.length ? `<p class="m-gem-same">Même valeur que ${same.map(x => `<button type="button" class="linkbtn" data-gex="${x[0]}"><b lang="he">${x[0]}</b> ${x[1]}, « ${x[2]} »</button>`).join(", ")}.</p>` : w ? `<p class="m-gem-same none">Aucun mot du petit dictionnaire n'a cette valeur.</p>` : ""}
+          ${near.length ? `<p class="m-gem-near">À une unité près, ce que les kabbalistes acceptent par la règle du <i>kolel</i> : ${near.map(x => `<span><b lang="he">${x[0]}</b> ${x[1]}, ${hval(x[0])}</span>`).join(", ")}.</p>` : ""}
+          ${K && w ? `<div class="m-gem-meth" role="group" aria-label="Cinq façons de compter">${K.METHODES.map(m => `<button type="button" data-gmeth="${m.id}" aria-pressed="${m.id === meth}"><small>${m.nom}</small><b>${G[m.id](w)}</b></button>`).join("")}</div>
+            <p class="m-gem-mx"><b>${M.nom}</b> <i>(${M.heb})</i>. ${M.txt}${meth === "katan" ? ` Réduit encore à un seul chiffre : <b>${G.reduit(G.katan(w))}</b>.` : ""}</p>` : ""}
+          ${K && w === "יהוה" ? `<div class="m-renc-w nom"><p class="eyebrow">Le Nom rempli de quatre façons</p>${K.NOM.pleins.map(x => `<p><b lang="he" dir="rtl">${x[0]}</b><span>${x[0].split(" ").map(q => hval(q)).join(" + ")} = <strong>${hval(x[0])}</strong></span></p>`).join("")}</div>` : ""}
           <div class="m-gem-kb" dir="rtl">${C2.HEBREU.map(x => `<button type="button" data-gk="${x.l}" class="f-${x.f === "mère" ? "m" : x.f === "double" ? "d" : "s"}" aria-label="${x.nom}, ${x.v}"><b lang="he">${x.l}</b><small>${x.v}</small></button>`).join("")}${Object.entries(C2.FINALES).map(([l]) => `<button type="button" data-gk="${l}" class="fin" aria-label="finale"><b lang="he">${l}</b><small>fin.</small></button>`).join("")}</div>
           <div class="m-acts"><button type="button" class="btn ghost small" data-gdel>Effacer une lettre</button><button type="button" class="btn ghost small" data-gclr>Tout effacer</button><button type="button" class="btn small" data-gatb>Atbash</button></div>
-          <div class="m-gem-ex"><span class="eyebrow">Exemples</span>${C2.EXEMPLES_GEMATRIE.map(x => `<button type="button" class="chip" data-gex="${x.w}"><b lang="he">${x.w}</b> ${x.fr} · ${hval(x.w)}</button>`).join("")}</div>
+          <div class="m-gem-ex"><span class="eyebrow">Essayer</span>${EX.map(x => `<button type="button" class="chip" data-gex="${x}"><b lang="he">${x}</b> ${tr(x)} · ${hval(x)}</button>`).join("")}</div>
           <p class="m-gem-atb" hidden></p></div>
-          <figcaption>Valeurs classiques des 22 lettres. Les formes finales gardent ici la valeur de leur lettre. Mères en rouge, doubles en or, simples en encre.</figcaption>`;
+          <figcaption>Valeurs classiques des 22 lettres ; les finales ne changent de valeur que dans le « grand nombre ». Mères en rouge, doubles en or, simples en encre. ${K ? `Le dictionnaire compte ${K.MOTS.length} mots : c'est peu, et c'est voulu.` : ""}</figcaption>`;
+        qa("[data-gmeth]", host).forEach(b => b.onclick = () => { meth = b.dataset.gmeth; render(); });
         qa("[data-gk]", host).forEach(b => b.onclick = () => { if(w.length < 12){ w += b.dataset.gk; render(); } });
         q1("[data-gdel]", host).onclick = () => { w = [...w].slice(0, -1).join(""); render(); };
         q1("[data-gclr]", host).onclick = () => { w = ""; render(); };

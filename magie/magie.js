@@ -229,9 +229,20 @@
   const SEP = Object.fromEntries(D.SEPHIROTH.map(s => [s.n, s]));
   function treeSVG(o = {}){
     const mode = o.mode || "lettres";
-    let s = `<svg class="m-tree" viewBox="0 0 300 540" role="img" aria-label="L'Arbre de vie, ses dix sephiroth et ses vingt-deux sentiers">`;
+    const KAB = window.MAGIE_KAB, CQ = KAB && o.lect ? KAB.CALQUES[o.lect] || {} : {};
+    let s = `<svg class="m-tree${CQ.flash ? " flash" : ""}${o.lect ? " lect" : ""}" viewBox="${o.lect ? "0 -20 300 562" : "0 0 300 540"}" role="img" aria-label="L'Arbre de vie, ses dix sephiroth et ses vingt-deux sentiers">`;
     s += `<g class="m-t-pillars"><line x1="50" y1="70" x2="50" y2="400"/><line x1="250" y1="70" x2="250" y2="400"/><line x1="150" y1="20" x2="150" y2="525"/></g>`;
-    s += `<circle cx="150" cy="155" r="18" class="m-t-daath"/>`;
+    if(o.lect){ s += `<g class="m-t-lect" pointer-events="none">`;
+      if(CQ.g) CQ.g.forEach((g, i) => { const x0 = SEP[g.s[0]].x, ys = g.s.map(n => SEP[n].y), y0 = Math.min(...ys) - 32, y1 = Math.max(...ys) + 32;
+        s += `<rect x="${x0 - 33}" y="${y0}" width="66" height="${y1 - y0}" rx="33" fill="${g.c}" opacity=".24"/><text x="${x0}" y="${i === 2 ? -6 : y0 - 7}" class="m-t-lab">${["Miséricorde","Rigueur","Équilibre"][i]}</text>`; });
+      if(CQ.tri) CQ.tri.forEach((t, i) => { const P = t.slice(0, 3).map(n => SEP[n]);
+        s += `<polygon points="${P.map(q => q.x + "," + q.y).join(" ")}" fill="${t[3]}" opacity=".3" stroke="${t[3]}" stroke-width="1.5"/><text x="4" y="${[60, 262, 420][i]}" class="m-t-lab s">${["triade céleste","triade morale","triade astrale"][i]}</text>`; });
+      if(CQ.bandes) CQ.bandes.forEach(bd => { s += `<rect x="2" y="${bd[0]}" width="296" height="${bd[1] - bd[0] - 3}" rx="8" fill="${bd[3]}" opacity=".2"/><text x="9" y="${bd[0] + 12}" class="m-t-lab s">${bd[2]}</text>`; });
+      if(CQ.voiles){ const wav = (y) => { let d = `M6 ${y}`; for(let x = 6; x < 294; x += 16) d += ` q4 -5 8 0 t8 0`; return d; };
+        s += `<path d="${wav(155)}" class="m-t-voile"/><text x="294" y="147" class="m-t-lab e">l'Abîme</text><path d="${wav(322)}" class="m-t-voile v2"/><text x="294" y="314" class="m-t-lab e">voile de Paroketh</text>`;
+        [30, 38, 46].forEach(r => { s += `<path d="M${150 - r} 42 A${r} ${r} 0 0 1 ${150 + r} 42" class="m-t-ain"/>`; });
+        s += `<text x="150" y="-10" class="m-t-lab">Ain · Ain Soph · Ain Soph Aur</text>`; }
+      s += `</g>`; }
     D.PATHS.forEach(p => { const a = SEP[p.a], b = SEP[p.b], on = o.path === p.n;
       s += `<g class="m-t-path${on ? " on" : ""}" data-mpath="${p.n}" role="button" tabindex="0" aria-label="Sentier ${p.n}, ${p.lettre}, ${p.lameNom}">
         <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="m-t-hit"/><line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="m-t-line ${p.type}"/></g>`; });
@@ -240,6 +251,7 @@
       const x = a.x + (b.x - a.x)*t, y = a.y + (b.y - a.y)*t;
       const lab = mode === "lettres" ? `<text x="${f1(x)}" y="${f1(y + 1)}" class="m-t-heb">${p.heb}</text>` : mode === "lames" ? `<text x="${f1(x)}" y="${f1(y + 1)}" class="m-t-num">${p.num}</text>` : `<text x="${f1(x)}" y="${f1(y + 1)}" class="m-t-num">${p.n}</text>`;
       s += `<g class="m-t-tag" data-mpath="${p.n}" pointer-events="none"><circle cx="${f1(x)}" cy="${f1(y)}" r="9.5" class="m-t-tagbg"/>${lab}</g>`; });
+    s += `<g class="m-t-daathg" data-mdaath role="button" tabindex="0" aria-label="Daath, la Connaissance"><circle cx="150" cy="155" r="18" class="m-t-daath" pointer-events="all"/><text x="150" y="158" class="m-t-dname">Daath</text></g>`;
     s += `<path class="m-t-flash" d="M150 42 L250 98 L50 98 L250 212 L50 212 L150 270 L250 370 L50 370 L150 430 L150 500" pathLength="1"/>`;
     D.SEPHIROTH.forEach(x => { const on = o.sep === x.n;
       let fill = `fill="${x.hex}"`;
@@ -248,6 +260,9 @@
       else s += `<circle cx="${x.x}" cy="${x.y}" r="22.6" class="m-t-disc" ${fill}/>`;
       s += `<text x="${x.x}" y="${x.y - 3}" class="m-t-n" fill="${x.txt}">${x.n}</text><text x="${x.x}" y="${x.y + 9}" class="m-t-sheb" fill="${x.txt}">${x.heb}</text>`;
       s += `<text x="${x.x}" y="${x.y + (x.n === 10 ? 36 : 35)}" class="m-t-name">${x.nom}</text></g>`; });
+    if(CQ.serpent){ const P = [SEP[10]]; for(let n = 32; n >= 11; n--){ const pp = D.PATHS.find(x => x.n === n); P.push({x:(SEP[pp.a].x + SEP[pp.b].x)/2, y:(SEP[pp.a].y + SEP[pp.b].y)/2}); } P.push(SEP[1]);
+      let d = `M${P[0].x} ${P[0].y}`; for(let i = 1; i < P.length - 1; i++){ const mx = (P[i].x + P[i + 1].x)/2, my = (P[i].y + P[i + 1].y)/2; d += ` Q${f1(P[i].x)} ${f1(P[i].y)} ${f1(mx)} ${f1(my)}`; } d += ` L${P[P.length - 1].x} ${P[P.length - 1].y}`;
+      s += `<g pointer-events="none"><line x1="150" y1="500" x2="150" y2="42" class="m-t-fleche"/><path d="${d}" class="m-t-serpent" pathLength="1"/></g>`; }
     return s + `</svg>`;
   }
 
@@ -365,10 +380,19 @@
       <h2><span class="m-heb big">${x.heb}</span> ${x.nom}</h2><p class="m-lede">${cap(x.sens)}.</p><p>${x.dit}</p>
       <dl class="m-corr"><div><dt>Nom divin</dt><dd>${x.nomDivin}</dd></div><div><dt>Archange</dt><dd>${x.archange}</dd></div>
         <div><dt>Sphère</dt><dd>${cap(x.sphere)}</dd></div><div><dt>Couleur</dt><dd>${x.hex === "quart" ? "citrin, olive, roux et noir" : `<i class="m-sw" style="background:${x.hex}"></i>`}</dd></div></dl>
+      ${(() => { const K = window.MAGIE_KAB, e = K && K.SEPH[n]; if(!e) return ""; return `<h4>Son rôle dans l'Arbre</h4><p>${e.role}</p>
+        <dl class="m-corr"><div><dt>Triade</dt><dd>${e.tri ? cap(e.tri) : "Aucune : elle reçoit tout"}</dd></div><div><dt>Monde</dt><dd>${e.monde}</dd></div>
+        <div><dt>Dans le corps</dt><dd>${cap(e.corps)}</dd></div><div><dt>Image traditionnelle</dt><dd>${cap(e.image)}</dd></div>
+        <div><dt>Expérience</dt><dd>${cap(e.exp)}</dd></div><div><dt>Vertu · excès</dt><dd>${cap(e.vertu)} · ${e.vice}</dd></div>
+        <div><dt>Valeur du nom</dt><dd><span lang="he">${x.heb}</span> = ${K.GEM.std(x.heb)}</dd></div></dl>
+        <blockquote class="m-kq"><p class="eyebrow">La question qu'elle te pose</p><p>${e.q}</p></blockquote>`; })()}
       <h4>Ses sentiers</h4><div class="m-chips">${pths.map(p => `<button type="button" class="chip" data-mpath="${p.n}">${p.n} · ${p.lettre} · ${p.lameNom}</button>`).join("")}</div>
       ${x.planete ? `<div class="m-acts"><button type="button" class="btn ghost small" data-mpl="${x.planete}">Sa planète : ${PL[x.planete].nom}</button></div>` : ""}
-      <p class="help m-left">Attributions de la Golden Dawn (couleurs de l'« échelle de la Reine »).</p>`);
+      <p class="help m-left">Attributions de la Golden Dawn (couleurs de l'« échelle de la Reine »). Vertus, excès et expériences d'après Dion Fortune, 1935.</p>`);
   }
+  function daathSheet(){ const K = window.MAGIE_KAB; if(!K) return; const d = K.DAATH;
+    sheet(`<p class="eyebrow">Sur l'Abîme · pilier du milieu</p><h2><span class="m-heb big">${d.heb}</span> ${d.nom}</h2><p class="m-lede">${cap(d.sens)}.</p><p>${d.txt}</p>
+      <dl class="m-corr"><div><dt>Valeur du nom</dt><dd><span lang="he">${d.heb}</span> = ${K.GEM.std(d.heb)}</dd></div><div><dt>Statut</dt><dd>Ce n'est pas une sephira</dd></div></dl>`); }
   function pathSheet(n){
     const p = D.PATHS.find(x => x.n === n), a = SEP[p.a], b = SEP[p.b];
     sheet(`<p class="eyebrow">Sentier ${p.n} · lettre ${p.type}</p>
@@ -376,6 +400,12 @@
       <div><h2><span class="m-heb big">${p.heb}</span> ${p.lettre}</h2><p class="m-lede">« ${p.sens} »</p>
       <dl class="m-corr one"><div><dt>Lame</dt><dd>${p.num} · ${p.lameNom}</dd></div><div><dt>Astre ou élément</dt><dd>${cap(p.attr)}</dd></div>
       <div><dt>Relie</dt><dd>${a.nom} (${a.sens}) et ${b.nom} (${b.sens})</dd></div></dl></div></div>
+      ${(() => { const K = window.MAGIE_KAB, L = K && K.LETTRES[p.heb]; if(!L) return ""; const G = K.GEM, v = G.std(p.heb), fin = L.fin, w = L.mot;
+        return `<dl class="m-corr"><div><dt>Son nom veut dire</dt><dd>${cap(L.sens)}</dd></div><div><dt>Valeur</dt><dd>${v}${fin ? ` · en finale <span lang="he">${fin}</span>, ${K.FINV[fin]} dans le « grand nombre »` : ""}</dd></div>
+          <div><dt>Se prononce</dt><dd>${cap(L.son)}</dd></div><div><dt>Nom en toutes lettres</dt><dd><span lang="he">${K.NOMS[p.heb]}</span> = ${G.std(K.NOMS[p.heb])}</dd></div></dl>
+          <h4>Ce que la tradition en dit</h4><p>${L.dit}</p><h4>Pourquoi ce sentier</h4><p>${L.sentier}</p>
+          <p class="m-kmot"><span class="eyebrow">Un mot</span><b lang="he" dir="rtl">${w[0]}</b> <i>${w[1]}</i>, « ${w[2]} » : ${[...w[0]].map(c => G.std(c)).join(" + ")} = <strong>${G.std(w[0])}</strong></p>
+          <p class="help m-left">${K.FAMILLES[p.type] || ""}</p>`; })()}
       <p>Méditer ce sentier, c'est contempler la lame en sachant qu'elle mène de ${a.nom} à ${b.nom} : ${b.n > a.n ? `de ${a.sens} vers ${b.sens}` : ""}. Dans le sens de la remontée, on part de ${b.nom}.</p>
       <p class="help m-left">Attribution de la Golden Dawn (1888). Lévi, en 1856, rangeait les lames autrement. Illustration : tarot Waite-Smith (1909), dessiné par Pamela Colman Smith, membre de la Golden Dawn.</p>`);
   }
@@ -563,7 +593,7 @@
     const T0 = at.tool;
     if(T0 === "sceau"){ root.innerHTML = head("Le sceau sur le carré", "Écris un mot, choisis la planète qui lui convient : le mot devient une ligne sur son carré.") + host; schemas.sceau(q1(".m-toolhost", root), {full:true, pl:at.arg}); }
     else if(T0 === "sigil"){ root.innerHTML = head("Le sigil", "Écris ton intention en une phrase, au présent. Les lettres en double disparaissent ; celles qui restent deviennent des pièces que tu composes : déplace-les, tourne-les, agrandis-les, efface des traits, jusqu'à ce que le sens disparaisse.") + host; schemas.spare(q1(".m-toolhost", root), {full:true}); }
-    else if(T0 === "arbre"){ root.innerHTML = head("L'Arbre de vie", "Touche une sphère ou un sentier. Change l'affichage pour voir les lettres, les lames ou les numéros.") + host; schemas.arbre(q1(".m-toolhost", root), {full:true}); }
+    else if(T0 === "arbre"){ root.innerHTML = head("L'Arbre de vie", "Touche une sphère, un sentier ou une lettre. Les boutons « Lire l'Arbre » montrent comment il fonctionne : piliers, triades, mondes, descente et remontée.") + host; schemas.arbre(q1(".m-toolhost", root), {full:true}); }
     else if(T0 === "corresp"){ root.innerHTML = head("Les correspondances", "Choisis une planète ou un élément : tout ce que la tradition lui rattache, au même endroit.") + host; schemas.corresp(q1(".m-toolhost", root), {pl:at.arg}); }
     else if(T0 === "election"){ root.innerHTML = head("Choisir le moment", "Les heures de la planète choisie, sur les trente prochains jours, classées selon les règles des élections.") + host; schemas.election(q1(".m-toolhost", root), {full:true, pl:at.arg}); }
     else if(EXT.toolRender[T0]){ const X = EXT.toolRender[T0]; root.innerHTML = head(X.t, X.sous) + host; X.render(q1(".m-toolhost", root), {full:true, arg:at.arg}); }
@@ -877,14 +907,43 @@
       qa("[data-fr]", fig).forEach(b => b.onclick = () => set(+b.dataset.fr)); set(0);
     },
     arbre(fig, o = {}){
-      let mode = o.mode || "lettres";
+      const K = window.MAGIE_KAB; let mode = o.mode || "lettres", lect = o.lect || "";
       fig.innerHTML = `<div class="sc-seg m-seg" role="group" aria-label="Affichage des sentiers"><button type="button" data-tm="lettres">Lettres</button><button type="button" data-tm="lames">Lames</button><button type="button" data-tm="nums">Numéros</button></div>
-        <div class="m-treehost"></div><div class="m-acts"><button type="button" class="btn small" data-flash>L'Éclair</button></div>
-        <figcaption>Disposition et attributions de la Golden Dawn. Les traits épais sont les lettres mères, les moyens les doubles, les fins les simples.</figcaption>`;
-      const draw = () => { q1(".m-treehost", fig).innerHTML = treeSVG({mode}); qa("[data-tm]", fig).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tm === mode))); };
+        ${K ? `<div class="m-lectbar" role="group" aria-label="Façons de lire l'Arbre"><span class="eyebrow">Lire l'Arbre</span>${K.LECTURES.map(l => `<button type="button" class="chip" data-lect="${l.id}">${l.t}</button>`).join("")}</div>` : ""}
+        <div class="m-treewrap"><div class="m-treehost"></div><div class="m-lectp" aria-live="polite"></div></div>
+        <figcaption>Disposition et attributions de la Golden Dawn. Touche une sphère, un sentier ou Daath. Les traits épais sont les lettres mères, les moyens les doubles, les fins les simples.</figcaption>
+        ${o.full && K ? `<div class="m-lettres-in"></div>` : ""}`;
+      const draw = () => { q1(".m-treehost", fig).innerHTML = treeSVG({mode, lect}); qa("[data-tm]", fig).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tm === mode)));
+        qa("[data-lect]", fig).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lect === lect)));
+        const L = K && K.LECTURES.find(x => x.id === lect), pn = q1(".m-lectp", fig);
+        pn.innerHTML = L ? `<h3>${L.t}</h3><p>${L.txt}</p><p class="m-lectr">${L.regle}</p>${lect === "eclair" ? `<div class="m-acts"><button type="button" class="btn small" data-flash>Relancer l'Éclair</button></div>` : ""}` : (K ? `<p class="help m-left">Choisis une façon de lire l'Arbre : piliers, triades, mondes, descente, remontée ou voiles.</p>` : `<div class="m-acts"><button type="button" class="btn small" data-flash>L'Éclair</button></div>`);
+        const fb = q1("[data-flash]", fig); if(fb) fb.onclick = () => { const t = q1(".m-tree", fig); t.classList.remove("flash"); void t.getBoundingClientRect(); t.classList.add("flash"); };
+        bindLinks(q1(".m-treewrap", fig)); };
       qa("[data-tm]", fig).forEach(b => b.onclick = () => { mode = b.dataset.tm; draw(); });
-      q1("[data-flash]", fig).onclick = () => { const t = q1(".m-tree", fig); t.classList.remove("flash"); void t.getBoundingClientRect(); t.classList.add("flash"); };
+      qa("[data-lect]", fig).forEach(b => b.onclick = () => { lect = lect === b.dataset.lect ? "" : b.dataset.lect; draw(); });
       draw();
+      const li = q1(".m-lettres-in", fig); if(li){ li.innerHTML = `<h3 class="m-subh">Les vingt-deux lettres</h3><figure class="m-schema in"></figure>`; schemas.lettres(q1("figure", li)); }
+    },
+    arbrelect(fig){ schemas.arbre(fig, {lect:"piliers"}); },
+    lettres(fig){
+      const K = window.MAGIE_KAB; if(!K){ fig.innerHTML = ""; return; }
+      const cl = t => t === "mère" ? "m" : t === "double" ? "d" : "s";
+      const P = D.PATHS.slice().sort((a, b) => a.n - b.n);
+      fig.innerHTML = `<div class="m-lgridk" dir="rtl">${P.map(p => `<button type="button" class="m-lk f-${cl(p.type)}" data-mpath="${p.n}" aria-label="${p.lettre}, ${K.GEM.std(p.heb)}, ${h(K.LETTRES[p.heb].sens)}"><b lang="he">${p.heb}</b><span>${p.lettre}</span><small>${K.GEM.std(p.heb)}</small></button>`).join("")}</div>
+        <ul class="m-lkleg"><li class="f-m"><b>3 mères</b> les éléments</li><li class="f-d"><b>7 doubles</b> les planètes</li><li class="f-s"><b>12 simples</b> les signes</li></ul>
+        <figcaption>De droite à gauche, comme on lit l'hébreu. Touche une lettre : le sens de son nom, sa valeur, ce que la tradition en dit, son sentier et sa lame.</figcaption>`;
+      bindLinks(fig);
+    },
+    rencontres(fig){
+      const K = window.MAGIE_KAB; if(!K){ fig.innerHTML = ""; return; } const G = K.GEM;
+      fig.innerHTML = `<div class="m-renc">${K.RENCONTRES.map(r => `<article class="m-renc-i"><header><span class="m-renc-n">${G.std(r.w[0])}</span><h3>${r.t}</h3>${badge(r.st)}</header>
+          <div class="m-renc-w">${r.w.map(w => `<p><b lang="he" dir="rtl">${w}</b><span>${[...w].filter(c => c !== " ").map(c => G.std(c)).join(" + ")} = <strong>${G.std(w)}</strong></span></p>`).join("")}</div><p>${r.txt}</p></article>`).join("")}</div>
+        <h3 class="m-subh">Le Nom, rempli de quatre façons</h3>
+        <div class="m-renc-w nom">${K.NOM.pleins.map(x => `<p><b lang="he" dir="rtl">${x[0]}</b><span>${x[0].split(" ").map(w => G.std(w)).join(" + ")} = <strong>${G.std(x[0])}</strong></span></p>`).join("")}</div>
+        <p class="help m-left">Selon qu'on écrit le nom des lettres Hé et Vav avec un Yod, un Aleph ou un Hé, la « valeur pleine » du Nom change. L'école d'Isaac Louria attache ces quatre nombres aux quatre mondes. Et le Nom écrit en triangle, Yod, Yod-Hé, Yod-Hé-Vav, Yod-Hé-Vav-Hé, donne ${K.NOM.triangle.map(w => G.std(w)).join(" + ")} = ${K.NOM.triangle.reduce((a, w) => a + G.std(w), 0)}.</p>
+        <h3 class="m-subh">La même idée ailleurs</h3>
+        <ul class="m-ailleurs">${K.AILLEURS.map(a => `<li><b>${a[0]}</b><span>${a[1]}</span><strong>${a[2]}</strong><p>${a[3]}</p></li>`).join("")}</ul>
+        <figcaption>Toutes les sommes sont recalculées par l'application. Refais-les à la main : c'est le but.</figcaption>`;
     },
     sentiers(fig){ schemas.arbre(fig, {mode:"lames"}); q1("figcaption", fig).textContent = "Chaque numéro est un atout du tarot, dans la numérotation de la Golden Dawn (la Force en VIII, la Justice en XI). Touche un sentier pour voir sa lame."; },
     corresp(fig, o = {}){
@@ -1095,6 +1154,7 @@
      ================================================================ */
   function bindLinks(root){
     qa("[data-mpl]", root).forEach(b => { const f = () => planetSheet(b.dataset.mpl); b.onclick = f; b.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); f(); } }; });
+    qa("[data-mdaath]", root).forEach(b => { b.onclick = daathSheet; b.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); daathSheet(); } }; });
     qa("[data-msep]", root).forEach(b => { const f = () => sepSheet(+b.dataset.msep); b.onclick = f; b.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); f(); } }; });
     qa("[data-mpath]", root).forEach(b => { if(b.getAttribute("pointer-events") === "none") return; const f = () => pathSheet(+b.dataset.mpath); b.onclick = f; b.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); f(); } }; });
     qa("[data-mrite]", root).forEach(b => b.onclick = () => { const [k, a] = b.dataset.mrite.split(":"); openRite(k, a); });
