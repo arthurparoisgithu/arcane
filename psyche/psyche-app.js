@@ -24,7 +24,7 @@
 
   /* ---------- mémoire ---------- */
   const STORE = "arcanes.psyche.v1";
-  const DEF = () => ({vue:"jour", done:[], notes:{}, jour:{}, reves:[], assoc:[], ombre:[], mandalas:[], coue:{}, quiz:{}, xp:null});
+  const DEF = () => ({vue:"jour", descente:null, done:[], notes:{}, jour:{}, reves:[], assoc:[], ombre:[], mandalas:[], coue:{}, quiz:{}, xp:null});
   const load = () => { try{ const v = JSON.parse(localStorage.getItem(STORE) || "{}"); return Object.assign(DEF(), v && typeof v === "object" ? v : {}); }catch(e){ return DEF(); } };
   let st = load();
   const save = () => { try{ localStorage.setItem(STORE, JSON.stringify(st)); }catch(e){ toast("La mémoire du navigateur est pleine : supprime quelques mandalas."); } };
@@ -57,7 +57,7 @@
         <button type="button" class="ps-tile" data-psgo="outil:reves"><b>Noter un rêve</b><span>${st.reves.length ? `${st.reves.length} rêve${st.reves.length > 1 ? "s" : ""} dans ton journal` : "Le journal et l'amplification"}</span></button>
         ${nl ? `<button type="button" class="ps-tile" data-psgo="lec:${nl.id}"><b>Continuer le cours</b><span>Module ${nl.mod.n} · ${h(nl.t)}</span></button>` : `<button type="button" class="ps-tile" data-psgo="apprendre"><b>Le cours est fini</b><span>Relis la maison</span></button>`}
         <button type="button" class="ps-tile" data-psgo="outil:coue"><b>La ficelle de Coué</b><span>${cn ? `${cn} fois aujourd'hui` : "Vingt nœuds, une formule"}</span></button>
-        <button type="button" class="ps-tile" data-psgo="outil:mandala"><b>Un mandala</b><span>Le cercle du matin</span></button>
+        <button type="button" class="ps-tile" data-psgo="outil:descente"><b>La descente</b><span>${st.descente && st.descente.n ? `Le jeu · ${st.descente.n} fois au fond` : "Le jeu : descendre dans la maison"}</span></button>
       </div>
       <p class="ps-care">Psyché est un espace de curiosité et de réflexion, pas un soin. Si une souffrance dure, parles-en à un médecin ou à un psychologue.</p>`;
     let t = 0;
@@ -73,6 +73,7 @@
      PRATIQUER
      ================================================================ */
   const TOOLS = [
+    ["descente", "La descente", "Le jeu : quatre étages, quatre symboles, et les ombres"],
     ["assoc", "Le test d'associations", "Cent mots, un chronomètre : l'expérience de Jung en 1904"],
     ["reves", "Le journal des rêves", "Noter, puis amplifier les symboles"],
     ["mandala", "L'atelier du mandala", "Dessiner un cercle en symétrie"],
@@ -86,8 +87,8 @@
     if(pv.tool && TOOLR[pv.tool]){ const T = TOOLS.find(t => t[0] === pv.tool);
       r.innerHTML = `${back("Les outils", "pratiquer")}<header class="ps-head sm"><p class="eyebrow">Pratiquer</p><h1>${h(T[1])}</h1></header><div class="ps-tool"></div>`;
       toolOff = TOOLR[pv.tool](q1(".ps-tool", r), pv.arg) || null; return; }
-    r.innerHTML = `<header class="ps-head"><p class="eyebrow">Pratiquer</p><h1>Les outils</h1><p class="ps-lede">Six exercices tirés de l'histoire de la psychologie. Ils servent à se connaître et à réfléchir, jamais à se diagnostiquer.</p></header>
-      <div class="ps-tools">${TOOLS.map(([id, t, d], i) => `<button type="button" class="ps-toolc" data-psgo="outil:${id}"><span class="ps-toolc-n">${["I","II","III","IV","V","VI"][i]}</span><b>${h(t)}</b><span>${h(d)}</span></button>`).join("")}</div>`;
+    r.innerHTML = `<header class="ps-head"><p class="eyebrow">Pratiquer</p><h1>Les outils</h1><p class="ps-lede">Un jeu et six exercices tirés de l'histoire de la psychologie. Ils servent à se connaître et à réfléchir, jamais à se diagnostiquer.</p></header>
+      <div class="ps-tools">${TOOLS.map(([id, t, d], i) => `<button type="button" class="ps-toolc" data-psgo="outil:${id}"><span class="ps-toolc-n">${["I","II","III","IV","V","VI","VII"][i]}</span><b>${h(t)}</b><span>${h(d)}</span></button>`).join("")}</div>`;
   }
   const TOOLR = {};
 

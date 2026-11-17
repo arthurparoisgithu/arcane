@@ -38,3 +38,47 @@
 .chm-note p{margin:0} .chm-note b{color:var(--ink)}
 .chm-tag{display:inline-block;font:700 10px var(--f-ui);letter-spacing:.11em;text-transform:uppercase;padding:3px 7px;border:1px solid currentColor;border-radius:999px;color:var(--or);margin-right:4px;vertical-align:.1em}
 @media (max-width:560px){ .chm-arts{grid-template-columns:minmax(0,1fr)} .chm-head h2{font-size:30px} .chm-seal{width:70px;height:70px} .chm-chip{margin-left:0} .chm-steps li span{font-size:8px;letter-spacing:0} }
+
+/* ===== Le grand chelem ===== */
+.chm-chelem{margin:0 0 20px;padding:16px 18px;border-radius:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--or) 5%,var(--panel-solid))}
+.chm-chelem.tout{border-color:var(--or);box-shadow:0 0 0 3px color-mix(in srgb,var(--or) 18%,transparent)}
+.chm-chelem h3{font:400 24px var(--f-display);margin:0}.chm-chelem h3 small{font:600 12px var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-left:6px}
+.chm-chelem .help{margin:4px 0 12px}
+.chm-jeux{display:grid;gap:6px}
+.chm-jeu{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:10px 12px;border-radius:9px;border:1px solid var(--line2);background:var(--panel-solid);color:var(--ink);cursor:pointer;font:13.5px var(--f-ui)}
+.chm-jeu i{font-style:normal;font-size:18px;color:var(--ink-soft);text-align:center}
+.chm-jeu.ok i{color:var(--or)}
+.chm-jeu small{display:block;font:700 9.5px var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.chm-jeu b{display:block;font:400 18px/1.2 var(--f-display)}.chm-jeu em{font-style:normal;color:var(--ink-soft)}
+.chm-jeu:hover{border-color:var(--or)}
+.chg h2{font:400 32px/1.05 var(--f-display);margin:4px 0 12px}
+.chg-back{border:0;background:none;padding:6px 0;margin-bottom:6px;font:600 14px var(--f-ui);color:var(--or);cursor:pointer}
+.chg-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.chg-top p{margin:0;line-height:1.5}
+.chg-t{font:600 20px var(--f-ui);font-variant-numeric:tabular-nums;color:var(--ink);background:var(--cloth-2);padding:4px 10px;border-radius:8px}
+.chg-next{min-height:1.4em;margin:10px 0}
+.chg-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.chg-card{position:relative;padding:0;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--panel-solid);cursor:pointer;aspect-ratio:480/945}
+.chg-card img{width:100%;height:100%;object-fit:cover;display:block}
+.chg-card.ok{opacity:.32;cursor:default}.chg-card.ok span{position:absolute;inset:auto 0 0;background:var(--ink);color:var(--panel-solid);font:600 11px var(--f-ui);text-align:center;padding:2px 0}
+.chg-card.ko,.chg-sign.ko{animation:chg-ko .35s}
+@keyframes chg-ko{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.chg-wheel svg{display:block;width:100%;max-width:280px;margin:6px auto 12px}
+.chg-wheel svg circle,.chg-wheel svg path{fill:none;stroke:var(--ink-soft);stroke-width:.8}
+.chg-wheel text{font-size:17px;text-anchor:middle;font-family:"Segoe UI Symbol","Noto Sans Symbols 2",serif}
+.el-feu{--e:#b3401f}.el-terre{--e:#3f6b3a}.el-air{--e:#b08a1a}.el-eau{--e:#2a5a8f}
+.chg-wheel text{fill:var(--e)}
+.chg-signs{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
+.chg-sign{display:grid;gap:1px;justify-items:center;padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--panel-solid);cursor:pointer;color:var(--e)}
+.chg-sign b{font:400 22px "Segoe UI Symbol","Noto Sans Symbols 2",serif}.chg-sign small{font:12px var(--f-ui);color:var(--ink)}
+.chg-sign.ok{opacity:.3;cursor:default}
+.chg-sq{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-width:250px;margin:14px auto}
+.chg-cell{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--line);background:var(--panel-solid);font:400 34px var(--f-display);color:var(--ink);cursor:pointer}
+.chg-cell.sel{border-color:var(--or);box-shadow:0 0 0 3px color-mix(in srgb,var(--or) 22%,transparent)}
+.chg-cell.bad{color:var(--vermillon)}
+.chg-pad{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;max-width:300px;margin:0 auto}
+.chg-pad button{padding:10px 0;border-radius:8px;border:1px solid var(--line);background:var(--cloth);font:600 17px var(--f-ui);color:var(--ink);cursor:pointer}
+.chg-pad button.used{opacity:.4}
+.chg-msg{text-align:center}
+.chg-win{text-align:center;padding:10px 0}.chg-win h3{font:400 28px var(--f-display);margin:4px 0 8px}.chg-win p{line-height:1.5}
+.chg-acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}

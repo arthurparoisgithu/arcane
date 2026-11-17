@@ -2,7 +2,7 @@
    Le cinquième univers ne pèse rien au démarrage : ce petit fichier déclare l'univers,
    et charge le reste (données, cours, histoire, interface, style) la première fois qu'on y entre. */
 (() => {
-  const FILES = ["psyche/psyche-data.js", "psyche/psyche-cours.js", "psyche/psyche-histoire.js", "psyche/psyche-app.js"];
+  const FILES = ["psyche/psyche-data.js", "psyche/psyche-cours.js", "psyche/psyche-histoire.js", "psyche/psyche-app.js", "psyche/psyche-jeu.js"];
   let on = false, loading = null, want = null;
   const css = () => { if(document.querySelector('link[href="psyche/psyche.css"]')) return; const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "psyche/psyche.css"; document.head.appendChild(l); };
   const one = src => new Promise((ok, ko) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => ko(new Error(src)); document.head.appendChild(s); });

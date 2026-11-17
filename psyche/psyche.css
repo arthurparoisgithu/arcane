@@ -224,3 +224,21 @@
 /* ---------- la pilule à cinq arts ---------- */
 .u-pill .u-l2{display:inline}.u-pill .u-s2{display:none}
 @media (prefers-reduced-motion: reduce){ .ps-arch-sym svg,.ps-room.next rect,.ps-view>*{animation:none} }
+
+/* ---------- la descente ---------- */
+.ps-game{max-width:440px;margin:0 auto}
+.ps-game-hud{display:flex;justify-content:space-between;align-items:center;font:600 13px var(--f-ui);color:var(--ink-soft);margin-bottom:6px;letter-spacing:.04em}
+.ps-game-hud [data-glives]{display:flex;gap:4px}
+.ps-game-hud [data-glives] i{width:12px;height:12px;border-radius:50%;border:1.5px solid #c2952e;display:block}
+.ps-game-hud [data-glives] i.on{background:radial-gradient(circle,#ffe39a,#d9a43a)}
+.ps-game-cv{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);box-shadow:0 20px 40px -24px rgba(30,15,50,.6)}
+.ps-game-cv canvas{display:block;width:100%;height:auto;aspect-ratio:400/560;touch-action:none;outline:none}
+.ps-game-ov{position:absolute;inset:0;display:grid;place-items:center;padding:22px;background:rgba(252,250,253,.93);text-align:center;overflow:auto}
+.ps-game-ov[hidden]{display:none}
+.ps-game-ov h3{font:400 30px var(--f-display);margin:6px 0 10px}
+.ps-game-ov p{line-height:1.5;margin:0 0 12px}
+.ps-game-mand svg{width:120px;height:120px;margin:0 auto;display:block}
+.ps-game-mand svg *{fill:none;stroke:var(--ps);stroke-width:1.4}.ps-game-mand .f{fill:var(--ps)}
+.ps-game-ctl{display:flex;gap:10px;align-items:center;margin-top:10px}
+.ps-game-ctl .btn{white-space:nowrap;flex:none}
+.ps-game-ctl .help{margin:0;font-size:12.5px}
