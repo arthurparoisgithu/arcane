@@ -2,7 +2,7 @@
    Pose un bandeau en tête des pages Histoire des quatre univers et charge le globe à la demande
    (bibliothèque de projection, fond de carte, données, moteur : environ 370 ko, jamais chargés avant). */
 (() => {
-  const FILES = ["globe/vendor/d3-array.min.js", "globe/vendor/d3-geo.min.js", "globe/globe-terre.js", "globe/globe-relief.js", "globe/globe-data.js", "globe/globe-plus-1.js", "globe/globe-plus-2.js", "globe/globe-images.js", "globe/globe-liens.js", "globe/globe-plus-3.js", "globe/globe-moteur.js"];
+  const FILES = ["globe/vendor/d3-array.min.js", "globe/vendor/d3-geo.min.js", "globe/globe-terre.js", "globe/globe-relief.js", "globe/globe-data.js", "globe/globe-plus-1.js", "globe/globe-plus-2.js", "globe/globe-images.js", "globe/globe-liens.js", "globe/globe-plus-3.js", "globe/globe-plus-4.js", "globe/globe-moteur.js"];
   const load = src => new Promise((ok, ko) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => ko(new Error(src)); document.head.appendChild(s); });
   let loading = null, veil = null;
   const DEEP = location.hash === "#globe" || /[?&]globe\b/.test(location.search);   // lien direct : …/#globe ou …/?globe
@@ -16,7 +16,7 @@
   }
   const MINI = `<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="25" class="s"/><circle cx="32" cy="32" r="29" class="r"/><path d="M7 32h50M32 7c-13 8-13 42 0 50M32 7c13 8 13 42 0 50M11 20c12 5 30 5 42 0M11 44c12-5 30-5 42 0" class="g"/><path d="M22 18c4-2 9-1 11 2s-1 6-4 7-3 5-7 4-5-9 0-13zM38 34c4-1 8 1 8 5s-3 8-6 7-5-10-2-12z" class="l"/><circle cx="25" cy="24" r="2.6" class="d"/><circle cx="42" cy="39" r="2.6" class="d2"/></svg>`;
   const banner = () => { const b = document.createElement("button"); b.type = "button"; b.className = "gl-banner"; b.setAttribute("data-globe", "");
-    b.innerHTML = `${MINI}<span><b>Le globe des traditions</b><small>Une carte ancienne à faire tourner : 76 traditions spirituelles et ésotériques, leurs voyages, leurs symboles et 36 événements.</small></span><i aria-hidden="true">Ouvrir</i>`; return b; };
+    b.innerHTML = `${MINI}<span><b>Le globe des traditions</b><small>Une carte ancienne à faire tourner : 90 traditions spirituelles et ésotériques, leurs voyages, leurs symboles et 47 événements.</small></span><i aria-hidden="true">Ouvrir</i>`; return b; };
   function place(v){
     if(!v || !v.firstElementChild || v.querySelector(".gl-banner")) return;
     const anchor = v.querySelector(".hx-top") || v.querySelector(":scope > header") || v.firstElementChild; anchor.after(banner());
