@@ -172,3 +172,5 @@ body.m-riting .m-rite-in{padding-bottom:calc(150px + env(safe-area-inset-bottom,
   .mr-plan .way,.mr-room.next rect,.m-kamea .m-k-cell.mr-next{animation:none}
 }
 .mr-vig .ec-ic{fill:var(--ink);stroke:none}
+.mr-room .n.xs{font-size:13.5px}
+.mr-room .t.xs{font-size:9.2px}

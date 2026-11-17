@@ -178,25 +178,27 @@
      L'ÉCOLE : la carte du château, une salle par module
      ================================================================ */
   const SALLES = {m1:["Qu'est-ce que","la magie ?"], m2:["La sympathie","universelle"], m3:["Les sept","planètes"], m4:["Talismans","et carrés"], m5:["La Kabbale","hermétique"], m6:["Le rituel","cérémoniel"], m7:["Sigils et","chaos"], m8:["L'éthique de","la pratique"],
-    m9:["L'âme","du monde"], m10:["Ficin","et le ciel"], m11:["La","géomancie"], m12:["Lettres","et nombres"], m13:["L'alchimie","spirituelle"], m14:["L'art de","la mémoire"]};
+    m9:["L'âme","du monde"], m10:["Ficin","et le ciel"], m11:["La","géomancie"], m12:["Lettres","et nombres"], m13:["L'alchimie","spirituelle"], m14:["L'art de","la mémoire"], m15:["Les","pentacles"], m16:["Écritures","secrètes"]};
   const COUL = ["#9b2c1c","#2c6a47","#8a5f0a","#2a4f8f","#3f3d63","#a34e12","#595e7c"];
   EXT.ecoleMap = (mods, st, next) => {
     const box = {}, W = 96, Hh = 112;
     ["m1","m2","m3","m4"].forEach((id, i) => box[id] = [26, 486 - i*118, W, Hh]);
     ["m5","m6","m7","m8"].forEach((id, i) => box[id] = [238, 132 + i*118, W, Hh]);
-    ["m9","m10","m11","m12","m13","m14"].forEach((id, i) => box[id] = [134, 425 - i*55, 92, 55]);
+    const KEEP = mods.filter(m => (m.cercle || 1) === 2).map(m => m.id), kh = Math.min(55, Math.floor(330/Math.max(1, KEEP.length)));
+    KEEP.forEach((id, i) => box[id] = [134, 480 - (i + 1)*kh, 92, kh]);
     const nextId = next ? next[0].id : null;
-    const room = (m, i) => { const b = box[m.id]; if(!b) return ""; const [x, y, w, hh] = b, done = m.lecons.filter(l => st.done.includes(l.id)).length, all = done === m.lecons.length, nm = SALLES[m.id] || [m.t, ""], tw = hh < 60;
+    const room = (m, i) => { const b = box[m.id]; if(!b) return ""; const [x, y, w, hh] = b, done = m.lecons.filter(l => st.done.includes(l.id)).length, all = done === m.lecons.length, nm = SALLES[m.id] || [m.t, ""], tw = hh < 60, xs = hh < 50;
       return `<g class="mr-room${all ? " done" : ""}${m.id === nextId ? " next" : ""}" data-mmod="${m.id}" role="button" tabindex="0" aria-label="Module ${m.n} : ${h(m.t)}, ${done} leçon${done > 1 ? "s" : ""} sur ${m.lecons.length}" style="--rc:${COUL[i % 7]}">
         <rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="2"/>
-        <text class="n" x="${x + 9}" y="${y + (tw ? 19 : 26)}">${m.n}</text>
-        <text class="t" x="${x + 9}" y="${y + (tw ? 33 : 50)}">${h(nm[0])}</text><text class="t" x="${x + 9}" y="${y + (tw ? 45 : 63)}">${h(nm[1])}</text>
-        ${m.lecons.map((l, k) => `<circle class="pip${st.done.includes(l.id) ? " on" : ""}" cx="${x + w - 12 - (m.lecons.length - 1 - k)*9}" cy="${y + (tw ? 14 : hh - 13)}" r="3"/>`).join("")}
+        ${xs ? `<text class="n xs" x="${x + 7}" y="${y + hh/2 + 6}">${m.n}</text><text class="t xs" x="${x + 41}" y="${y + hh/2 - 2}">${h(nm[0])}</text><text class="t xs" x="${x + 41}" y="${y + hh/2 + 9}">${h(nm[1])}</text>`
+          : `<text class="n" x="${x + 9}" y="${y + (tw ? 19 : 26)}">${m.n}</text>
+        <text class="t" x="${x + 9}" y="${y + (tw ? 33 : 50)}">${h(nm[0])}</text><text class="t" x="${x + 9}" y="${y + (tw ? 45 : 63)}">${h(nm[1])}</text>`}
+        ${m.lecons.map((l, k) => `<circle class="pip${st.done.includes(l.id) ? " on" : ""}" cx="${xs ? x + 44 + k*6.5 : x + w - 12 - (m.lecons.length - 1 - k)*9}" cy="${xs ? y + 6 : y + (tw ? 14 : hh - 13)}" r="${xs ? 2.2 : 3}"/>`).join("")}
         </g>`; };
     const cren = Array.from({length:23}, (z, k) => `M${21 + k*14.5} 70v-7h7v7`).join("");
     return `<section class="mr-castle"><header><p class="eyebrow">La carte de l'école</p><h2>Le château de la mémoire</h2>
         <p>Chaque salle est un module. Les huit salles de l'enceinte forment le premier cercle : la pratique. Le donjon, au centre, est le second : les fondements et les arts. Touche une salle pour y entrer.</p></header>
-      <svg class="mr-plan" viewBox="0 0 360 640" role="group" aria-label="Plan du château : quatorze salles, une par module">
+      <svg class="mr-plan" viewBox="0 0 360 640" role="group" aria-label="Plan du château : ${mods.length} salles, une par module">
         <defs><pattern id="mr-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(40)"><line x1="0" y1="0" x2="0" y2="5"/></pattern></defs>
         <rect class="ground" x="14" y="70" width="332" height="540"/><rect class="court" x="128" y="126" width="104" height="478"/>
         <path class="wall" d="M14 70h332v540H214M146 610H14z"/><path class="wall thin" d="${cren}"/>

@@ -1491,7 +1491,7 @@ body.m-riting .nav{visibility:hidden}
 /* ---------- le traducteur d'écritures ---------- */
 .ec{display:grid;gap:18px}
 .ec-in{display:grid;gap:6px;font:500 14px var(--f-ui);color:var(--ink-soft)}
-.ec-in input{font:400 22px var(--f-display);padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel-solid,var(--cloth));color:var(--ink);width:100%;box-sizing:border-box}
+.ec-in input{font:400 22px var(--f-text);padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel-solid,var(--cloth));color:var(--ink);width:100%;box-sizing:border-box}
 .ec-in input:focus{outline:none;border-color:var(--rub)}
 .ec-ex{margin-top:-8px}
 .ec-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
@@ -1600,3 +1600,47 @@ body.m-riting .nav{visibility:hidden}
 @media (min-width:900px){.pm-at{grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:28px}.pm-prev{position:sticky;top:84px;align-self:start}.pm-prev-svg{max-width:340px}}
 @media (max-width:899px){.pm-prev-svg{max-width:250px}}
 .pm-olyf figcaption b small{font-weight:400;color:var(--ink-soft);font-size:12.5px}
+
+/* ---------- les schémas des écritures et des pentacles (modules XV et XVI) ---------- */
+.xs{display:grid;gap:12px}
+.ec-in.sm input{font-size:19px;padding:10px 12px}
+.xs-rows{display:grid;gap:6px}
+.xs-row{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line2)}
+.xs-row b{font:600 12.5px var(--f-ui);color:var(--ink-soft)}
+.xs-row .ec-out{min-height:44px}
+.xs-big{margin:0;font:500 38px var(--f-heb);color:var(--ink);text-align:center}
+.xs-big.gr{font-family:Georgia,"Times New Roman",serif;letter-spacing:.08em;font-size:32px}
+.xs-big.id{font-family:"Arcanes Symboles",var(--f-text),"Segoe UI Symbol",serif;font-size:24px;line-height:1.5}
+.xs-cards{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.xs-cards.rtl{flex-direction:row-reverse}
+.xs-c{display:grid;justify-items:center;gap:2px;min-width:62px;padding:8px 6px;border-radius:10px;border:1px solid var(--line);background:var(--panel-solid);border-top:3px solid var(--line)}
+.xs-c i{font:500 30px/1 var(--f-heb);font-style:normal;color:var(--ink)}
+.xs-c i.gr{font-family:Georgia,serif}
+.xs-c b{font:600 12px var(--f-ui)}.xs-c small{font:500 11.5px var(--f-ui);color:var(--ink-soft)}.xs-c em{font:italic 12px var(--f-text);color:var(--rub)}
+.xs-c.f-m{border-top-color:#a3301f}.xs-c.f-d{border-top-color:#2a4f8f}.xs-c.f-s{border-top-color:#2c6a47}
+.xs-tot{margin:0;text-align:center;font:400 15px var(--f-ui)}
+.xs-voy{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.xs-voy span{display:grid;justify-items:center;padding:6px 2px;border-radius:8px;border:1px solid var(--line2)}
+.xs-voy b{font:400 24px Georgia,serif}.xs-voy small{font:500 10.5px var(--f-ui);color:var(--ink-soft);text-align:center}
+.xs-jeu .sc-seg{flex-wrap:wrap}
+.xs-q{display:grid;justify-items:center;gap:6px}
+.xs-q p{margin:0;font:500 14px var(--f-ui);color:var(--ink-soft)}
+.xs-gl{display:grid;place-items:center;width:120px;height:120px;border-radius:50%;border:1px solid var(--line);background:var(--panel-solid)}
+.xs-gl .ec-mini{height:64px}
+.xs-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.xs-opts .chip{justify-content:center;min-height:44px}
+.xs-opts .chip.ok{border-color:#2c6a47;background:color-mix(in srgb,#2c6a47 14%,transparent)}
+.xs-opts [lang=he]{font-family:var(--f-heb);font-size:18px;margin-left:4px}
+.xs-msg{margin:0;text-align:center;font:400 15px var(--f-ui)}
+.xs-ideo{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.xs-ideo span{display:grid;justify-items:center;gap:2px;padding:6px 4px;border:1px solid var(--line2);border-radius:8px}
+.xs-ideo b{font:400 24px "Arcanes Symboles","Segoe UI Symbol",serif}.xs-ideo small{font:400 11px var(--f-ui);color:var(--ink-soft);text-align:center}
+.xs-dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.xs-dl div{padding:8px 10px;border-left:3px solid var(--pc);background:var(--panel)}
+.xs-dl dt{font:600 11px var(--f-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}.xs-dl dd{margin:2px 0 0;font:400 16px var(--f-text)}
+.xs-hours{margin:0;padding-left:18px;font:400 15px/1.6 var(--f-ui)}
+@media (min-width:640px){.xs-dl{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.m-rite-pent{width:min(280px,70vw);margin:0 auto}
+.m-rite-pent .pt-svg>*{transition:opacity .5s}
+.m-rite-pent.on-ring .pt-ctr{opacity:.15}
+.m-rite-pent.on-ctr .pt-ring{opacity:.15}
