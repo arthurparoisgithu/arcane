@@ -157,13 +157,12 @@
   function catalogue(host, o = {}){
     let pl = o.pl || "saturne", filt = "";
     const draw = () => { const p = PLAN.find(q => q.id === pl);
-      host.innerHTML = `<div class="pt-tabs" role="tablist" aria-label="Les sept planètes">${PLAN.map(q => `<button type="button" role="tab" aria-selected="${q.id === pl}" data-ptpl="${q.id}" style="--pc:${q.hex}"><span>${(PL[q.id] || {}).gl || ""}</span>${q.nom.replace(/^l[ea] /, "")}<small>${q.n}</small></button>`).join("")}</div>
-        <p class="pt-head" style="--pc:${p.hex}"><b>${p.n} pentacles de ${p.nom}</b> · ${p.coul} · ${p.metal}</p>
-        <div class="pt-filt" role="group" aria-label="Filtrer">${Object.entries(KIND).map(([k, v]) => `<button type="button" class="chip small${filt === k ? " on" : ""}" data-ptk="${k}"><i class="pt-dotk k-${k}"></i>${v[0]}</button>`).join("")}</div>
-        <ol class="pt-list">${P[pl].map((x, i) => (filt && x.k !== filt) ? "" : `<li><button type="button" class="pt-it k-${x.k}" data-pti="${i}" style="--pc:${p.hex}">
+      host.innerHTML = `<div class="pt-tabs" role="tablist" aria-label="Les sept planètes">${PLAN.map(q => `<button type="button" role="tab" aria-selected="${q.id === pl}" data-ptpl="${q.id}" style="--pc:${q.hex}"><span>${(PL[q.id] || {}).gl || ""}</span>${q.nom.replace(/^l[ea] /, "")}<small>${P[q.id].filter(x => x.k === "soi").length}</small></button>`).join("")}</div>
+        <p class="pt-head" style="--pc:${p.hex}"><b>${P[pl].filter(x => x.k === "soi").length} pentacles pour soi de ${p.nom}</b> · ${p.coul} · ${p.metal}</p>
+        <ol class="pt-list">${P[pl].map((x, i) => x.k !== "soi" ? "" : `<li><button type="button" class="pt-it k-${x.k}" data-pti="${i}" style="--pc:${p.hex}">
           <span class="pt-mini">${x.image ? pic(x.image) : x.dessin ? pentSVG(P_ATTR(pl, i)) : x.k === "autrui" ? `<i class="pt-veil" aria-hidden="true">—</i>` : `<i class="pt-num">${i + 1}</i>`}</span>
           <span class="pt-txt"><b>${ORD[i]}</b><span>${x.but}</span>${x.v ? `<small>${x.v.ref}</small>` : ""}</span></button></li>`).join("")}</ol>
-        <figcaption>Pentacle illustré : image du manuscrit ou reconstruction d'Arcanes. Trait vide : pentacle raconté sans dessin, parce qu'il vise une autre personne.</figcaption>`;
+        <figcaption>Seuls les pentacles tournés vers soi sont montrés : protection, étude, prospérité, voyage. Image du manuscrit ou reconstruction d'Arcanes.</figcaption>`;
       qa("[data-ptpl]", host).forEach(b => b.onclick = () => { pl = b.dataset.ptpl; draw(); });
       qa("[data-ptk]", host).forEach(b => b.onclick = () => { filt = filt === b.dataset.ptk ? "" : b.dataset.ptk; draw(); });
       qa("[data-pti]", host).forEach(b => b.onclick = () => pentSheet(pl, +b.dataset.pti)); };
@@ -312,18 +311,18 @@
       carnet:"Le verset ou la phrase que j'aimerais voir courir autour d'un cercle :",
       marge:[{t:"Les couleurs", txt:"Les manuscrits disent l'or, le cinabre ou vermillon, et l'azur céleste."},
              {t:"Voir aussi", txt:"Les correspondances des planètes.", go:"outil:toile"}] },
-    { id:"m15l3", t:"Les quarante-quatre pentacles de Salomon", sous:"Sept planètes, quatre usages",
+    { id:"m15l3", t:"Les quarante-quatre pentacles de Salomon", sous:"Sept planètes, et ceux qui sont pour soi",
       idee:[
        "L'édition de la Clé de Salomon publiée par Samuel Liddell MacGregor Mathers en 1889, à partir de manuscrits du British Museum, compte <b>quarante-quatre pentacles</b> : sept pour Saturne, Jupiter, Mars et le Soleil, cinq pour Vénus et Mercure, six pour la Lune. Les manuscrits plus anciens n'en ont pas tous autant : l'un n'en donne que treize, un autre aucun. Le chiffre de quarante-quatre est donc celui de Mathers, qui a fait école.",
-       "Leurs buts sont de quatre sortes. Beaucoup servent à <b>invoquer ou commander des esprits</b>, ou à protéger celui qui les invoque. D'autres sont pour l'opérateur lui-même : protection en voyage, contre les eaux, contre la pauvreté, pour obtenir des visions ou le savoir. Quelques-uns prétendent agir sur la <b>nature</b> : faire pleuvoir, trembler la terre, rendre invisible. Et une poignée <b>visent autrui</b> : ruiner, obséder, contraindre à aimer.",
-       "Arcanes raconte les quarante-quatre, parce que c'est l'histoire. Il ne dessine pas ceux qui visent une autre personne, et ne propose rien qui s'en approche. Ce n'est pas qu'on les croie efficaces : c'est qu'une intention de nuire ou de contraindre n'a pas sa place dans une pratique qui se veut un travail sur soi.",
+       "Leurs buts sont de quatre sortes. Beaucoup servent à <b>invoquer ou commander des esprits</b>. D'autres prétendent agir sur la nature, ou sur une autre personne. Une partie seulement est tournée vers <b>l'opérateur lui-même</b> : protection en voyage, contre les eaux, contre la pauvreté, pour l'étude ou le savoir.",
+       "Arcanes ne montre que ces derniers, les pentacles <b>pour soi</b>. Ce n'est pas qu'on croie les autres efficaces : c'est qu'une intention de commander, de nuire ou de contraindre n'a pas sa place dans une pratique qui se veut un travail sur soi.",
        "Regarde aussi ce que ces buts disent de leurs utilisateurs. Des trésors cachés gardés par des esprits, des chaînes dont on voudrait se libérer, des voyages dangereux, la peur de la pauvreté et des procès : le grimoire est un miroir des angoisses d'un petit clerc des XVIe et XVIIe siècles."],
       source:{txt:"Sept pentacles consacrés à Saturne, en noir ; sept à Jupiter, en bleu ; sept à Mars, en rouge ; sept au Soleil, en jaune ; cinq à Vénus, en vert ; cinq à Mercure, en couleurs mêlées ; six à la Lune, en argent.", ref:"Clé de Salomon, « l'ordre des pentacles », éd. Mathers, 1889", st:"doc"},
       schema:"pentcat",
-      ex:{t:"Trier les pentacles", txt:"Dans le catalogue, filtre les pentacles « pour soi ». Lequel répond le mieux à une inquiétude que tu as en ce moment ? Lis son verset à voix haute.", outil:"outil:pentacles"},
+      ex:{t:"Trier les pentacles", txt:"Dans le catalogue, parcours les pentacles planète par planète. Lequel répond le mieux à une inquiétude que tu as en ce moment ? Lis son verset à voix haute.", outil:"outil:pentacles"},
       carnet:"Le pentacle « pour soi » qui me parle, et pourquoi :",
       marge:[{t:"Mathers", txt:"Il travaillait au British Museum pendant que naissait la Golden Dawn. Sa Clé de Salomon reste l'édition de référence."},
-             {t:"Un garde-fou", txt:"Les pentacles marqués « vise autrui » sont racontés sans dessin."}] },
+             {t:"Un garde-fou", txt:"Arcanes ne montre que les pentacles tournés vers soi."}] },
     { id:"m15l4", t:"Le pentacle aujourd'hui", sous:"De Lévi au tarot, et le tien",
       idee:[
        "Au XIXe siècle, <b>Éliphas Lévi</b> fait du pentagramme le symbole même de la magie : l'étoile pointe en haut figure l'esprit qui gouverne les quatre éléments ; pointe en bas, la matière qui l'emporte. La confusion entre pentacle et pentagramme, déjà ancienne, devient la règle.",
@@ -354,12 +353,12 @@
      ret:["Double cercle, verset, figure, noms, matière.","Le verset dit le but, par analogie.","Jour et heure de Mercure, Lune croissante, papier vierge ou métal de la planète."]},
    m15l3:{acc:"Quarante-quatre médailles, et autant de fenêtres sur les peurs et les espoirs de ceux qui les traçaient.",
      conf:[["Tous les manuscrits ont les mêmes pentacles.","Le nombre, l'ordre, les versets et les noms varient beaucoup. L'un n'en a que treize, un autre aucun."]],
-     ret:["7 + 7 + 7 + 7 + 5 + 5 + 6 = 44.","Quatre usages : esprits, soi, nature, autrui.","Arcanes ne dessine pas ceux qui visent autrui."]},
+     ret:["7 + 7 + 7 + 7 + 5 + 5 + 6 = 44.","Quatre usages : esprits, soi, nature, autrui.","Arcanes ne montre que ceux qui sont pour soi."]},
    m15l4:{acc:"Le pentacle a changé de nature trois fois : médaille de grimoire, outil de la Terre, couleur du tarot.",
      conf:[["Le pentagramme est un signe satanique.","Pour Lévi et la Golden Dawn, l'étoile pointe en haut dit l'esprit qui gouverne la matière. L'usage satanique de l'étoile renversée date surtout du XXe siècle."]],
      ret:["Lévi : le pentagramme, esprit et éléments.","Golden Dawn : le pentacle, instrument de la Terre.","Waite, 1909 : les deniers deviennent les Pentacles."]}
   };
   if(!K.MODULES.find(m => m.id === "m15")) K.MODULES.push(MOD);
   Object.assign(window.MAGIE_ETOFFE = window.MAGIE_ETOFFE || {}, ETOF);
-  window.MAGIE_PENT = {P, PLAN, pentSVG, pentSheet};
+  window.MAGIE_PENT = {P, PLAN, pentSVG, pentSheet, VERSETS, NDIV, centre, pentagram, hexagram, star, pic, IM, CR, catalogue, anatomie, terre, familles, ORD};
 })();

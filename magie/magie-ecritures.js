@@ -134,6 +134,9 @@
   }
   /* pour l'atelier des pentacles (génération suivante) : la suite des glyphes avec leur largeur */
   const layout = (text, id) => { const e = BY[id]; if(e.type === "u") return null; let seq = glyphSeq(text, id); if(e.dir === "rtl") seq = seq.slice().reverse(); return seq.map(g => g.sp ? {sp:true, w:46} : {d:GL[id][g.k][1], w:GL[id][g.k][0], k:g.k}); };
+  /* une chaîne déjà en hébreu (un verset) → glyphes d'une écriture d'Agrippa, de droite à gauche */
+  const HREV = Object.assign(Object.fromEntries(HL.map(x => [x[1], x[0]])), {"ך":"caph", "ם":"mem", "ן":"nun", "ף":"pe", "ץ":"zade"});
+  const layoutHeb = (str, id) => { const G = GL[id]; if(!G) return null; const seq = [...String(str)].map(c => /\s/.test(c) ? {sp:true, w:46} : HREV[c] && G[HREV[c]] ? {d:G[HREV[c]][1], w:G[HREV[c]][0], k:HREV[c]} : null).filter(Boolean); return seq.reverse(); };
   /* lettre par lettre : [{src, out (html)}] */
   function pairs(text, id){
     const e = BY[id];
@@ -190,7 +193,7 @@
     draw(); bindTabs();
   }
 
-  window.ArcanesEcritures = {LIST, BY, HL, hebWord, hebText, grText, ideoText, ideoTokens, lineSVG, layout, glyphMini, GL};
+  window.ArcanesEcritures = {LIST, BY, HL, hebWord, hebText, grText, ideoText, ideoTokens, lineSVG, layout, layoutHeb, glyphMini, GL, IDEO};
   if(X){
     X.tools.push(["ecritures", "Le traducteur d'écritures", "Ton mot en grec, en hébreu et dans les alphabets secrets", "ecritures"]);
     X.toolRender.ecritures = {t:"Le traducteur d'écritures", sous:"Écris un mot : il apparaît en grec, en hébreu, en thébain, dans les trois écritures d'Agrippa et en idéogrammes. Ce sont les alphabets qu'on trouve sur les pentacles.", render:traducteur};
