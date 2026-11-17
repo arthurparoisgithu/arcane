@@ -48,13 +48,21 @@
   ]
  ],
  [
+  "Les récits d'histoire et les pentacles",
+  [
+   "Histoires de la magie (onze chapitres) et de l'astrologie (dix chapitres) : 59 gravures, manuscrits et objets venant de <a href=\"https://wellcomecollection.org/\" target=\"_blank\" rel=\"noopener\">Wellcome Collection</a> (53 images, <a href=\"https://creativecommons.org/publicdomain/mark/1.0/deed.fr\" target=\"_blank\" rel=\"noopener\">Public Domain Mark</a> ou <a href=\"https://creativecommons.org/licenses/by/4.0/deed.fr\" target=\"_blank\" rel=\"noopener\">CC BY 4.0</a>), de l'<a href=\"https://www.artic.edu/open-access\" target=\"_blank\" rel=\"noopener\">Art Institute of Chicago</a> (4, CC0) et du <a href=\"https://www.clevelandart.org/open-access\" target=\"_blank\" rel=\"noopener\">Cleveland Museum of Art</a> (2, CC0). La légende de chaque image donne l'œuvre, la date et la source. Les gravures de Robert Fludd viennent pour la plupart de l'<i>Utriusque cosmi historia</i> (Oppenheim, 1617-1621).",
+   "Pentacles : pages de deux manuscrits de la <i>Clavicule de Salomon</i> (une Clavicule italienne et latine vers 1775, et <i>Les Clavicules de R. Salomon</i>, manuscrit français de 1796) et une amulette hébraïque du XVIIIe siècle, <a href=\"https://wellcomecollection.org/\" target=\"_blank\" rel=\"noopener\">Wellcome Collection</a>, <a href=\"https://creativecommons.org/licenses/by/4.0/deed.fr\" target=\"_blank\" rel=\"noopener\">CC BY 4.0</a>. Les pentacles redessinés suivent l'édition de S. L. MacGregor Mathers, <i>The Key of Solomon the King</i> (1889), et l'édition critique de Joseph H. Peterson (esotericarchives.com).",
+   "Arbre de vie et guématrie : textes rédigés pour Arcanes. Pour aller plus loin : Gershom Scholem, <i>La Kabbale</i> (Cerf) ; Moshe Idel, <i>Kabbalah: New Perspectives</i> (Yale, 1988) ; le <i>Sefer Yetsira</i>, trad. Charles Mopsik ; Joscelyn Godwin et Jean-Pierre Brach sur la kabbale chrétienne. Les valeurs et versets hébreux ont été vérifiés par calcul."
+  ]
+ ],
+ [
   "Le globe des traditions",
   [
    "Fond de carte : <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> (domaine public), tracés des côtes simplifiés pour Arcanes. Projection : <a href=\"https://github.com/d3/d3-geo\" target=\"_blank\" rel=\"noopener\">d3-geo</a> de Mike Bostock (licence ISC). L'habillage de carte ancienne, les sceaux et les vingt-six symboles sont dessinés pour Arcanes.",
    "Les notices sont rédigées pour Arcanes. Pour vérifier et aller plus loin : Wouter J. Hanegraaff (dir.), <i>Dictionary of Gnosis and Western Esotericism</i> (Brill, 2005) ; Antoine Faivre, <i>L'Ésotérisme</i> (PUF) ; Jean-Pierre Brach et Jérôme Rousse-Lacordaire (dir.), <i>Études d'histoire de l'ésotérisme</i> (Cerf, 2007) ; les listes du <a href=\"https://ich.unesco.org/fr/listes\" target=\"_blank\" rel=\"noopener\">patrimoine culturel immatériel de l'UNESCO</a>.",
    "Les traditions vivantes, en particulier celles des peuples autochtones, sont présentées comme des religions et des cultures. Arcanes n'en reproduit ni les objets sacrés ni le détail des cérémonies. Les emplacements des sceaux sont des repères, pas des frontières.",
    "Fleuves, lacs, montagnes et déserts : <a href=\"https://www.naturalearthdata.com/\" target=\"_blank\" rel=\"noopener\">Natural Earth</a> (domaine public), simplifiés pour Arcanes. Les navires, les monstres marins, la sphère armillaire et le pied du globe sont dessinés pour Arcanes.",
-   "Images des fiches (59) : <a href=\"https://wellcomecollection.org/\" target=\"_blank\" rel=\"noopener\">Wellcome Collection</a> (domaine public ou CC BY), <a href=\"https://www.artic.edu/open-access\" target=\"_blank\" rel=\"noopener\">Art Institute of Chicago</a> (CC0) et <a href=\"https://www.clevelandart.org/open-access\" target=\"_blank\" rel=\"noopener\">Cleveland Museum of Art</a> (CC0). La légende de chaque image donne l'œuvre, la date et la source. Les gravures ont été recadrées et passées en tons sépia."
+   "Images des fiches (72) : <a href=\"https://wellcomecollection.org/\" target=\"_blank\" rel=\"noopener\">Wellcome Collection</a> (domaine public ou CC BY), <a href=\"https://www.artic.edu/open-access\" target=\"_blank\" rel=\"noopener\">Art Institute of Chicago</a> (CC0) et <a href=\"https://www.clevelandart.org/open-access\" target=\"_blank\" rel=\"noopener\">Cleveland Museum of Art</a> (CC0). La légende de chaque image donne l'œuvre, la date et la source. Les gravures ont été recadrées et passées en tons sépia."
   ]
  ],
  [

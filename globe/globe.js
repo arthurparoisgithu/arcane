@@ -2,7 +2,7 @@
    Pose un bandeau en tête des pages Histoire des quatre univers et charge le globe à la demande
    (bibliothèque de projection, fond de carte, données, moteur : environ 370 ko, jamais chargés avant). */
 (() => {
-  const FILES = ["globe/vendor/d3-array.min.js", "globe/vendor/d3-geo.min.js", "globe/globe-terre.js", "globe/globe-relief.js", "globe/globe-data.js", "globe/globe-plus-1.js", "globe/globe-plus-2.js", "globe/globe-images.js", "globe/globe-moteur.js"];
+  const FILES = ["globe/vendor/d3-array.min.js", "globe/vendor/d3-geo.min.js", "globe/globe-terre.js", "globe/globe-relief.js", "globe/globe-data.js", "globe/globe-plus-1.js", "globe/globe-plus-2.js", "globe/globe-images.js", "globe/globe-liens.js", "globe/globe-plus-3.js", "globe/globe-moteur.js"];
   const load = src => new Promise((ok, ko) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => ko(new Error(src)); document.head.appendChild(s); });
   let loading = null, veil = null;
   const DEEP = location.hash === "#globe" || /[?&]globe\b/.test(location.search);   // lien direct : …/#globe ou …/?globe

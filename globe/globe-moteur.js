@@ -46,7 +46,13 @@
   const view = {lon:15, lat:30, k:1, cx:0, cy:0, tcx:0, tcy:0};
   let moving = false, raf = 0, settleT = 0, fly = null, inertia = null, hits = [];
   const filt = {fam:new Set(Object.keys(D.FAM)), ev:true};
-  let sel = null, route = null, tour = null, game = null, panelOpen = false;
+  let sel = null, route = null, tour = null, game = null, panelOpen = false, threads = null, showAll = false, fcv = null, fogPat = null;
+  const LI = window.GLOBE_LIENS || {L:[], VOY:[], VL:[]}; LI.L = LI.L.filter(l => TRI[l[0]] && TRI[l[1]]);
+  (LI.VOY || []).forEach(v => { if(!D.PARCOURS.find(p => p.id === v.id)) D.PARCOURS.push(v); });
+  const LST = {doc:"Documenté", trad:"Discuté", leg:"Légende", mod:"Lecture moderne"};
+  const fbadge = k => `<span class="gl-st gl-st-${k === "trad" ? "trad" : k}">${LST[k]}</span>`;
+  const parents = id => LI.L.filter(l => l[1] === id), enfants = id => LI.L.filter(l => l[0] === id);
+  const dkey = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
   const KMAX = 16;
 
   function resize(){
@@ -72,6 +78,7 @@
     if(route && route.p < route.n){ route.p = Math.min(route.n, route.p + (ts - (route.last || ts))/1000/route.pace); route.last = ts; const i = Math.min(route.n, Math.floor(route.p + .02)); if(i !== route.shown){ route.shown = i; if(route.onStep) route.onStep(i); } again = true; }
     else if(route) route.last = 0;
     if(game && game.pulse){ again = true; }
+    if(threads && ts - threads.t0 < 1200) again = true;
     const dt = lastTs ? Math.min(.06, (ts - lastTs)/1000) : 0; lastTs = ts;
     if(intro){ if(ts - intro.t0 < 2300) again = true; else intro = null; }
     if(route && (route.pulse || route.p < route.n || (route.done && ts - route.done < 4000))){ route.pulse = false; again = true; if(route.p >= route.n && !route.done) route.done = ts; }
@@ -251,13 +258,16 @@
     ctx.lineCap = "round"; ctx.lineJoin = "round";
     if(RIV_MAJ){ const rp = P2(RIV_MAJ); if(rp){ ctx.strokeStyle = "rgba(40,86,100,.72)"; ctx.lineWidth = view.k > 3 ? 1.4 : 1; ctx.stroke(rp); } }
     if(RIV_MIN && view.k >= 2.2){ const rp = P2(RIV_MIN); if(rp){ ctx.strokeStyle = "rgba(40,86,100,.55)"; ctx.lineWidth = .8; ctx.stroke(rp); } }
+    // la terra incognita : les terres non explorées restent dans la brume
+    const VU = mem.fog === false || game ? null : mem.vus.map(id => TRI[id] || EVI[id]).filter(Boolean).map(it => [it.lon, it.lat]);
+    if(VU && landP) fog(landP, R, VU);
     // le canevas : méridiens, parallèles, tropiques
     ctx.beginPath(); path(GRAT); ctx.strokeStyle = "rgba(70,48,22,.16)"; ctx.lineWidth = .55; ctx.stroke();
     PARS.forEach(p => { ctx.beginPath(); path(p.g); ctx.setLineDash(p.main ? [] : [5, 5]); ctx.strokeStyle = p.main ? "rgba(70,48,22,.42)" : "rgba(70,48,22,.3)"; ctx.lineWidth = p.main ? .9 : .7; ctx.stroke(); }); ctx.setLineDash([]);
     if(landP){ ctx.strokeStyle = "#3b2a1a"; ctx.lineWidth = view.k > 3 ? 1.2 : .95; ctx.stroke(landP); }
     // les montagnes en taupinières
     { const c0 = [view.lon, view.lat], base = clamp(R*.0105, 2.6, 9);
-      MTN.forEach(m => { if(!m[2] && view.k < 1.35) return; const d = d3.geoDistance(c0, m); if(d > 1.4) return; const q = proj(m); if(!q) return; hill(q[0], q[1], base*(m[2] ? 1.15 : .9)*(.6 + .4*Math.cos(d)), m[2]); }); }
+      MTN.forEach(m => { if(!m[2] && view.k < 1.35) return; const d = d3.geoDistance(c0, m); if(d > 1.4) return; if(VU && !VU.some(v => d3.geoDistance(v, m) < .2)) return; const q = proj(m); if(!q) return; hill(q[0], q[1], base*(m[2] ? 1.15 : .9)*(.6 + .4*Math.cos(d)), m[2]); }); }
     ROSES.forEach(rose);
     decor(SHIPS, ship, R); decor(MONSTERS, monster, R);
     const c0 = [view.lon, view.lat];
@@ -272,9 +282,38 @@
     ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = tex; ctx.fillRect(cx - R, cy - R, R*2, R*2); ctx.globalCompositeOperation = "source-over";
     g = ctx.createRadialGradient(cx - R*.28, cy - R*.34, R*.1, cx, cy, R*1.02); g.addColorStop(0, "rgba(255,250,232,.22)"); g.addColorStop(.62, "rgba(120,80,30,0)"); g.addColorStop(.9, "rgba(84,52,16,.2)"); g.addColorStop(1, "rgba(50,28,6,.6)");
     ctx.fillStyle = g; ctx.fillRect(cx - R, cy - R, R*2, R*2);
+    if(showAll || threads) drawThreads(ts || performance.now());
     if(route) drawRoute(ts || performance.now());
     ctx.restore();
     drawMarkers(ts || performance.now()); if(game) drawGame();
+  }
+  function fogTex(){ const c = document.createElement("canvas"); c.width = c.height = 48; const x = c.getContext("2d");
+    x.fillStyle = "rgba(226,212,174,.86)"; x.fillRect(0, 0, 48, 48); x.strokeStyle = "rgba(110,80,40,.2)"; x.lineWidth = .8;
+    for(let i = -48; i < 96; i += 6){ x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 48, 48); x.stroke(); } return c; }
+  function fog(landP, R, VU){
+    if(!fcv) fcv = document.createElement("canvas"); if(fcv.width !== cv.width || fcv.height !== cv.height){ fcv.width = cv.width; fcv.height = cv.height; }
+    const fx = fcv.getContext("2d"); fx.setTransform(dpr, 0, 0, dpr, 0, 0); fx.globalCompositeOperation = "source-over"; fx.clearRect(0, 0, W, H);
+    if(!fogPat) fogPat = fx.createPattern(fogTex(), "repeat"); fx.fillStyle = fogPat; fx.fill(landP);
+    fx.globalCompositeOperation = "destination-out"; const c0 = [view.lon, view.lat], rr = R*.21;
+    VU.forEach(v => { if(d3.geoDistance(c0, v) > 1.62) return; const p = proj(v); if(!p) return; const g = fx.createRadialGradient(p[0], p[1], rr*.3, p[0], p[1], rr);
+      g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)"); fx.fillStyle = g; fx.beginPath(); fx.arc(p[0], p[1], rr, 0, 7); fx.fill(); });
+    fx.globalCompositeOperation = "source-over"; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(fcv, 0, 0); ctx.restore();
+  }
+  /* les fils d'influence : d'une tradition à celles qu'elle a nourries */
+  function drawThreads(ts){
+    const R = R0*view.k, id = threads && threads.id, L = showAll ? LI.L : LI.L.filter(l => l[0] === id || l[1] === id);
+    const f = threads ? clamp((ts - threads.t0)/1100, 0, 1) : 1, e = 1 - Math.pow(1 - f, 3);
+    ctx.lineCap = "round";
+    L.forEach(l => { const A = TRI[l[0]], B = TRI[l[1]], mine = id && (l[0] === id || l[1] === id), a = showAll && !mine ? .5 : 1;
+      const sp = arcPts([A.lon, A.lat], [B.lon, B.lat], mine || !showAll ? e : 1, R);
+      ctx.setLineDash(l[3] === "doc" ? [] : l[3] === "leg" ? [1.5, 5] : [7, 5]);
+      if(sp){ ctx.beginPath(); sp.forEach((q, j) => j ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]));
+        ctx.strokeStyle = `rgba(255,246,220,${.7*a})`; ctx.lineWidth = mine ? 4.6 : 3; ctx.stroke();
+        ctx.strokeStyle = `rgba(178,128,30,${.95*a})`; ctx.lineWidth = mine ? 2.2 : 1.3; ctx.stroke();
+        if((mine || !showAll) && e > .97){ const p = sp[sp.length - 1], q = sp[Math.max(0, sp.length - 3)], an = Math.atan2(p[1] - q[1], p[0] - q[0]); ctx.setLineDash([]);
+          ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(an); ctx.beginPath(); ctx.moveTo(-1, 0); ctx.lineTo(-9, -4); ctx.lineTo(-7, 0); ctx.lineTo(-9, 4); ctx.closePath(); ctx.fillStyle = "#9a6e1c"; ctx.fill(); ctx.restore(); } }
+      else { const ip = d3.geoInterpolate([A.lon, A.lat], [B.lon, B.lat]); ctx.beginPath(); path({type:"LineString", coordinates:d3.range(21).map(j => ip(e*j/20))}); ctx.strokeStyle = `rgba(178,128,30,${.7*a})`; ctx.lineWidth = 1.4; ctx.stroke(); } });
+    ctx.setLineDash([]);
   }
   /* le voyage : un arbre d'arcs qui se tracent l'un après l'autre */
   function arcPts(P, Q, f, R){
@@ -297,7 +336,10 @@
         ctx.setLineDash([8, 6]); ctx.lineDashOffset = -(ts/45) % 14; ctx.strokeStyle = "rgba(140,35,24,.95)"; ctx.lineWidth = 2.3; ctx.stroke(); ctx.setLineDash([]);
         const e = sp[sp.length - 1], e0 = sp[Math.max(0, sp.length - 3)];
         if(f < 1){ const gg = ctx.createRadialGradient(e[0], e[1], 0, e[0], e[1], 16); gg.addColorStop(0, "rgba(255,240,190,1)"); gg.addColorStop(.3, "rgba(230,120,60,.8)"); gg.addColorStop(1, "rgba(200,60,30,0)");
-          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(e[0], e[1], 16, 0, 7); ctx.fill(); }
+          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(e[0], e[1], 16, 0, 7); ctx.fill();
+          const an = Math.atan2(e[1] - e0[1], e[0] - e0[0]); ctx.save(); ctx.translate(e[0], e[1]); ctx.rotate(an - 2.2);
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(11, -18, 5, -46); ctx.quadraticCurveTo(-6, -24, 0, 0); ctx.closePath(); ctx.fillStyle = "rgba(248,240,220,.96)"; ctx.fill(); ctx.strokeStyle = "#3b2a1a"; ctx.lineWidth = 1; ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(3, -22, 5, -44); ctx.strokeStyle = "rgba(59,42,26,.7)"; ctx.lineWidth = .8; ctx.stroke(); ctx.restore(); }
         else { const a = Math.atan2(e[1] - e0[1], e[0] - e0[0]); ctx.save(); ctx.translate(e[0], e[1]); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(-1, 0); ctx.lineTo(-10, -4.5); ctx.lineTo(-7.5, 0); ctx.lineTo(-10, 4.5); ctx.closePath(); ctx.fillStyle = "#8c2318"; ctx.fill(); ctx.restore(); }
       } else { const ip = d3.geoInterpolate(P, Q), m = 20, seg = {type:"LineString", coordinates:d3.range(m + 1).map(j => ip(f*j/m))};
         ctx.beginPath(); path(seg); ctx.setLineDash([6, 6]); ctx.strokeStyle = "rgba(140,35,24,.7)"; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); }
@@ -389,7 +431,7 @@
     if(!panelOpen){ panelOpen = true; target(); ask(); } root.classList.add("gl-has-panel");
   }
   function closePanel(keep){
-    q1(".gl-panel", root).hidden = true; panelOpen = false; root.classList.remove("gl-has-panel"); if(!keep){ sel = null; route = null; } target(); ask();
+    q1(".gl-panel", root).hidden = true; panelOpen = false; root.classList.remove("gl-has-panel"); if(!keep){ sel = null; route = null; threads = null; } target(); ask();
   }
   function meme(t){ // trois traditions vivantes à la même époque, ailleurs
     const a0 = t.de, a1 = t.a == null ? 2026 : t.a, mid = clamp((a0 + Math.min(a1, a0 + 400))/2, -3000, 2026);
@@ -407,7 +449,7 @@
         + (P.t && P.t.length ? `<h3>Des textes, des lieux</h3><ul class="gl-txts">${P.t.map(x => `<li><i>${h(x[0])}</i>${x[1] ? ` <small>${h(x[1])}</small>` : ""}</li>`).join("")}</ul>` : ""),
       bottom:P.r ? `<div class="gl-reste"><h3>Ce qu'il en reste</h3><p class="gl-p">${nb(h(P.r))}</p></div>` : ""}; }
   function open(it, quiet){
-    if(tour) endTour(true); sel = it; lastTouch = performance.now(); if(!mem.vus.includes(it.id)){ mem.vus.push(it.id); save(); count(); }
+    if(tour) endTour(true); sel = it; threads = null; lastTouch = performance.now(); if(!mem.vus.includes(it.id)){ mem.vus.push(it.id); save(); count(); }
     if(it.ev){ const t = it.tr && TRI[it.tr]; route = null; const ik = it.id in EVIMG ? EVIMG[it.id] : (IM[it.id] ? it.id : null);
       panel(`${hero(ik)}<p class="gl-eye">${dot(it)}Événement · ${h(it.lieu)}</p><h2>${h(it.nom)}</h2><p class="gl-dates">${h(it.quand)} ${badge(it.st)}</p><p class="gl-p gl-lead">${nb(h(it.x))}</p>
         ${t ? `<h3>La tradition concernée</h3>${link(t)}` : ""}`, ik ? "has-hero" : "");
@@ -419,10 +461,15 @@
       ${t.r ? `<h3>Son voyage</h3><ol class="gl-route">${t.r.map((s, i) => `<li><button type="button" data-glstep="${i}"><b>${h(s[3])}</b><span><strong>${h(s[2])}</strong>${nb(h(s[4]))}</span></button></li>`).join("")}</ol><button type="button" class="gl-btn" data-glreplay>Rejouer le voyage</button>` : ""}
       ${dd.fig || ""}
       ${t.s ? `<h3>Ses signes</h3><div class="gl-syms">${t.s.map(s => `<button type="button" class="gl-sym" data-glsym="${s}">${glyph(s)}<span>${h(D.SY[s].nom)}</span></button>`).join("")}</div>` : ""}
+      ${(() => { const Pa = parents(t.id), En = enfants(t.id); if(!Pa.length && !En.length) return "";
+        const row = (l, o) => `<button type="button" class="gl-link gl-fil" data-glgo="${o.id}">${dot(o)}<span><b>${h(o.nom)}</b><small>${nb(h(l[2]))}</small></span>${fbadge(l[3])}</button>`;
+        return `<h3>Ses héritages</h3>${Pa.length ? `<p class="gl-sub">Ce qu'elle a reçu</p>${Pa.map(l => row(l, TRI[l[0]])).join("")}` : ""}${En.length ? `<p class="gl-sub">Ce qu'elle a transmis</p>${En.map(l => row(l, TRI[l[1]])).join("")}` : ""}<p class="gl-note sm">Sur le globe, les fils dorés montrent ces passages. Trait plein : documenté ; tirets : discuté ; pointillés : légende.</p>`; })()}
       ${evs.length ? `<h3>Ce qui s'est passé</h3>${evs.map(e => link(e)).join("")}` : ""}
       ${dd.bottom}
       ${mm.length ? `<h3>Au même moment dans le monde</h3>${mm.map(o => link(o)).join("")}` : ""}
-      ${t.l ? `<h3>Dans Arcanes</h3><div class="gl-arc">${t.l.map(l => `<button type="button" class="gl-btn" data-glarc="${l}">${h(ARC[l][0])}</button>`).join("")}</div>` : ""}`, IM[t.id] ? "has-hero" : "");
+      ${t.l ? `<h3>Dans Arcanes</h3><div class="gl-arc">${t.l.map(l => `<button type="button" class="gl-btn" data-glarc="${l}">${h(ARC[l][0])}</button>`).join("")}</div>` : ""}
+      <div class="gl-arc"><button type="button" class="gl-btn ghost" data-glcmp="${t.id}">Comparer avec une autre</button></div>`, IM[t.id] ? "has-hero" : "");
+    threads = {id:t.id, t0:performance.now() + (t.r ? 600 : 300)}; bell();
     if(t.r){ startRoute(t.r, i => qa("[data-glstep]", root).forEach(b => b.parentNode.classList.toggle("on", +b.dataset.glstep <= i))); if(!quiet) fit(t.r.map(s => [s[0], s[1]]).concat([[t.lon, t.lat]]), 1, () => { route.p = 0; route.last = 0; route.at = []; route.done = 0; ask(); }); }
     else { route = null; if(!quiet) flyTo(t.lon, t.lat, Math.max(view.k, 3.4)); }
   }
@@ -447,7 +494,9 @@
   function listHere(its){ route = null; sel = null; panel(`<p class="gl-eye">Au même endroit</p><h2>${its.length} sceaux ici</h2>${its.map(i => link(i)).join("")}`); }
   function tours(){ route = null; sel = null;
     panel(`<p class="gl-eye">Balades racontées</p><h2>Les parcours</h2><p class="gl-p">Le globe tourne tout seul d'une étape à l'autre. Tu n'as qu'à lire.</p>
-      ${D.PARCOURS.map(p => `<button type="button" class="gl-tour" data-gltour="${p.id}"><b>${h(p.nom)}</b><span>${nb(h(p.x))}</span><small>${p.stops.length} étapes</small></button>`).join("")}`); }
+      ${D.PARCOURS.filter(p => !p.voy).map(p => `<button type="button" class="gl-tour" data-gltour="${p.id}"><b>${h(p.nom)}</b><span>${nb(h(p.x))}</span><small>${p.stops.length} étapes</small></button>`).join("")}
+      <h3>Des vies sur la carte</h3><p class="gl-p">Suivre une personne plutôt qu'une tradition : ses villes, ses années, ce qu'elle y a fait.</p>
+      ${D.PARCOURS.filter(p => p.voy).map(p => `<button type="button" class="gl-tour voy" data-gltour="${p.id}"><b>${h(p.nom)}</b><span>${nb(h(p.x))}</span><small>${p.stops.length} villes · ${h(p.stops[0][3])} – ${h(p.stops[p.stops.length - 1][3])}</small></button>`).join("")}`); }
 
   /* ---------- les parcours ---------- */
   function startTour(id){
@@ -469,6 +518,7 @@
     game = {pool, i:0, score:0, wait:true, g:null}; root.classList.add("gl-has-card", "gl-is-game"); target(); flyTo(view.lon, 20, 1, 700); ask(); gameCard();
   }
   function gameCard(res){
+    if(game.mode === "enig") return enigCard(res);
     const t = game.pool[game.i], c = q1(".gl-card", root); c.hidden = false;
     c.innerHTML = res ? `<p class="gl-eye">Manche ${game.i + 1} sur 5 · ${game.score} points</p><h3>${h(res.v)} <small>${res.km.toLocaleString("fr-FR")} km</small></h3><p class="gl-p">${h(t.nom)} : ${h(t.lieu)}. ${nb(h(t.x.split(". ")[0]))}.</p>
         <div class="gl-card-nav"><button type="button" class="gl-btn ghost" data-glquit>Arrêter</button><button type="button" class="gl-btn main" data-glnextq>${game.i < 4 ? "Suivante" : "Voir le score"}</button></div>`
@@ -476,7 +526,9 @@
         <div class="gl-card-nav"><button type="button" class="gl-btn ghost" data-glquit>Arrêter</button></div>`;
   }
   function guess(x, y){
-    const p = proj.invert([x, y]); if(!p || Math.hypot(x - view.cx, y - view.cy) > R0*view.k) return; const t = game.pool[game.i];
+    const p = proj.invert([x, y]); if(!p || Math.hypot(x - view.cx, y - view.cy) > R0*view.k) return;
+    if(game.mode === "enig") return enigGuess(p);
+    const t = game.pool[game.i];
     const km = Math.round(d3.geoDistance(p, [t.lon, t.lat])*6371/10)*10, pts = Math.max(0, Math.round(100 - km/45)); game.score += pts; game.wait = false; game.g = {a:p, b:[t.lon, t.lat]};
     gameCard({km, v:km <= 400 ? "Dans le mille !" : km <= 1500 ? "Tout près." : km <= 4000 ? "Le bon coin du monde." : "Assez loin."}); fit([p, [t.lon, t.lat]], 1.6);
   }
@@ -491,7 +543,137 @@
         <div class="gl-card-nav"><button type="button" class="gl-btn ghost" data-glquit>Revenir au globe</button><button type="button" class="gl-btn main" data-glgame>Rejouer</button></div>`; game.g = null; game.wait = false; ask(); return; }
     game.i++; game.g = null; game.wait = true; gameCard(); flyTo(view.lon, 20, 1, 700);
   }
-  function endGame(){ game = null; q1(".gl-card", root).hidden = true; root.classList.remove("gl-has-card", "gl-is-game"); target(); ask(); }
+  function endGame(){ game = null; threads = null; q1(".gl-card", root).hidden = true; root.classList.remove("gl-has-card", "gl-is-game"); target(); ask(); }
+
+  /* ---------- les héritages ---------- */
+  function liens(){ route = null; sel = null; threads = null; showAll = true; ask();
+    const L = LI.L.slice().sort((a, b) => TRI[a[0]].de - TRI[b[0]].de);
+    panel(`<p class="gl-eye">${L.length} fils dorés</p><h2>Les héritages</h2>
+      <p class="gl-p">Aucune tradition n'est née seule. Ces fils montrent ce qui est passé de l'une à l'autre : un texte traduit, un dieu rebaptisé, un rite emprunté, parfois une filiation que l'on s'est inventée pour paraître plus ancien.</p>
+      <p class="gl-legend"><span><i class="fl fl-doc"></i>Documenté</span><span><i class="fl fl-trad"></i>Discuté</span><span><i class="fl fl-leg"></i>Légende</span></p>
+      <button type="button" class="gl-btn ghost" data-glall2 aria-pressed="true">Afficher ou cacher tous les fils</button>
+      ${L.map(l => `<div class="gl-hrow"><button type="button" class="gl-link" data-glgo="${l[0]}">${dot(TRI[l[0]])}<span><b>${h(TRI[l[0]].nom)}</b></span></button><span class="gl-harr" aria-hidden="true">→</span><button type="button" class="gl-link" data-glgo="${l[1]}">${dot(TRI[l[1]])}<span><b>${h(TRI[l[1]].nom)}</b><small>${nb(h(l[2]))}</small></span></button>${fbadge(l[3])}</div>`).join("")}`, "wide");
+    flyTo(view.lon, 30, 1, 800);
+  }
+
+  /* ---------- le son : des vagues, une cloche ---------- */
+  const AU = {c:null, g:null, src:null};
+  function son(on){
+    try{ if(on){ const C = window.AudioContext || window.webkitAudioContext; if(!C) return; AU.c = AU.c || new C(); if(AU.c.state === "suspended") AU.c.resume(); if(AU.src) return;
+        const n = AU.c.sampleRate*4, b = AU.c.createBuffer(1, n, AU.c.sampleRate), d = b.getChannelData(0); let last = 0;
+        for(let i = 0; i < n; i++){ const w = Math.random()*2 - 1; last = (last + .02*w)/1.02; d[i] = last*3.2; }
+        const s = AU.c.createBufferSource(); s.buffer = b; s.loop = true; const f = AU.c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 420;
+        const g = AU.c.createGain(); g.gain.value = .0; const lfo = AU.c.createOscillator(), lg = AU.c.createGain(); lfo.frequency.value = .09; lg.gain.value = .035; lfo.connect(lg); lg.connect(g.gain); lfo.start();
+        s.connect(f); f.connect(g); g.connect(AU.c.destination); g.gain.setTargetAtTime(.05, AU.c.currentTime, 1.5); s.start(); AU.src = s; AU.g = g; AU.lfo = lfo; }
+      else if(AU.src){ const s = AU.src, l = AU.lfo; AU.g.gain.setTargetAtTime(0, AU.c.currentTime, .4); setTimeout(() => { try{ s.stop(); l.stop(); }catch(e){} }, 1500); AU.src = null; } }catch(e){}
+  }
+  function bell(){ if(!mem.son || !AU.c) return; try{ const t = AU.c.currentTime; [659.3, 987.8, 1318.5].forEach((fq, i) => { const o = AU.c.createOscillator(), g = AU.c.createGain(); o.type = "sine"; o.frequency.value = fq;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05/(i + 1), t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + 1.8 - i*.3); o.connect(g); g.connect(AU.c.destination); o.start(t); o.stop(t + 2); }); }catch(e){} }
+
+  /* ---------- comparer deux traditions ---------- */
+  function cmpPick(a){ const A = TRI[a]; route = null;
+    panel(`<p class="gl-eye">Comparer</p><h2>${h(A.nom)} et…</h2><label class="gl-search"><span class="sr-only">Chercher</span><input type="search" placeholder="Chercher une tradition" data-glq2></label>
+      <div class="gl-cmpl">${D.TR.filter(t => t.id !== a).map(t => `<button type="button" class="gl-link" data-glcmp2="${a}:${t.id}">${dot(t)}<span><b>${h(t.nom)}</b><small>${h(t.lieu)}</small></span></button>`).join("")}</div>`);
+    const inp = q1("[data-glq2]", root), norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    inp.oninput = () => { const v = norm(inp.value.trim()); qa(".gl-cmpl .gl-link", root).forEach(b => { const t = TRI[b.dataset.glcmp2.split(":")[1]]; b.hidden = !!v && !norm(t.nom + " " + t.lieu).includes(v); }); };
+  }
+  function chemin(a, b){ // le plus court fil qui relie deux traditions, dans les deux sens
+    const adj = {}; LI.L.forEach(l => { (adj[l[0]] = adj[l[0]] || []).push([l[1], l]); (adj[l[1]] = adj[l[1]] || []).push([l[0], l]); });
+    const prev = {[a]:null}, q = [a]; while(q.length){ const x = q.shift(); if(x === b) break; (adj[x] || []).forEach(([y, l]) => { if(!(y in prev)){ prev[y] = [x, l]; q.push(y); } }); }
+    if(!(b in prev)) return null; const out = []; let x = b; while(prev[x]){ out.unshift([prev[x][0], x, prev[x][1]]); x = prev[x][0]; } return out;
+  }
+  function compare(A, B){
+    const y1 = t => t.a == null ? 2026 : t.a, ov0 = Math.max(A.de, B.de), ov1 = Math.min(y1(A), y1(B)), km = Math.round(d3.geoDistance([A.lon, A.lat], [B.lon, B.lat])*6371/10)*10;
+    const temps = ov0 <= ov1 ? `Elles ont coexisté ${ov1 >= 2026 ? `depuis ${an(ov0)}` : `de ${an(ov0)} à ${an(ov1)}`}, soit ${(Math.min(ov1, 2026) - ov0).toLocaleString("fr-FR")} ans.` : `${(ov0 - ov1).toLocaleString("fr-FR")} ans les séparent : l'une avait disparu quand l'autre est née.`;
+    const ch = chemin(A.id, B.id), syA = new Set(A.s || []), com = (B.s || []).filter(s => syA.has(s));
+    const col = t => `<div class="gl-cmpc">${hero(IM[t.id] ? t.id : null, "small")}<p class="gl-eye">${dot(t)}${h(D.FAM[t.fam].nom)}</p><h3>${h(t.nom)}</h3><p class="gl-dates">${h(t.lieu)} · ${h(dates(t))} ${badge(t.st)}</p><p class="gl-p">${nb(h(t.x.split(". ").slice(0, 2).join(". ")))}${t.x.split(". ").length > 2 ? "." : ""}</p><button type="button" class="gl-btn ghost" data-glgo="${t.id}">La fiche</button></div>`;
+    panel(`<p class="gl-eye">Comparer</p><h2>${h(A.nom)} <i>et</i> ${h(B.nom)}</h2>
+      <div class="gl-cmp">${col(A)}${col(B)}</div>
+      <h3>Dans l'espace et le temps</h3><p class="gl-p">${km.toLocaleString("fr-FR")} km à vol d'oiseau. ${temps}</p>
+      ${com.length ? `<h3>Des signes en commun</h3><div class="gl-syms">${com.map(s => `<button type="button" class="gl-sym" data-glsym="${s}">${glyph(s)}<span>${h(D.SY[s].nom)}</span></button>`).join("")}</div>` : ""}
+      <h3>Le fil qui les relie</h3>${ch ? `<ol class="gl-chain">${ch.map(([x, y, l]) => `<li><b>${h(TRI[x].nom)}</b> ${l[0] === x ? "→" : "←"} <b>${h(TRI[y].nom)}</b><small>${nb(h(l[2]))} ${fbadge(l[3])}</small></li>`).join("")}</ol>` : `<p class="gl-p">Aucun fil connu ne les relie : elles se sont développées chacune de leur côté. Les ressemblances, s'il y en a, viennent de ce que les humains se posent partout les mêmes questions.</p>`}
+      <button type="button" class="gl-btn ghost" data-glcmp="${A.id}">Comparer ${h(A.nom)} avec une autre</button>`);
+    sel = A; threads = null; startRoute([[A.lon, A.lat, A.lieu, dates(A)], [B.lon, B.lat, B.lieu, dates(B)]]); route.p = 0; route.last = 0; route.at = [];
+    fit([[A.lon, A.lat], [B.lon, B.lat]], 1); ask();
+  }
+
+  /* ---------- les jeux ---------- */
+  let qz = null;
+  const shuffle = a => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const recs = () => mem.rec = mem.rec || {};
+  function jeux(){ route = null; sel = null; threads = null; showAll = false; qz = null; if(game) endGame();
+    const e = (mem.enig || {})[dkey()], R = recs();
+    panel(`<p class="gl-eye">Cinq façons de jouer</p><h2>Les jeux du globe</h2>
+      <button type="button" class="gl-tour game star" data-glenig><b>L'énigme du jour</b><span>Trois indices, un lieu à retrouver sur le globe. Une nouvelle chaque jour.</span><small>${e != null ? `Faite aujourd'hui : ${e} points sur 300` : "Pas encore jouée aujourd'hui"}</small></button>
+      <button type="button" class="gl-tour game" data-glgame><b>D'où vient-elle ?</b><span>Cinq traditions, sceaux cachés : touche l'endroit où chacune est née.</span><small>Record : ${mem.best || 0} sur 500</small></button>
+      <button type="button" class="gl-tour game" data-glvl><b>Vrai ou légende ?</b><span>Huit affirmations qu'on entend partout. Lesquelles tiennent debout ?</span><small>Record : ${R.vl || 0} sur 8</small></button>
+      <button type="button" class="gl-tour game" data-glordre><b>Remets dans l'ordre</b><span>Quatre moments de l'histoire, du plus ancien au plus récent.</span><small>Record : ${R.ordre || 0} sur 20</small></button>
+      <button type="button" class="gl-tour game" data-glfil><b>Le fil perdu</b><span>Deux traditions, et celle qui a fait le lien entre elles. Laquelle ?</span><small>Record : ${R.fil || 0} sur 6</small></button>`);
+  }
+  function qRender(){
+    const Q = qz, c = Q.list[Q.i], head = `<p class="gl-eye">${Q.titre} · ${Q.i + 1} sur ${Q.list.length} · ${Q.score} point${Q.score > 1 ? "s" : ""}</p>`;
+    let body = "";
+    if(Q.mode === "vl"){ const V = {v:"Vrai", l:"Légende", m:"Les deux"};
+      body = `<h2 class="gl-q">« ${h(c[0])} »</h2><div class="gl-qa">${Object.entries(V).map(([k, t]) => `<button type="button" class="gl-btn${Q.ans ? (k === c[1] ? " ok" : k === Q.ans ? " ko" : " off") : ""}" data-glqa="${k}" ${Q.ans ? "disabled" : ""}>${t}</button>`).join("")}</div>
+        ${Q.ans ? `<div class="gl-qr ${Q.ans === c[1] ? "ok" : "ko"}"><b>${Q.ans === c[1] ? "Bien vu." : "Eh non."} ${V[c[1]]}.</b><p>${nb(h(c[2]))}</p>${c[3] && (TRI[c[3]] || EVI[c[3]]) ? `<button type="button" class="gl-btn ghost" data-glgo="${c[3]}">Voir sur le globe</button>` : ""}</div>` : ""}`; }
+    else if(Q.mode === "ordre"){ const done = Q.pick.length === 4, right = c.slice().sort((a, b) => a.an - b.an);
+      body = `<h2 class="gl-q">Du plus ancien au plus récent</h2><p class="gl-p">Touche les quatre cartes dans l'ordre.</p><div class="gl-ord">${c.map((it, k) => { const pos = Q.pick.indexOf(k), ok = done && right[pos] === it;
+          return `<button type="button" class="gl-ordc${pos >= 0 ? " on" : ""}${done ? (ok ? " ok" : " ko") : ""}" data-glqa="${k}" ${pos >= 0 || done ? "disabled" : ""}><i>${pos >= 0 ? pos + 1 : ""}</i><b>${h(it.nom)}</b><small>${h(it.lieu)}${done ? ` · <strong>${h(it.dq)}</strong>` : ""}</small></button>`; }).join("")}</div>
+        ${done ? `<div class="gl-qr ${Q.last === 4 ? "ok" : "ko"}"><b>${Q.last} sur 4 à la bonne place.</b><p>L'ordre juste : ${right.map(i => h(i.nom) + " (" + h(i.dq) + ")").join(", ")}.</p></div>` : ""}`; }
+    else if(Q.mode === "fil"){ const [A, B, C, l1, l2] = c;
+      body = `<h2 class="gl-q">${h(TRI[A].nom)} <span class="gl-qdots">· · · ?</span> ${h(TRI[C].nom)}</h2><p class="gl-p">Quelle tradition a reçu de la première et transmis à la seconde ?</p>
+        <div class="gl-qa col">${Q.opts.map(o => `<button type="button" class="gl-link${Q.ans ? (o === B ? " ok" : o === Q.ans ? " ko" : " off") : ""}" data-glqa="${o}" ${Q.ans ? "disabled" : ""}>${dot(TRI[o])}<span><b>${h(TRI[o].nom)}</b><small>${h(TRI[o].lieu)}</small></span></button>`).join("")}</div>
+        ${Q.ans ? `<div class="gl-qr ${Q.ans === B ? "ok" : "ko"}"><b>${Q.ans === B ? "Le bon fil." : "C'était " + h(TRI[B].nom) + "."}</b><p>${h(TRI[A].nom)} → ${h(TRI[B].nom)} : ${nb(h(l1[2]))}.<br>${h(TRI[B].nom)} → ${h(TRI[C].nom)} : ${nb(h(l2[2]))}.</p></div>` : ""}`; }
+    const fin = Q.ans || (Q.mode === "ordre" && Q.pick.length === 4);
+    panel(head + body + (fin ? `<div class="gl-card-nav"><button type="button" class="gl-btn ghost" data-gljeux>Les jeux</button><button type="button" class="gl-btn main" data-glqnext>${Q.i < Q.list.length - 1 ? "Suivante" : "Voir le score"}</button></div>` : `<div class="gl-card-nav"><button type="button" class="gl-btn ghost" data-gljeux>Arrêter</button></div>`), "quiz");
+  }
+  function answer(a){ const Q = qz; if(!Q) return; const c = Q.list[Q.i];
+    if(Q.mode === "vl"){ if(Q.ans) return; Q.ans = a; if(a === c[1]){ Q.score++; bell(); } const it = c[3] && (TRI[c[3]] || EVI[c[3]]); if(it) flyTo(it.lon, it.lat, Math.max(view.k, 2.6)); }
+    else if(Q.mode === "ordre"){ const k = +a; if(Q.pick.includes(k) || Q.pick.length >= 4) return; Q.pick.push(k);
+      if(Q.pick.length === 4){ const right = c.slice().sort((x, y) => x.an - y.an); Q.last = Q.pick.filter((k2, pos) => c[k2] === right[pos]).length; Q.score += Q.last; if(Q.last === 4) bell();
+        fit(c.map(i => [i.lon, i.lat]), 1); } }
+    else if(Q.mode === "fil"){ if(Q.ans) return; Q.ans = a; const [A, B, C] = c; if(a === B){ Q.score++; bell(); } threads = {id:B, t0:performance.now()}; sel = TRI[B]; fit([A, B, C].map(x => [TRI[x].lon, TRI[x].lat]), 1); }
+    qRender(); ask();
+  }
+  function qNext(){ const Q = qz; if(!Q) return;
+    if(Q.i < Q.list.length - 1){ Q.i++; Q.ans = null; Q.pick = []; if(Q.mode === "fil") Q.opts = filOpts(Q.list[Q.i]); threads = null; sel = null; qRender(); return; }
+    const R = recs(), rec = Q.score > (R[Q.mode] || 0); if(rec){ R[Q.mode] = Q.score; save(); }
+    panel(`<p class="gl-eye">${Q.titre} · terminé</p><h2>${Q.score} sur ${Q.max} ${rec ? "<small class='gl-rec'>record</small>" : ""}</h2><p class="gl-p">${Q.score >= Q.max*.8 ? "Remarquable. Tu sais séparer l'histoire de ce qu'on en raconte." : Q.score >= Q.max/2 ? "Bien joué. Les fiches du globe t'aideront à faire mieux." : "Le sujet est piégeux. Promène-toi dans les fiches, puis reviens."}</p>
+      <div class="gl-card-nav"><button type="button" class="gl-btn ghost" data-gljeux>Les jeux</button><button type="button" class="gl-btn main" data-gl${Q.mode === "vl" ? "vl" : Q.mode === "ordre" ? "ordre" : "fil"}>Rejouer</button></div>`, "quiz");
+    threads = null; qz = null;
+  }
+  function startVL(){ if(game) endGame(); route = null; sel = null; showAll = false; qz = {mode:"vl", titre:"Vrai ou légende ?", list:shuffle(LI.VL).slice(0, 8), i:0, score:0, max:8, ans:null}; qRender(); }
+  function startOrdre(){ if(game) endGame(); route = null; sel = null; showAll = false;
+    const pool = D.TR.filter(t => t.fam !== "art" && !t.dt && t.de > -3500).map(t => ({id:t.id, nom:t.nom, lieu:t.lieu, an:t.de, dq:"vers " + an(t.de), lon:t.lon, lat:t.lat}))
+      .concat(EVS.map(e => ({id:e.id, nom:e.nom, lieu:e.lieu, an:e.an, dq:e.quand, lon:e.lon, lat:e.lat})));
+    const rounds = []; for(let r = 0; r < 5; r++){ for(let tries = 0; tries < 200; tries++){ const c = shuffle(pool).slice(0, 4), s = c.map(x => x.an).sort((a, b) => a - b); if(s.every((v, i) => !i || v - s[i - 1] >= 40)){ rounds.push(c); break; } } }
+    qz = {mode:"ordre", titre:"Remets dans l'ordre", list:rounds, i:0, score:0, max:20, pick:[]}; qRender(); }
+  function filOpts(c){ const [A, B, C] = c; return shuffle([B].concat(shuffle(D.TR.filter(t => ![A, B, C].includes(t.id) && t.fam !== "art").map(t => t.id)).slice(0, 3))); }
+  function startFil(){ if(game) endGame(); route = null; sel = null; showAll = false;
+    const ch = []; LI.L.forEach(l1 => LI.L.forEach(l2 => { if(l1[1] === l2[0] && l1[0] !== l2[1]) ch.push([l1[0], l1[1], l2[1], l1, l2]); }));
+    const list = shuffle(ch).filter((c, i, a) => a.findIndex(x => x[1] === c[1]) === i).slice(0, 6);
+    qz = {mode:"fil", titre:"Le fil perdu", list, i:0, score:0, max:list.length, ans:null}; qz.opts = filOpts(list[0]); qRender(); }
+
+  /* ---------- l'énigme du jour ---------- */
+  const siecle = n => { if(n < -999) return `au ${Math.ceil(-n/1000) === 1 ? "Ier" : ["", "", "IIe", "IIIe", "IVe", "Ve"][Math.ceil(-n/1000)] || Math.ceil(-n/1000) + "e"} millénaire avant notre ère`;
+    const r = ["Ier","IIe","IIIe","IVe","Ve","VIe","VIIe","VIIIe","IXe","Xe","XIe","XIIe","XIIIe","XIVe","XVe","XVIe","XVIIe","XVIIIe","XIXe","XXe","XXIe"], c = n < 0 ? Math.ceil(-n/100) : Math.floor(n/100) + 1;
+    return `au ${r[c - 1] || c + "e"} siècle${n < 0 ? " avant notre ère" : ""}`; };
+  function enigCible(){ const pool = D.TR.filter(t => t.fam !== "art" && !t.dt && t.de > -5000), d = new Date(), k = d.getFullYear()*372 + d.getMonth()*31 + d.getDate();
+    return pool[(k*7919 + 13) % pool.length]; }
+  function enigIndices(t){ const P = PL[t.id] || {}, out = [];
+    out.push(`Une tradition de la famille « ${D.FAM[t.fam].nom} », apparue ${siecle(t.de)}.`);
+    if(t.s && t.s.length) out.push(`Parmi ses signes : ${D.SY[t.s[0]].nom.toLowerCase()}.`); else if(P.f && P.f.length) out.push(`Une figure qui lui est liée : ${P.f[0][0]}.`); else out.push(`On la connaît notamment par ceci : ${t.x.split(". ")[1] || t.x.split(". ")[0]}.`.replace(new RegExp(t.nom.replace(/^(Les?|La|L')\s?/i, "").split(" ")[0], "gi"), "…"));
+    out.push(`Son lieu : ${t.lieu}.`); return out; }
+  function startEnig(){ closePanel(); if(tour) endTour(); qz = null; const t = enigCible(), deja = (mem.enig || {})[dkey()];
+    game = {mode:"enig", t, clue:1, wait:deja == null, score:0, g:null, done:deja}; root.classList.add("gl-has-card", "gl-is-game"); target(); flyTo(view.lon, 20, 1, 700); ask(); gameCard(); }
+  function enigHint(){ if(!game || game.mode !== "enig" || game.clue >= 3) return; game.clue++; gameCard(); }
+  function enigCard(res){ const G = game, t = G.t, I = enigIndices(t), c = q1(".gl-card", root); c.hidden = false;
+    if(G.done != null && !res){ c.innerHTML = `<p class="gl-eye">L'énigme du jour</p><h3>Déjà résolue aujourd'hui <small>${G.done} points</small></h3><p class="gl-p">C'était ${h(t.nom)}, à ${h(t.lieu)}. Reviens demain pour la suivante.</p><div class="gl-card-nav"><button type="button" class="gl-btn ghost" data-glquit>Revenir au globe</button><button type="button" class="gl-btn main" data-glgo="${t.id}">La fiche</button></div>`; return; }
+    c.innerHTML = res ? `<p class="gl-eye">L'énigme du jour · ${res.pts} points sur 300</p><h3>${h(t.nom)} <small>${res.km.toLocaleString("fr-FR")} km</small></h3><p class="gl-p">${h(t.lieu)}. ${nb(h(t.x.split(". ")[0]))}.</p><div class="gl-card-nav"><button type="button" class="gl-btn ghost" data-glquit>Revenir au globe</button><button type="button" class="gl-btn main" data-glgo="${t.id}">La fiche</button></div>`
+      : `<p class="gl-eye">L'énigme du jour · indice ${G.clue} sur 3 · jusqu'à ${[300, 200, 100][G.clue - 1]} points</p><ol class="gl-clues">${I.slice(0, G.clue).map(x => `<li>${nb(h(x))}</li>`).join("")}</ol><p class="gl-p sm">Touche le globe là où tu crois qu'elle est née.</p>
+        <div class="gl-card-nav"><button type="button" class="gl-btn ghost" data-glquit>Abandonner</button>${G.clue < 3 ? `<button type="button" class="gl-btn" data-glhint>Un indice de plus</button>` : ""}</div>`; }
+  function enigGuess(p){ const G = game, t = G.t, km = Math.round(d3.geoDistance(p, [t.lon, t.lat])*6371/10)*10, pts = Math.round([300, 200, 100][G.clue - 1]*Math.max(0, 1 - km/3500));
+    G.wait = false; G.g = {a:p, b:[t.lon, t.lat]}; mem.enig = mem.enig || {}; mem.enig[dkey()] = pts; save(); if(pts > 150) bell(); enigCard({km, pts}); fit([p, [t.lon, t.lat]], 1.6); }
 
   /* ---------- l'habillage ---------- */
   const count = () => { const e = q1("[data-glcount]", root); if(e) e.textContent = `${mem.vus.length} sur ${D.TR.length + EVS.length} explorés`; };
@@ -500,8 +682,8 @@
     root.innerHTML = `<canvas class="gl-cv" tabindex="0" aria-label="Le globe : glisse pour tourner, pince ou molette pour zoomer, touche un sceau pour ouvrir sa fiche. La liste complète est dans le bouton Liste."></canvas>
       <header class="gl-top"><button type="button" class="gl-x" data-glclose aria-label="Quitter le globe">←</button>
         <div class="gl-title"><b>Le globe des traditions</b><small data-glcount></small></div></header>
-      <nav class="gl-tools" aria-label="Outils du globe"><button type="button" data-gllist>Liste</button><button type="button" data-gltours>Parcours</button><button type="button" data-glatlas>Symboles</button><button type="button" data-glgame>Jeu</button><button type="button" data-glfilt aria-expanded="false">Filtrer</button></nav>
-      <div class="gl-filters" hidden>${Object.entries(D.FAM).map(([k, f]) => `<button type="button" class="on" data-glfam="${k}"><i class="gl-dot" style="background:${f.hex}"></i>${h(f.nom)}</button>`).join("")}<button type="button" class="on" data-glfam="ev"><i class="gl-dot lz"></i>Événements</button><button type="button" class="all" data-glall>Tout afficher</button></div>
+      <nav class="gl-tools" aria-label="Outils du globe"><button type="button" data-gllist>Liste</button><button type="button" data-gltours>Parcours</button><button type="button" data-glliens>Héritages</button><button type="button" data-gljeux>Jeux</button><button type="button" data-glatlas>Symboles</button><button type="button" data-glfilt aria-expanded="false">Filtrer</button></nav>
+      <div class="gl-filters" hidden>${Object.entries(D.FAM).map(([k, f]) => `<button type="button" class="on" data-glfam="${k}"><i class="gl-dot" style="background:${f.hex}"></i>${h(f.nom)}</button>`).join("")}<button type="button" class="on" data-glfam="ev"><i class="gl-dot lz"></i>Événements</button><button type="button" class="all" data-glall>Tout afficher</button><button type="button" class="${mem.fog === false ? "" : "on"}" data-glfog>Brume sur l'inexploré</button><button type="button" class="${mem.son ? "on" : ""}" data-glson>Son</button></div>
       <div class="gl-zoom"><button type="button" data-glz="1" aria-label="Zoomer">+</button><button type="button" data-glz="-1" aria-label="Dézoomer">−</button><button type="button" data-glz="0" aria-label="Revenir au globe entier">◎</button></div>
       <p class="gl-hint">Tourne, zoome, touche un sceau.</p>
       <aside class="gl-panel" hidden><button type="button" class="gl-px" data-glpx aria-label="Fermer la fiche">×</button><div class="gl-panel-in"></div></aside>
@@ -518,7 +700,15 @@
       if(d.glfam){ const on = b.classList.toggle("on"); if(d.glfam === "ev") filt.ev = on; else on ? filt.fam.add(d.glfam) : filt.fam.delete(d.glfam); return ask(); }
       if("glall" in d){ qa("[data-glfam]", root).forEach(x => x.classList.add("on")); filt.fam = new Set(Object.keys(D.FAM)); filt.ev = true; return ask(); }
       if(d.glz){ fly = null; if(d.glz === "0") flyTo(view.lon, clamp(view.lat, -40, 50), 1, 700); else flyTo(view.lon, view.lat, clamp(view.k*(d.glz === "1" ? 1.8 : 1/1.8), 1, KMAX), 380); return; }
-      if(d.glgo){ const it = TRI[d.glgo] || EVI[d.glgo]; if(it){ if(tour) endTour(); open(it); } return; }
+      if(d.glgo){ const it = TRI[d.glgo] || EVI[d.glgo]; if(it){ if(tour) endTour(); if(game) endGame(); qz = null; open(it); } return; }
+      if("glliens" in d) return liens(); if("gljeux" in d) return jeux(); if("glenig" in d) return startEnig();
+      if("glvl" in d) return startVL(); if("glordre" in d) return startOrdre(); if("glfil" in d) return startFil();
+      if(d.glqa != null) return answer(d.glqa); if("glqnext" in d) return qNext();
+      if(d.glcmp) return cmpPick(d.glcmp); if(d.glcmp2){ const [a, b] = d.glcmp2.split(":"); return compare(TRI[a], TRI[b]); }
+      if("glhint" in d) return enigHint();
+      if("glfog" in d){ mem.fog = !b.classList.toggle("on") ? false : true; save(); return ask(); }
+      if("glson" in d){ mem.son = b.classList.toggle("on"); save(); son(mem.son); return; }
+      if("glall2" in d){ showAll = !showAll; b.setAttribute("aria-pressed", showAll); return ask(); }
       if(d.glstep) return stepTo(+d.glstep);
       if("glreplay" in d && sel && sel.r){ qa(".gl-route li", root).forEach(l => l.classList.remove("on", "cur")); route.shown = -1; route.cur = -1; fit(sel.r.map(s => [s[0], s[1]]), 1, () => { route.p = 0; route.last = 0; route.at = []; route.done = 0; ask(); }); return; }
       if(d.glsym) return symSheet(d.glsym);

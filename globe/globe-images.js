@@ -63,6 +63,19 @@ window.GLOBE_IMG = (() => {
     e_landa:["Vase maya peint d'une scène mythologique, vers 658 – 667", A, CC0],
     e_bruno:["Giordano Bruno, gravure du XIXe siècle", W, PD],
     e_witch:["Matthew Hopkins, le « chasseur de sorcières » des années 1640, gravure", W, PD],
-    e_cagliostro:["Cagliostro, gravure au pointillé de F. Bonneville, 1796", W, PD]
+    e_cagliostro:["Cagliostro, gravure au pointillé de F. Bonneville, 1796", W, PD],
+    eleusis:["Perséphone préparant son lit nuptial, plaque votive de Locres, Italie du Sud, vers 490 – 450 av. J.-C.", C, CC0],
+    eleusis_b:["Tête de Déméter sur une pièce d'argent de Métaponte, vers 330 – 300 av. J.-C.", C, CC0],
+    zen:["Bodhidharma traversant le fleuve sur un roseau, rouleau japonais de l'époque Muromachi, XVIe siècle", C, CC0],
+    shinto:["La fête Hotohoto au grand sanctuaire d'Izumo, estampe d'Utagawa Hiroshige, 1853", C, CC0],
+    theosophie:["Annie Besant, présidente de la Société théosophique de 1907 à 1933, gravure au pointillé", W, PD],
+    newage:["Le Verseau, carte coloriée du ciel, XIXe siècle : l'ère du Verseau a donné son nom au mouvement", W, PD],
+    wicca:["Une sorcière à son chaudron, eau-forte de Jan van de Velde II, 1626 : l'image que la wicca s'est réappropriée", W, BY],
+    cathares:["La délivrance des emmurés de Carcassonne, eau-forte d'après Jean-Paul Laurens : en 1303, des prisonniers de l'Inquisition sont libérés", W, PD],
+    muisca:["Un tunjo, figurine d'or offerte aux divinités, Muiscas, Colombie, 1000 – 1500", A, CC0],
+    onmyodo:["L'acteur Ichikawa Raizō dans le rôle d'Abe no Seimei, estampe japonaise, vers 1760", C, CC0],
+    tengri:["Le khan mongol Hülegü donne un festin, miniature moghole d'un Livre de Gengis Khan, fin du XVIe siècle", C, CC0],
+    ulugh:["Le thème de naissance du prince Iskandar, petit-fils de Tamerlan, peint à Chiraz en 1411", W, BY],
+    gd:["Une planche de La Kabbale dévoilée, traduite par Samuel Mathers, l'un des fondateurs de l'ordre, en 1887", W, PD]
   };
 })();
