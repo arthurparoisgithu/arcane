@@ -34,7 +34,7 @@ const MAGIE_COURS = (() => {
       "Le premier qui manque, c'est presque toujours l'attention. C'est pourquoi presque tous les manuels commencent par la respiration et la concentration, bien avant les cercles et les sceaux."],
      source:{txt:"Ce découpage en quatre outils est une synthèse moderne : on le retrouve, sous d'autres noms, chez Dion Fortune, chez Israel Regardie et dans les manuels de magie du chaos.", ref:"Synthèse d'Arcanes", st:"mod"},
      schema:"souffle",
-     ex:{t:"La respiration en carré", txt:"Quatre temps pour inspirer, quatre pour retenir, quatre pour expirer, quatre pour rester vide. Huit cycles. C'est la base de tous les rituels de ce cours.", outil:"rituel:carre"},
+     ex:{t:"La respiration en carré", txt:"Quatre temps égaux : inspirer, retenir, expirer, rester vide. Commence à cinq secondes par temps, pendant trois minutes, et allonge quand c'est facile. C'est la base de tous les rituels de ce cours.", outil:"rituel:carre"},
      carnet:"Après la respiration en carré, mon attention était :"}
    ],
    quiz:[

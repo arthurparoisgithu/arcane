@@ -818,7 +818,7 @@
       const set = m => { q1(".m-sv-host", fig).innerHTML = draw(m); q1("figcaption", fig).textContent = cap1[m]; qa("[data-em]", fig).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.em === m))); };
       qa("[data-em]", fig).forEach(b => b.onclick = () => set(b.dataset.em)); set("frazer");
     },
-    souffle(fig){ fig.innerHTML = `<div class="m-breath-host"></div><figcaption>Quatre temps par côté. Lance quelques cycles, puis essaie le rituel guidé en entier.</figcaption>`; breath(q1(".m-breath-host", fig), {cycles:4, compact:true}); },
+    souffle(fig){ fig.innerHTML = `<div class="m-breath-host"></div><figcaption>Choisis ton rythme et la longueur de l'inspiration. Lance quelques cycles, puis essaie le rituel guidé en entier.</figcaption>`; breath(q1(".m-breath-host", fig), {cycles:4, compact:true}); },
     mondes(fig){
       const M = [["intellectuel","Le monde intellectuel","Les anges, les intelligences, les idées, et au sommet le divin. Le mage y accède par la religion et la contemplation."],
         ["celeste","Le monde céleste","Les étoiles et les sept planètes, avec leurs nombres et leurs figures. On y travaille par l'astrologie et les mathématiques."],
@@ -1061,22 +1061,79 @@
   }
 
   /* la respiration en carré (animation) */
+  /* ---------- la respiration réglable ----------
+     Chaque rythme donne les proportions des quatre temps (inspirer, retenir, rester plein → expirer, rester vide).
+     Le curseur fixe la durée de l'inspiration en secondes ; les autres temps suivent la proportion.
+     « Sur mesure » ouvre quatre curseurs. Le réglage est gardé dans la mémoire de la Magie. */
+  const BR_LAB = ["Inspire","Retiens","Expire","Reste vide"];
+  const BR_RY = [
+    {id:"carre", nom:"Le carré", r:[1,1,1,1], d:"Quatre temps égaux. La base de tout le cours."},
+    {id:"triangle", nom:"Le triangle", r:[1,1,1,0], d:"Inspirer, retenir, expirer, sans rester vide. Plus doux que le carré."},
+    {id:"coherence", nom:"Cohérence", r:[1,0,1,0], d:"Inspirer et expirer à égalité, sans retenir. À cinq secondes, six souffles par minute."},
+    {id:"478", nom:"4-7-8", r:[1,1.75,2,0], d:"Une expiration deux fois plus longue que l'inspiration, pour s'apaiser avant de dormir."},
+    {id:"libre", nom:"Sur mesure", r:null, d:"Règle toi-même chaque temps."}];
+  const BR_DUR = [2,3,5,10];
+  const brGet = () => { const d = {ry:"carre", base:5, lib:[5,5,5,5], min:3, vib:true, son:false}; return Object.assign(d, st.souffle && typeof st.souffle === "object" ? st.souffle : {}); };
+  const brPhases = c => { if(c.ry === "libre") return c.lib.map(x => Math.max(0, Math.min(12, +x || 0)));
+    const ry = BR_RY.find(r => r.id === c.ry) || BR_RY[0]; return ry.r.map(x => Math.round(x*c.base*2)/2); };
+  let brAudio = null;
+  const brTone = (f) => { try{ brAudio = brAudio || new (window.AudioContext || window.webkitAudioContext)(); const a = brAudio, o = a.createOscillator(), g = a.createGain();
+    o.type = "sine"; o.frequency.value = f; g.gain.setValueAtTime(0, a.currentTime); g.gain.linearRampToValueAtTime(.08, a.currentTime + .05); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + .9);
+    o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + 1); }catch(e){} };
+  function brShape(ph){
+    /* coins : bas-gauche, haut-gauche, haut-droit, bas-droit ; un temps nul fond deux coins en une pointe */
+    const top = ph[1] > 0, bot = ph[3] > 0;
+    if(!top && !bot) return {circle:true};
+    const BL = bot ? [-50,50] : [0,55], BR = bot ? [50,50] : [0,55], TL = top ? [-50,-50] : [0,-55], TR = top ? [50,-50] : [0,-55];
+    return {pts:[BL, TL, TR, BR, BL]};
+  }
   function breath(host, o = {}){
-    const LAB = ["Inspire","Retiens","Expire","Reste vide"];
-    host.innerHTML = `<div class="m-breath${o.compact ? " compact" : ""}"><svg viewBox="-70 -70 140 140" aria-hidden="true"><rect x="-50" y="-50" width="100" height="100" rx="3" class="m-br-sq"/><path d="M-50 50 L-50 -50 L50 -50 L50 50 Z" class="m-br-prog" pathLength="4"/><circle r="6" class="m-br-dot" cx="-50" cy="50"/></svg>
-      <div class="m-br-t"><b>Prêt</b><span>${o.cycles || 8} cycles · 4 temps</span></div></div><div class="m-acts"><button type="button" class="btn small" data-br>Commencer</button></div>`;
-    const dot = q1(".m-br-dot", host), prog = q1(".m-br-prog", host), lb = q1(".m-br-t b", host), sub = q1(".m-br-t span", host), btn = q1("[data-br]", host);
-    const C = [[-50,50],[-50,-50],[50,-50],[50,50],[-50,50]], SIDE = 4000, N = o.cycles || 8;
-    let raf = null, t0 = 0;
-    const stop = () => { cancelAnimationFrame(raf); raf = null; btn.textContent = "Recommencer"; };
-    const tick = ts => { if(!host.isConnected){ cancelAnimationFrame(raf); return; }
-      const el = ts - t0, tot = SIDE*4*N; if(el >= tot){ lb.textContent = "Terminé"; sub.textContent = `${N} cycles`; dot.setAttribute("cx", -50); dot.setAttribute("cy", 50); prog.style.strokeDashoffset = 4; stop(); if(o.onEnd) o.onEnd(); return; }
-      const cyc = Math.floor(el/(SIDE*4)), inC = el % (SIDE*4), side = Math.floor(inC/SIDE), f = (inC % SIDE)/SIDE, a = C[side], b = C[side + 1];
-      dot.setAttribute("cx", f1(a[0] + (b[0] - a[0])*f)); dot.setAttribute("cy", f1(a[1] + (b[1] - a[1])*f));
-      prog.style.strokeDashoffset = String(4 - (side + f));
-      lb.textContent = LAB[side]; sub.textContent = `${Math.ceil((1 - f)*4)} · cycle ${cyc + 1} sur ${N}`;
-      raf = requestAnimationFrame(tick); };
-    btn.onclick = () => { if(raf){ stop(); lb.textContent = "En pause"; return; } t0 = performance.now(); btn.textContent = "Arrêter"; raf = requestAnimationFrame(tick); };
+    let c = brGet(), raf = null, t0 = 0, last = -1, setOpen = false;
+    const draw = () => {
+      const ph = brPhases(c), cyc = ph.reduce((a, b) => a + b, 0) || 1, sh = brShape(ph), segs = ph.map((v, i) => v > 0 ? i : -1).filter(i => i >= 0);
+      const N = o.cycles && o.compact ? o.cycles : Math.max(1, Math.round(c.min*60/cyc));
+      const shapeSVG = sh.circle ? `<circle r="52" class="m-br-sq"/><circle r="52" class="m-br-prog" transform="rotate(90)"/>`
+        : `<path d="M${sh.pts.map(p => p.join(" ")).join(" L")} Z" class="m-br-sq"/><path d="M${sh.pts.map(p => p.join(" ")).join(" L")}" class="m-br-prog"/>`;
+      const lens = sh.circle ? [52*Math.PI, 0, 52*Math.PI, 0] : sh.pts.slice(1).map((p, i) => Math.hypot(p[0] - sh.pts[i][0], p[1] - sh.pts[i][1])), LT = lens.reduce((a, b) => a + b, 0), cum = lens.map((_x, i) => lens.slice(0, i).reduce((a, b) => a + b, 0));
+      const ry = BR_RY.find(r => r.id === c.ry) || BR_RY[0];
+      host.innerHTML = `<div class="m-breath${o.compact ? " compact" : ""}"><div class="m-br-fig"><svg viewBox="-70 -70 140 140" aria-hidden="true">${shapeSVG}<circle r="6" class="m-br-dot" cx="${sh.circle ? 0 : sh.pts[0][0]}" cy="${sh.circle ? 52 : sh.pts[0][1]}"/></svg>
+        <div class="m-br-t" aria-live="polite"><b>Prêt</b><span>${o.compact ? N + " cycles" : "≈ " + N + " cycles · " + c.min + " min"}</span></div></div>
+        <div class="m-acts"><button type="button" class="btn small" data-br>Commencer</button></div>
+        <details class="m-br-set"${setOpen ? " open" : ""}><summary><span><b>${ry.nom}</b> · ${ph.filter(Boolean).map(v => v + " s").join(" · ")}${o.compact ? "" : ` · ${c.min} min`}</span><i>Régler</i></summary><div class="m-br-in">
+          <div class="m-chips m-br-ry" role="group" aria-label="Le rythme">${BR_RY.map(r => `<button type="button" class="chip small${r.id === c.ry ? " on" : ""}" data-bry="${r.id}" aria-pressed="${r.id === c.ry}">${r.nom}</button>`).join("")}</div>
+          <p class="m-br-d">${ry.d}</p>
+          ${c.ry === "libre" ? `<div class="m-br-lib">${BR_LAB.map((l, i) => `<label class="m-br-rg"><span>${l}<b>${ph[i]} s</b></span><input type="range" min="${i % 2 ? 0 : 2}" max="12" step="1" value="${ph[i]}" data-brl="${i}"></label>`).join("")}</div>`
+            : `<label class="m-br-rg"><span>Inspiration<b>${ph[0]} s</b></span><input type="range" min="3" max="10" step="1" value="${c.base}" data-brb></label>`}
+          <p class="m-br-sum">${ph.map((v, i) => v ? `${BR_LAB[i].toLowerCase()} ${v} s` : "").filter(Boolean).join(" · ")} — un souffle complet dure ${Math.round(cyc)} s</p>
+          ${o.compact ? "" : `<div class="m-br-dur" role="group" aria-label="La durée"><span>Durée</span>${BR_DUR.map(m => `<button type="button" class="chip small${m === c.min ? " on" : ""}" data-brm="${m}">${m} min</button>`).join("")}</div>`}
+          <div class="m-br-opt">${"vibrate" in navigator ? `<label class="m-check"><input type="checkbox" data-brv${c.vib ? " checked" : ""}> Vibrer à chaque temps</label>` : ""}<label class="m-check"><input type="checkbox" data-brs${c.son ? " checked" : ""}> Son doux</label></div>
+          <p class="help m-br-safe">Si la tête tourne, reviens à un rythme plus court. On ne force jamais une rétention.</p>
+        </div></details></div>`;
+      const dot = q1(".m-br-dot", host), prog = q1(".m-br-prog", host); prog.style.strokeDasharray = f1(LT); prog.style.strokeDashoffset = f1(LT); const lb = q1(".m-br-t b", host), sub = q1(".m-br-t span", host), btn = q1("[data-br]", host);
+      const pos = (i, f) => { if(sh.circle){ const a = (90 + (i === 0 ? f : 1 + f)*180)*rad; return [52*Math.cos(a), 52*Math.sin(a)]; }
+        const a = sh.pts[i], b = sh.pts[i + 1]; return [a[0] + (b[0] - a[0])*f, a[1] + (b[1] - a[1])*f]; };
+      const stop = () => { cancelAnimationFrame(raf); raf = null; btn.textContent = "Recommencer"; host.classList.remove("on"); };
+      const tick = ts => { if(!host.isConnected){ cancelAnimationFrame(raf); return; }
+        const el = (ts - t0)/1000, tot = cyc*N;
+        if(el >= tot){ lb.textContent = "Terminé"; sub.textContent = `${N} cycles`; stop(); last = -1; if(o.onEnd) o.onEnd(); return; }
+        const k = Math.floor(el/cyc), inC = el - k*cyc; let i = 0, acc = 0; while(i < 3 && inC >= acc + ph[i]){ acc += ph[i]; i++; }
+        const f = ph[i] ? (inC - acc)/ph[i] : 1, [x, y] = pos(sh.circle ? (i === 0 ? 0 : 1) : i, f);
+        dot.setAttribute("cx", f1(x)); dot.setAttribute("cy", f1(y));
+        prog.style.strokeDashoffset = f1(LT - (cum[i] + f*lens[i]));
+        if(i !== last){ last = i; if(c.vib && navigator.vibrate) try{ navigator.vibrate(i === 0 ? 60 : 30); }catch(e){} if(c.son) brTone([392, 523, 330, 262][i]); host.dataset.ph = i; }
+        lb.textContent = BR_LAB[i]; sub.textContent = `${Math.ceil(ph[i] - (inC - acc))} · cycle ${k + 1} sur ${N}`;
+        raf = requestAnimationFrame(tick); };
+      btn.onclick = () => { if(raf){ stop(); lb.textContent = "En pause"; return; } t0 = performance.now(); last = -1; btn.textContent = "Arrêter"; host.classList.add("on"); raf = requestAnimationFrame(tick); };
+      const det = q1(".m-br-set", host); det.ontoggle = () => { setOpen = det.open; };
+      const keep = () => { st.souffle = c; save(); if(raf){ cancelAnimationFrame(raf); raf = null; } setOpen = true; draw(); };
+      qa("[data-bry]", host).forEach(b => b.onclick = () => { c.ry = b.dataset.bry; if(c.ry === "libre" && !st.souffle?.lib) c.lib = brPhases(Object.assign({}, c, {ry:"carre"})); keep(); });
+      qa("[data-brm]", host).forEach(b => b.onclick = () => { c.min = +b.dataset.brm; keep(); });
+      const bb = q1("[data-brb]", host); if(bb){ bb.oninput = () => { c.base = +bb.value; const p = brPhases(c); bb.previousElementSibling.querySelector("b").textContent = p[0] + " s"; }; bb.onchange = keep; }
+      qa("[data-brl]", host).forEach(r => { r.oninput = () => { r.previousElementSibling.querySelector("b").textContent = r.value + " s"; }; r.onchange = () => { c.lib[+r.dataset.brl] = +r.value; keep(); }; });
+      const v = q1("[data-brv]", host); if(v) v.onchange = () => { c.vib = v.checked; st.souffle = c; save(); };
+      q1("[data-brs]", host).onchange = e => { c.son = e.target.checked; st.souffle = c; save(); if(c.son) brTone(392); };
+    };
+    draw();
   }
 
   /* ================================================================

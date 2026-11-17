@@ -141,8 +141,8 @@ const MAGIE_DATA = (() => {
   /* ---------- les rituels guidés ----------
      chaque étape : titre, texte, dire (à prononcer ou vibrer), vis (l'image), duree (secondes, facultatif) */
   const RITUELS = {
-    carre:{nom:"La respiration en carré", sous:"Quatre temps égaux, pour poser l'attention", duree:"3 minutes", niveau:"Pour commencer", statut:"Pratique moderne",
-      intro:"Un exercice de base, venu des techniques de respiration et repris par la plupart des écoles : on inspire, on retient, on expire, on reste vide, chaque fois sur quatre temps. Il prépare à tout le reste.",
+    carre:{nom:"La respiration en carré", sous:"Quatre temps égaux, pour poser l'attention", duree:"2 à 10 minutes", niveau:"Pour commencer", statut:"Pratique moderne",
+      intro:"Un exercice de base, venu des techniques de respiration et repris par la plupart des écoles : on inspire, on retient, on expire, on reste vide, chaque fois le même temps. Commence à cinq secondes, allonge quand c'est facile. Le triangle, la cohérence et le 4-7-8 sont des variantes plus douces.",
       souffle:true, cycles:8},
     lbrp:{nom:"Le Pentagramme mineur", sous:"Le rituel de bannissement de la Golden Dawn", duree:"8 à 10 minutes", niveau:"Module 6", statut:"Tradition",
       intro:"Enseigné aux nouveaux membres de la Golden Dawn à partir de 1888, publié par Israel Regardie en 1937-1940. On l'utilise pour « faire place nette » avant une pratique, ou seul, chaque jour, comme un exercice de concentration. Debout, face à l'est, avec assez d'espace pour tourner.",

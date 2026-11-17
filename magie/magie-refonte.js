@@ -53,7 +53,7 @@
      L'ATELIER : des familles, deux vedettes, des vignettes qui se tracent
      ================================================================ */
   const FAM = [
-    ["Signes et sceaux", "Donner une forme à une intention.", ["sigil","sceau","pentacles","monade"]],
+    ["Signes et sceaux", "Donner une forme à une intention.", ["sigil","sceau","pentacles","ecritures","monade"]],
     ["Cartes du monde", "Voir comment tout se répond.", ["arbre","corresp","toile","decans"]],
     ["Le temps et la musique", "Choisir son heure, écouter le ciel.", ["election","kepler"]],
     ["Interroger et se souvenir", "Poser une question, compter, combiner, retenir.", ["geomancie","guematrie","roues","palais"]]

@@ -171,3 +171,4 @@ body.m-riting .m-rite-in{padding-bottom:calc(150px + env(safe-area-inset-bottom,
   .mr-vig .s{animation:none;stroke-dashoffset:0} .mr-vig .d circle,.mr-vig svg>circle{animation:none}
   .mr-plan .way,.mr-room.next rect,.m-kamea .m-k-cell.mr-next{animation:none}
 }
+.mr-vig .ec-ic{fill:var(--ink);stroke:none}
