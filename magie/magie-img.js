@@ -1,6 +1,6 @@
 /* Arcanes · Magie : la liste des gravures (Wellcome Collection, Public Domain Mark). Chaque image est un fichier de magie/img, chargé à l’affichage. */
 window.MAGIE_IMG = {
-"ecr": "magie/img/ecritures.webp",
+"ecr": "magie/img/ecritures.webp", "herbier": "magie/img/herbier.webp", "songes": "magie/img/songes.webp",
 "pt_soleil": "magie/img/pt_soleil.webp", "pt_saturne5": "magie/img/pt_saturne5.webp", "pt_mars6": "magie/img/pt_mars6.webp", "pt_carre": "magie/img/pt_carre.webp",
 "pt_jeudi": "magie/img/pt_jeudi.webp", "pt_dimanche": "magie/img/pt_dimanche.webp", "pt_jupiter": "magie/img/pt_jupiter.webp", "pt_amulette": "magie/img/pt_amulette.webp",
 "homme": "magie/img/homme.webp",

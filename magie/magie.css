@@ -1644,3 +1644,35 @@ body.m-riting .nav{visibility:hidden}
 .m-rite-pent .pt-svg>*{transition:opacity .5s}
 .m-rite-pent.on-ring .pt-ctr{opacity:.15}
 .m-rite-pent.on-ctr .pt-ring{opacity:.15}
+
+/* ===== Troisième cercle : schémas des modules XVII à XIX ===== */
+.pt-sel textarea{font:400 16px var(--f-ui);padding:10px 12px;border-radius:6px;border:1px solid var(--line);background:var(--panel-solid);color:var(--ink);resize:vertical;line-height:1.5}
+.x3-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.x3-card{display:grid;gap:3px;text-align:left;padding:11px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel-solid);color:var(--ink);font:400 13.5px/1.45 var(--f-ui);cursor:pointer;transition:border-color .2s,background .2s}
+.x3-card b{font:400 17px/1.15 var(--f-display)}
+.x3-card small{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em}
+.x3-card span{color:var(--ink-soft)}
+.x3-card:hover{border-color:var(--rub)}
+.x3-card.on{border-color:var(--rub);background:color-mix(in srgb,var(--rub) 7%,var(--panel-solid))}
+.x3-card.on span{color:var(--ink)}
+.x3-shelf{display:flex;align-items:flex-end;gap:6px;padding:0 10px 8px;border-bottom:6px solid color-mix(in srgb,var(--ink) 55%,transparent);min-height:150px;overflow-x:auto}
+.x3-book{flex:0 0 auto;width:46px;height:132px;border:0;border-radius:3px 3px 1px 1px;background:var(--bk);color:#f2ead7;cursor:pointer;position:relative;box-shadow:inset 3px 0 0 rgba(255,255,255,.12),inset -3px 0 0 rgba(0,0,0,.18);transition:transform .25s}
+.x3-book:nth-child(2){height:112px}.x3-book:nth-child(4){height:120px}.x3-book:nth-child(5){height:100px;width:58px}
+.x3-book span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-90deg);white-space:nowrap;font:400 12px var(--f-display);letter-spacing:.04em}
+.x3-book:hover,.x3-book.on{transform:translateY(-10px)}
+.x3-bookd h4,.x3-macd h4,.x3-herb h4{margin:0;font:400 20px var(--f-display)}
+.x3-bookd p,.x3-macd p{margin:4px 0 0;line-height:1.55}
+.x3-herb{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.x3-herb article{padding:12px 14px;border:1px solid var(--line);border-top:3px solid var(--pc);border-radius:6px;background:var(--panel-solid)}
+.x3-herb p{margin:4px 0 0;font-size:14px;line-height:1.5}
+.x3-herb .x3-lat{font-style:italic;color:var(--ink-soft);font-size:13px}
+.x3-mac{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.x3-macc{grid-column:span 3;display:grid;gap:2px;padding:10px;border:1px dashed var(--line);border-radius:6px;background:var(--panel-solid);color:var(--ink-soft);cursor:pointer;font:400 13px var(--f-ui)}
+.x3-macc.vrai{grid-column:span 2;border-style:solid;color:var(--ink)}
+.x3-macc b{font:400 17px var(--f-display)}
+.x3-macc.on{border-color:var(--rub);background:color-mix(in srgb,var(--rub) 8%,var(--panel-solid))}
+.x3-tag{display:inline-block;margin-top:8px!important;padding:3px 10px;border-radius:99px;font:600 11.5px var(--f-ui);letter-spacing:.06em;background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink-soft)}
+.x3-tag.v{background:color-mix(in srgb,var(--rub) 14%,transparent);color:var(--rub)}
+.x3-tmsg{margin:0;padding:10px 12px;border-left:3px solid var(--rub);background:color-mix(in srgb,var(--rub) 5%,transparent);line-height:1.5}
+.x3-nuit svg{display:block;margin:0 auto}
+@media (max-width:520px){.x3-macc,.x3-macc.vrai{grid-column:span 6}}

@@ -178,7 +178,8 @@
      L'ÉCOLE : la carte du château, une salle par module
      ================================================================ */
   const SALLES = {m1:["Qu'est-ce que","la magie ?"], m2:["La sympathie","universelle"], m3:["Les sept","planètes"], m4:["Talismans","et carrés"], m5:["La Kabbale","hermétique"], m6:["Le rituel","cérémoniel"], m7:["Sigils et","chaos"], m8:["L'éthique de","la pratique"],
-    m9:["L'âme","du monde"], m10:["Ficin","et le ciel"], m11:["La","géomancie"], m12:["Lettres","et nombres"], m13:["L'alchimie","spirituelle"], m14:["L'art de","la mémoire"], m15:["Les","pentacles"], m16:["Écritures","secrètes"]};
+    m9:["L'âme","du monde"], m10:["Ficin","et le ciel"], m11:["La","géomancie"], m12:["Lettres","et nombres"], m13:["L'alchimie","spirituelle"], m14:["L'art de","la mémoire"], m15:["Les","pentacles"], m16:["Écritures","secrètes"],
+    m17:["Le village","des secrets"], m18:["Le jardin","des simples"], m19:["La tour","des songes"]};
   const COUL = ["#9b2c1c","#2c6a47","#8a5f0a","#2a4f8f","#3f3d63","#a34e12","#595e7c"];
   EXT.ecoleMap = (mods, st, next) => {
     const box = {}, W = 96, Hh = 112;
@@ -186,6 +187,8 @@
     ["m5","m6","m7","m8"].forEach((id, i) => box[id] = [238, 132 + i*118, W, Hh]);
     const KEEP = mods.filter(m => (m.cercle || 1) === 2).map(m => m.id), kh = Math.min(55, Math.floor(330/Math.max(1, KEEP.length)));
     KEEP.forEach((id, i) => box[id] = [134, 480 - (i + 1)*kh, 92, kh]);
+    const OUT = mods.filter(m => m.cercle === 3).map(m => m.id);
+    OUT.forEach((id, i) => box[id] = [22 + i*110, 680, 96, 92]);
     const nextId = next ? next[0].id : null;
     const room = (m, i) => { const b = box[m.id]; if(!b) return ""; const [x, y, w, hh] = b, done = m.lecons.filter(l => st.done.includes(l.id)).length, all = done === m.lecons.length, nm = SALLES[m.id] || [m.t, ""], tw = hh < 60, xs = hh < 50;
       return `<g class="mr-room${all ? " done" : ""}${m.id === nextId ? " next" : ""}" data-mmod="${m.id}" role="button" tabindex="0" aria-label="Module ${m.n} : ${h(m.t)}, ${done} leçon${done > 1 ? "s" : ""} sur ${m.lecons.length}" style="--rc:${COUL[i % 7]}">
@@ -197,8 +200,8 @@
         </g>`; };
     const cren = Array.from({length:23}, (z, k) => `M${21 + k*14.5} 70v-7h7v7`).join("");
     return `<section class="mr-castle"><header><p class="eyebrow">La carte de l'école</p><h2>Le château de la mémoire</h2>
-        <p>Chaque salle est un module. Les huit salles de l'enceinte forment le premier cercle : la pratique. Le donjon, au centre, est le second : les fondements et les arts. Touche une salle pour y entrer.</p></header>
-      <svg class="mr-plan" viewBox="0 0 360 640" role="group" aria-label="Plan du château : ${mods.length} salles, une par module">
+        <p>Chaque salle est un module. Les huit salles de l'enceinte forment le premier cercle : la pratique. Le donjon, au centre, est le second : les fondements et les arts.${OUT.length ? " Hors les murs, le troisième : le village, le jardin et la tour, ce qui se pratiquait loin des livres." : ""} Touche une salle pour y entrer.</p></header>
+      <svg class="mr-plan" viewBox="0 0 360 ${OUT.length ? 790 : 640}" role="group" aria-label="Plan du château : ${mods.length} salles, une par module">
         <defs><pattern id="mr-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(40)"><line x1="0" y1="0" x2="0" y2="5"/></pattern></defs>
         <rect class="ground" x="14" y="70" width="332" height="540"/><rect class="court" x="128" y="126" width="104" height="478"/>
         <path class="wall" d="M14 70h332v540H214M146 610H14z"/><path class="wall thin" d="${cren}"/>
@@ -207,6 +210,8 @@
         <path class="way" d="M180 592V552M180 552C150 552 140 545 124 540M180 552V486"/>
         <circle class="well" cx="180" cy="528" r="13"/><circle class="well in" cx="180" cy="528" r="6"/>
         <path class="keep" d="M130 484V150a50 50 0 0 1 100 0v334z"/><text class="lab sm" x="180" y="140">Le donjon</text>
+        ${OUT.length ? `<rect class="fields" x="8" y="648" width="344" height="136" rx="4"/><path class="way" d="M180 640V662M70 662H290M70 662V680M180 662V680M290 662V680"/>
+        <text class="lab sm" x="180" y="782">Hors les murs</text>${[[12, 662], [348, 662], [12, 776], [348, 776]].map(([x, y]) => `<g class="tree" transform="translate(${x} ${y})"><circle r="4.5"/></g>`).join("")}` : ""}
         <g class="rose" transform="translate(180 36)"><path d="M0-14L3-3L14 0L3 3L0 14L-3 3L-14 0L-3-3Z"/><circle r="2.2"/></g>
         ${mods.map(room).join("")}
       </svg></section>`;

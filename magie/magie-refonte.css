@@ -95,6 +95,8 @@ body.m-riting .m-rite-in{padding-bottom:calc(150px + env(safe-area-inset-bottom,
 .mr-plan .well.in{fill:color-mix(in srgb,var(--azur) 30%,var(--panel-solid));stroke-width:.6}
 .mr-plan .lab{font:400 13px var(--f-display);letter-spacing:.14em;text-anchor:middle;fill:var(--ink-soft)}
 .mr-plan .lab.sm{font-size:10.5px;letter-spacing:.1em}
+.mr-plan .fields{fill:color-mix(in srgb,#2c6a47 7%,var(--panel-solid));stroke:color-mix(in srgb,#2c6a47 35%,transparent);stroke-width:.8;stroke-dasharray:3 3}
+.mr-plan .tree circle{fill:color-mix(in srgb,#2c6a47 30%,var(--panel-solid));stroke:#2c6a47;stroke-width:.8}
 .mr-plan .rose path{fill:none;stroke:var(--rub);stroke-width:1}
 .mr-plan .rose circle{fill:var(--rub)}
 .mr-room{cursor:pointer;outline:none}

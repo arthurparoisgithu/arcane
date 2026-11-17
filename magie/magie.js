@@ -621,7 +621,7 @@
         <div><p class="eyebrow">Ton degré</p><h2>${g.nom}</h2><p class="help m-left">${lus} leçon${lus > 1 ? "s" : ""} sur ${tot} · ${n} module${n > 1 ? "s" : ""} achevé${n > 1 ? "s" : ""} sur ${K.MODULES.length}. Ton degré compte les quatre arts d'Arcanes, pas seulement la magie. <button type="button" class="linkbtn" data-chemin>Voir le chemin</button></p>
         ${next ? `<button type="button" class="btn small" data-mlec="${next[0].id}:${next[1]}">${lus ? "Reprendre" : "Commencer"} : ${h(next[0].lecons[next[1]].t)}</button>` : `<p><b>Tu as parcouru tout le cours.</b></p>`}</div></section>
       ${EXT.ecoleMap ? EXT.ecoleMap(K.MODULES, st, next) : ""}
-      ${[1, 2].map(c => { const ms = K.MODULES.filter(m => (m.cercle || 1) === c); if(!ms.length) return "";
+      ${[1, 2, 3].map(c => { const ms = K.MODULES.filter(m => (m.cercle || 1) === c); if(!ms.length) return "";
         return `${EXT.ecoleHead ? EXT.ecoleHead(c, ms) : ""}<div class="m-mods">${ms.map(m => { const d = m.lecons.filter(l => st.done.includes(l.id)).length;
         return `<button type="button" class="m-mod${modDone(m) ? " done" : ""}" data-mmod="${m.id}"><span class="m-mod-img">${m.img === "sigil" ? sigilSVG(spareLetters("je trouve le calme", true).keep, 2, {cercle:true}) : img(m.img)}</span>
           <span class="m-mod-b"><span class="m-mod-n">${m.n}</span><b>${nb(m.t)}</b><small>${m.sous}</small><span class="m-mod-p"><i style="width:${Math.round(d/m.lecons.length*100)}%"></i></span><span class="m-mod-f">${d}/${m.lecons.length} leçons${st.best[m.id] != null ? ` · quiz ${st.best[m.id]}/${m.quiz.length}` : ""}</span></span></button>`; }).join("")}</div>`; }).join("")}`;
