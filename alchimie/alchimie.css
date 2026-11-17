@@ -478,3 +478,9 @@ button.al-tcard:hover{transform:translateY(-2px);border-color:color-mix(in srgb,
   .al-el-amb,.al-hot{animation:none} .al-el-amb{display:none}
   .al-reward-img{animation:none}
 }
+
+/* la pilule à cinq arts (Psyché) : sur mobile, des noms courts */
+@media (max-width:460px){ .u-pill.five button{padding:0 6px;letter-spacing:.03em;font-size:10.5px} .u-pill.five .u-l{display:none} .u-pill.five .u-s{display:inline} .brand-grp:has(.u-pill.five){gap:6px} .brand-grp:has(.u-pill.five) .brand b{font-size:22px} }
+@media (max-width:374px){ .u-pill.five button{padding:0 4.5px;letter-spacing:.01em;font-size:9.8px} .brand-grp:has(.u-pill.five) .brand b{font-size:19px} }
+@media (max-width:1100px) and (min-width:721px){ .u-pill.five button{padding:0 6px;letter-spacing:.05em} }
+@media (max-width:1000px) and (min-width:721px){ .top:has(.u-pill.five){flex-wrap:wrap} .top:has(.u-pill.five) .nav{flex:1 1 100%;justify-content:flex-start} }

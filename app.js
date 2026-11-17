@@ -7802,6 +7802,7 @@ function drawBackground(){
   for(let i=0;i<nStars;i++){ const r = rnd()*1.2+.25; x.globalAlpha = .25 + rnd()*.6; x.beginPath(); x.arc(rnd()*w, rnd()*h, r, 0, Math.PI*2); x.fill(); }
   x.globalAlpha = 1;
   if(document.documentElement.classList.contains("u-alch") && typeof window.alchBackdrop === "function"){ try{ window.alchBackdrop(x, w, h, v); }catch(e){} x.globalAlpha = 1; return; }
+  if(document.documentElement.classList.contains("u-psy") && typeof window.psyBackdrop === "function"){ try{ window.psyBackdrop(x, w, h, v); }catch(e){} x.globalAlpha = 1; return; }
   if(document.documentElement.classList.contains("u-magie") && typeof window.magieBackdrop === "function"){ try{ window.magieBackdrop(x, w, h, v); }catch(e){} x.globalAlpha = 1; return; }
   if(document.documentElement.classList.contains("u-astro") && typeof window.astroBackdrop === "function"){ try{ window.astroBackdrop(x, w, h, v); }catch(e){} x.globalAlpha = 1; return; }
   /* Le motif du jeu : l'Arbre de Vie, la roue du zodiaque d'Etteilla, ou la sphère céleste du Sola Busca */

@@ -76,6 +76,15 @@
   ]
  ],
  [
+  "Psyché",
+  [
+   "Images : Johann Heinrich Füssli, <i>Le Cauchemar</i> (1781, Detroit Institute of Arts) et Francisco de Goya, <i>Los Caprichos</i>, planche 43 (1799), via <a href=\"https://commons.wikimedia.org/\" target=\"_blank\" rel=\"noopener\">Wikimedia Commons</a> (domaine public) ; le baquet de Mesmer, gravure coloriée, <a href=\"https://wellcomecollection.org/\" target=\"_blank\" rel=\"noopener\">Wellcome Collection</a> (domaine public).",
+   "Les œuvres de C. G. Jung sont protégées par le droit d'auteur : le cours en résume les idées et ne cite que de courts passages, à des fins d'enseignement. La liste de mots du test d'associations vient des <i>Études diagnostiques sur les associations</i> de Jung et Riklin (1906), traduite pour Arcanes.",
+   "Sources : Henri F. Ellenberger, <i>À la découverte de l'inconscient</i> (1970) ; Sonu Shamdasani, <i>Jung and the Making of Modern Psychology</i> (2003) ; Deirdre Bair, <i>Jung</i> (2003) ; Robert Darnton, <i>La Fin des Lumières : le mesmérisme et la Révolution</i> (1984) ; le <i>Rapport des commissaires chargés par le roi de l'examen du magnétisme animal</i> (Bailly, 1784) ; Émile Coué, <i>La Maîtrise de soi-même par l'autosuggestion consciente</i> (1922).",
+   "Les exercices (associations, journal de rêves, mandala, miroir de l'ombre, ficelle de Coué) sont des outils de réflexion dessinés pour Arcanes, pas des tests psychologiques validés."
+  ]
+ ],
+ [
   "La magie",
   [
    "Heures planétaires et phases de la Lune calculées sur l'appareil avec Astronomy Engine (Don Cross, licence MIT), pour le lieu choisi en astrologie.",
