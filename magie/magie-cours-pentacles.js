@@ -227,7 +227,7 @@
   };
   if(!K.MODULES.find(m => m.id === "m16")) K.MODULES.push(M16);
   Object.assign(window.MAGIE_ETOFFE, ETOF16);
-  window.MAGIE_IMG = window.MAGIE_IMG || {}; window.MAGIE_IMG.ecr = "magie/img/ecritures.webp";
+  /* l'image du module XVI est déclarée dans magie-img.js, chargé à la première visite : ne pas créer MAGIE_IMG ici */
   _.CRED.ecr = "L'écriture céleste, d'après Agrippa, De occulta philosophia, livre III, chapitre 30, 1533 (planche redessinée pour Arcanes)";
 
   /* ================================================================
