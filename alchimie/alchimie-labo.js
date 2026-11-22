@@ -376,7 +376,7 @@
     const draw = () => {
       const s = st(), ks = Object.keys(D.PLANCHES), E = D.EMBLEMES;
       root.innerHTML = `<header class="al-hero sm"><p class="eyebrow">Les images de l'art</p><h1>Les planches</h1>${rule4}
-          <p class="al-lede">L'alchimie a parlé par images. Gagne les planches du Splendor solis dans le laboratoire, et apprends à lire six grands emblèmes, détail par détail.</p>
+          <p class="al-lede">L'alchimie a parlé par images. Gagne les planches du Splendor solis dans le laboratoire : chacune s'explore ensuite détail par détail. Six grands emblèmes sont commentés de la même façon.</p>
           <div class="subtabs" role="tablist"><button type="button" role="tab" class="subtab ${tab === "pl" ? "on" : ""}" data-tab="pl" aria-selected="${tab === "pl"}">Ma collection · ${s.planches.length}/${ks.length}</button><button type="button" role="tab" class="subtab ${tab === "emb" ? "on" : ""}" data-tab="emb" aria-selected="${tab === "emb"}">Emblèmes commentés</button></div></header>
         ${tab === "pl" ? `<div class="al-plates">${ks.map(k => { const P = D.PLANCHES[k], ok = s.planches.includes(k);
             return ok ? `<button type="button" class="al-plate ok" data-alplanche="${k}"><img src="${IMG(P.img)}" alt="${h(P.t)}" loading="lazy" decoding="async"><span>${h(P.t)}</span></button>`
@@ -402,6 +402,6 @@
     });
     draw();
   }
-  reg("planches", {t:"Les planches", genre:"Collection · lecture d'images", x:"Huit planches du Splendor solis à gagner, et six emblèmes commentés détail par détail.",
+  reg("planches", {t:"Les planches", genre:"Collection · lecture d'images", x:"Huit planches du Splendor solis à gagner puis à explorer, et six emblèmes commentés détail par détail.",
     ico:ico(`<rect x="9" y="5" width="30" height="38" rx="1.5"/><rect x="13" y="9" width="22" height="30" rx="1" opacity=".5"/><path d="M22 15v6c0 2-5 3.500-5 8a7 7 0 0 0 14 0c0-4.500-5-6-5-8v-6"/>`), render:planches});
 })();

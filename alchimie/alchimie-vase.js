@@ -43,7 +43,7 @@ window.AlchVase = (() => {
   const HUES = [[60,220,190],[120,90,230],[240,200,70],[70,200,110],[230,90,170],[80,150,240]];
 
   function create(cv, o = {}){
-    const S = Object.assign({p:0, heat:.2, fire:true, dry:0, stone:false, crown:false, crack:0, shake:0, wind:0, ink:"206,170,104"}, o);
+    const S = Object.assign({p:0, heat:.2, fire:true, dry:0, stone:false, crown:false, crack:0, shake:0, wind:0, bete:null, ink:"206,170,104"}, o);
     const V = {p:S.p, heat:S.heat, dry:S.dry, stone:S.stone ? 1 : 0, wind:0};
     const calm = reduce();
     let bub = [], vap = [], drp = [], flm = [], spk = [], t = 0, last = 0, raf = 0, alive = true, vis = true, k = 1;
@@ -127,6 +127,12 @@ window.AlchVase = (() => {
       const sh = clamp(V.p - 2.5, 0, 1)*clamp(5.4 - V.p, 0, 1);   // paillettes du blanc et du jaune
       if(sh > .02) for(let i = 0; i < 26; i++){ const px = 200 + Math.sin(i*12.9)*96, py = lerp(L + 6, 430, (i*.618 + t*.03*(1 + i % 3)) % 1), tw = .5 + .5*Math.sin(t*3 + i*2.4); if(Math.abs(px - 200) < halfW(py)) blit(white, px, py, 2.4 + tw*2.6, sh*tw*.75); }
       x.globalAlpha = 1; x.globalCompositeOperation = "source-over";
+      // la bête de la phase, en transparence dans le liquide (contour fourni par alchimie-objets.js, boîte de 200 × 200)
+      if(S.bete){ if(!api._bp || api._bd !== S.bete){ try{ api._bp = new Path2D(S.bete); api._bd = S.bete; }catch(e){ api._bp = null; } }
+        if(api._bp){ const pale = V.p > 2.6 && V.p < 4.6, br = .5 + .5*Math.sin(t*.9);
+          x.save(); x.globalCompositeOperation = "source-over"; x.translate(200 - 70 + Math.sin(t*.6)*2, 303 + Math.sin(t*.8)*2.5); x.scale(.7, .7);
+          x.globalAlpha = pale ? .13 + br*.06 : .3 + br*.12; x.fillStyle = pale ? "rgba(96,64,14,1)" : rgb(mix(glow, [255, 255, 255], .45)); x.fill(api._bp);
+          x.globalAlpha = pale ? .42 + br*.14 : .5 + br*.2; x.lineWidth = 2; x.strokeStyle = pale ? "rgba(96,64,14,1)" : "rgba(255,255,255,1)"; x.stroke(api._bp); x.restore(); } }
       // le dépôt au fond
       x.fillStyle = rgb(mix(bot, [0, 0, 0], .45), .5); x.beginPath(); x.ellipse(200, 438, 70, 13, 0, 0, TAU); x.fill();
       // les bulles
