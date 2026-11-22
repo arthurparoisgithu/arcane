@@ -1226,3 +1226,70 @@ details[open]>summary .a-chev{transform:rotate(180deg)}
 .ob-big-l{fill:#eef0f7;filter:drop-shadow(0 0 14px rgba(230,236,255,.45))}
 .ob-big-o{fill:none;stroke:var(--ink-soft);stroke-width:1}
 @media (max-width:820px){ .ob-grid{grid-template-columns:minmax(0,1fr);gap:14px;padding:16px} .ob-stage{max-width:400px;margin:0 auto;width:100%} }
+
+/* ================================================================
+   TON CIEL AUJOURD'HUI : la phrase d'abord, la roue ensuite (astro-jour.js)
+   ================================================================ */
+.a-jour{max-width:820px;margin-bottom:26px}
+.a-ph{margin:14px 0 0;padding:20px 22px 16px;border:1px solid color-mix(in srgb,var(--or) 55%,var(--line));border-radius:18px;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--or) 12%,var(--panel-solid)),var(--panel-solid) 62%)}
+.a-ph-t{font:400 clamp(24px,3.6vw,34px)/1.28 var(--f-text);margin:0;color:var(--ink);text-wrap:balance}
+.a-ph-k{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:14px 0 0;font:600 13.5px var(--f-ui);letter-spacing:.02em;color:var(--ink-soft)}
+.a-ph-k .ag{font-size:19px;line-height:1}
+.a-ph-k>span:not(.ag){margin:0 6px 0 4px}
+.a-ph-2{padding:16px 22px 14px;background:var(--panel-solid);border-color:var(--line)}
+.a-ph-2 .eyebrow{margin:0 0 6px}
+.a-ph-2 .a-ph-t{font-size:clamp(19px,2.4vw,23px);line-height:1.38}
+.a-ph-m{display:flex;gap:14px;align-items:center;margin:14px 2px 0;font:400 16.5px/1.5 var(--f-text);color:var(--ink-soft)}
+.a-ph-m svg{width:46px;height:46px;flex:none}
+.a-ph-m b{color:var(--ink);font-weight:600}
+.a-ph-cta{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:12px;padding:14px 18px;border:1px dashed var(--line);border-radius:14px}
+.a-ph-cta p{margin:0;flex:1 1 280px;font-size:15.5px;line-height:1.5;color:var(--ink-soft)}
+.a-ph-cta b{color:var(--ink)}
+.a-jour-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.a-why{display:inline-flex;align-items:center;gap:5px;background:none;border:0;border-bottom:1px dotted currentColor;padding:1px 0;margin:0;font:600 13px var(--f-ui);letter-spacing:.02em;color:var(--acc);cursor:pointer;white-space:nowrap}
+.a-why::before{content:"?";display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid currentColor;font-size:10px;line-height:1}
+.a-why:hover{color:var(--ink)}
+.a-trio{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+.a-trio button{display:inline-flex;align-items:center;gap:7px;padding:7px 13px 7px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink);font:500 14px var(--f-ui);cursor:pointer}
+.a-trio button span:not(.ag){color:var(--ink-soft)}
+.a-trio .ag{font-size:17px}
+.a-fold-tr{margin-bottom:8px}
+.a-trlist li>span:last-child{line-height:1.5}
+.a-h2why{margin-top:34px}
+.a-lede-sky{margin:-4px 0 14px;font-size:16.5px}
+.a-c3s-1{grid-template-columns:minmax(0,1fr)}
+.a-c3s-1 .a-c3{max-width:520px}
+.a-ev .a-why{margin-top:6px;font-size:12px}
+.a-lun .a-why{margin-top:4px;font-size:12px}
+/* la feuille « Pourquoi on dit ça ? » */
+.a-why-q{font:italic 400 clamp(19px,2.6vw,23px)/1.4 var(--f-text);margin:6px 0 16px;color:var(--ink)}
+.a-why-g{display:grid;grid-template-columns:180px minmax(0,1fr);gap:20px;align-items:start}
+.a-why-c{width:100%;height:auto;overflow:visible}
+.a-why-c .c{fill:none;stroke:var(--line);stroke-width:1.5}
+.a-why-c .t{stroke:var(--ink-soft);stroke-width:1;opacity:.6}
+.a-why-c .r{stroke:var(--ink-soft);stroke-width:1;stroke-dasharray:2 4;opacity:.7}
+.a-why-c .l{stroke:var(--acc);stroke-width:2.5}
+.a-why-c.dur .l{stroke:#d0563f}
+.a-why-c.doux .l{stroke:#3f8fbf}
+.a-why-c .pt{fill:var(--or)}
+.a-why-c .pn{fill:var(--panel-solid);stroke:var(--ink);stroke-width:2}
+.a-why-c text{font:600 12px var(--f-ui);fill:var(--ink-soft);letter-spacing:.06em;text-transform:uppercase}
+.a-why-s{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.a-why-s li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;align-items:start}
+.a-why-s li>b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--acc);color:var(--on-accent,#fff);font:700 14px var(--f-ui)}
+.a-why-s h4{margin:3px 0 3px;font:700 14px var(--f-ui);letter-spacing:.03em}
+.a-why-s p{margin:0;font-size:16px;line-height:1.5}
+.a-why-r{margin:18px 0 0;padding:12px 14px;border-left:3px solid var(--line);font-size:14.5px;line-height:1.5;color:var(--ink-soft)}
+.a-why-l{display:grid;gap:8px;margin-top:18px}
+.a-why-l .eyebrow{margin:0}
+.a-why-b{display:flex;align-items:baseline;gap:10px;width:100%;text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);font:500 16.5px var(--f-text);cursor:pointer}
+.a-why-b span{font:700 11px var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--acc)}
+.a-why-b::after{content:"→";margin-left:auto;color:var(--ink-soft)}
+.a-why-b:hover{border-color:var(--acc)}
+.a-why-f{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+@media (max-width:640px){
+  .a-ph{padding:18px 16px 14px}
+  .a-why-g{grid-template-columns:1fr}
+  .a-why-c{max-width:170px;margin:0 auto}
+}

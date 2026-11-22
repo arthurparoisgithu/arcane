@@ -1,7 +1,9 @@
 /* ===== Arcanes · Les pages d'histoire =====
    Un même gabarit de lecture pour l'histoire de la magie et celle de l'astrologie :
    tout est ouvert, illustré, avec les lieux, les figures et les questions qu'on se pose.
-   window.ArcanesHistoire = { render(o) -> html, bind(root) } */
+   window.ArcanesHistoire = { render(o) -> html, bind(root) }
+   Mode « par chapitre » : mount(root, o) affiche une couverture (la liste illustrée des chapitres), puis un chapitre à la fois.
+   Un chapitre peut porter une accroche (c.accroche, pour la couverture) et une scène d'ouverture (c.scene = [lieu et date, récit]). */
 window.ArcanesHistoire = (() => {
   const esc = s => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
   const nb = s => String(s).replace(/ ([:;?!»])/g, " $1").replace(/« /g, "« ");
@@ -11,8 +13,9 @@ window.ArcanesHistoire = (() => {
     let s = `<section class="hx-ch" id="${id}" data-hxc="${i}">
       <header class="hx-ch-h"><span class="hx-n" aria-hidden="true">${c.n}</span><p class="hx-per">${c.per}</p><h2>${nb(c.t)}</h2>
         ${c.lieux ? `<ul class="hx-lieux" aria-label="Les lieux">${c.lieux.map(l => `<li><b>${l[0]}</b>${l[1] ? `<small>${l[1]}</small>` : ""}</li>`).join("")}</ul>` : ""}</header>
+      ${c.scene ? `<div class="hx-scene"><p class="hx-scene-l">${nb(c.scene[0])}</p>${[].concat(c.scene[1]).map(p => `<p>${nb(p)}</p>`).join("")}</div>` : ""}
       ${c.hero ? fig(c.hero, "hero") : ""}
-      <p class="hx-lead">${nb(c.lead)}</p>`;
+      <p class="hx-lead${c.scene ? " sans" : ""}">${nb(c.lead)}</p>`;
     (c.blocs || []).forEach((b, k) => {
       s += `<div class="hx-bloc">${b.h ? `<h3>${nb(b.h)}</h3>` : ""}${b.fig ? fig(b.fig, k % 2 ? "l" : "r") : ""}${b.p.map(p => `<p>${nb(p)}</p>`).join("")}
         ${b.gal ? `<div class="hx-gal" role="group" aria-label="Galerie">${b.gal.map(g => fig(g, "g")).join("")}</div>` : ""}
@@ -43,18 +46,52 @@ window.ArcanesHistoire = (() => {
   function bind(root){
     const hx = root.querySelector(".hxb"); if(!hx) return;
     const toc = hx.querySelector(".hx-toc"), reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    toc.querySelectorAll("a").forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById(a.getAttribute("href").slice(1)); if(t) window.scrollTo({top:t.getBoundingClientRect().top + scrollY - 64, behavior:reduce ? "auto" : "smooth"}); });
+    if(toc) toc.querySelectorAll("a").forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById(a.getAttribute("href").slice(1)); if(t) window.scrollTo({top:t.getBoundingClientRect().top + scrollY - 64, behavior:reduce ? "auto" : "smooth"}); });
     hx.querySelectorAll("[data-hxz]").forEach(f => { f.tabIndex = 0; f.setAttribute("role", "button"); const go = () => zoom(f.querySelector("img").src, f.querySelector("figcaption").innerHTML); f.onclick = go; f.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); go(); } }; });
     hx.querySelectorAll("[data-hxz1]").forEach(im => { im.onclick = () => zoom(im.src, im.dataset.cap); });
     hx.querySelectorAll(".hx-fig.hero img").forEach(im => { const f = () => { if(im.naturalHeight > im.naturalWidth*1.08) im.parentNode.classList.add("pt"); }; if(im.complete && im.naturalWidth) f(); else im.addEventListener("load", f, {once:true}); });
     if(obs) obs.disconnect();
     if("IntersectionObserver" in window){
-      obs = new IntersectionObserver(es => es.forEach(en => { if(!en.isIntersecting) return; const i = en.target.dataset.hxc;
+      if(toc) obs = new IntersectionObserver(es => es.forEach(en => { if(!en.isIntersecting) return; const i = en.target.dataset.hxc;
         toc.querySelectorAll("a").forEach(a => { const on = a.dataset.hxt === i; a.classList.toggle("on", on); if(on && toc.scrollWidth > toc.clientWidth) toc.scrollTo({left:a.offsetLeft - 16, behavior:reduce ? "auto" : "smooth"}); }); }), {rootMargin:"-25% 0px -65% 0px"});
-      hx.querySelectorAll(".hx-ch").forEach(s => obs.observe(s));
+      if(toc) hx.querySelectorAll(".hx-ch").forEach(s => obs.observe(s));
       if(!reduce){ const rv = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting){ en.target.classList.add("in"); rv.unobserve(en.target); } }), {rootMargin:"0px 0px -8% 0px"});
         hx.querySelectorAll(".hx-fig, .hx-gen, .hx-ch-h").forEach(x => { x.classList.add("hx-rv"); rv.observe(x); }); }
     }
   }
-  return {render, bind, zoom};
+  /* ---------- un chapitre à la fois ---------- */
+  const OUVERT = {};   // le chapitre ouvert, par histoire, le temps de la visite
+  const minutes = c => Math.max(2, Math.round(JSON.stringify([c.lead, c.scene, c.blocs, c.gens, c.qr]).replace(/<[^>]+>/g, "").split(/\s+/).length/210));
+  function mount(root, o){
+    const pfx = o.pfx || "hx", CH = o.chapitres, n = CH.length, E = o.etat || {lu:[]}, reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!Array.isArray(E.lu)) E.lu = [];
+    const vu = id => E.lu.includes(id), suivant = () => { const k = CH.findIndex(c => !vu(c.id)); return k < 0 ? 0 : k; };
+    const thumb = c => c.hero ? `<span class="hxc-img"><img src="${c.hero[0]}" alt="" loading="lazy" decoding="async"></span>` : `<span class="hxc-img vide"></span>`;
+    const couverture = () => { const k = suivant(), fait = E.lu.length;
+      return `<div class="hxb hxc" data-hx="${pfx}">
+        <header class="hx-top"><p class="eyebrow">${o.eyebrow}</p><h1>${o.titre}</h1><p class="hx-lede">${nb(o.lede)}</p>
+          <div class="hxc-go"><button type="button" class="btn" data-hxgo="${k}">${fait === 0 ? "Commencer : chapitre I" : fait >= n ? "Relire depuis le début" : `Reprendre : chapitre ${CH[k].n}`}</button><span>${fait === 0 ? `${n} chapitres, à lire dans l'ordre ou au hasard` : `${fait} chapitre${fait > 1 ? "s" : ""} lu${fait > 1 ? "s" : ""} sur ${n}`}</span></div></header>
+        <ol class="hxc-list">${CH.map((c, i) => `<li><button type="button" class="hxc-card${vu(c.id) ? " lu" : ""}" data-hxgo="${i}">${thumb(c)}
+          <span class="hxc-tx"><span class="hxc-k"><b>${c.n}</b>${c.per}</span><span class="hxc-t">${nb(c.court || c.t)}</span>${c.accroche ? `<span class="hxc-a">${nb(c.accroche)}</span>` : ""}<span class="hxc-s">${vu(c.id) ? "Lu" : `${minutes(c)} min de lecture`}</span></span></button></li>`).join("")}</ol>
+        ${o.fin || ""}</div>`; };
+    const page = i => { const c = CH[i], nx = CH[i + 1];
+      return `<div class="hxb hxp" data-hx="${pfx}">
+        <nav class="hxp-bar" aria-label="Navigation dans l'histoire"><button type="button" class="hxp-back" data-hxgo="-1">‹ Les chapitres</button><span>Chapitre ${c.n} sur ${CH[n - 1].n}</span>
+          <span class="hxp-dots" aria-hidden="true">${CH.map((x, j) => `<i class="${j === i ? "on" : vu(x.id) ? "lu" : ""}"></i>`).join("")}</span></nav>
+        <div class="hx-body">${chapter(c, i, pfx)}</div>
+        <footer class="hxp-end" data-hxend>${nx ? `<button type="button" class="hxp-next" data-hxgo="${i + 1}">${thumb(nx)}<span class="hxc-tx"><span class="hxc-k">Chapitre suivant · <b>${nx.n}</b></span><span class="hxc-t">${nb(nx.t)}</span>${nx.accroche ? `<span class="hxc-a">${nb(nx.accroche)}</span>` : ""}</span></button>` : (o.finChap || "")}
+          <div class="hxp-nav">${i > 0 ? `<button type="button" class="btn ghost small" data-hxgo="${i - 1}">‹ Chapitre ${CH[i - 1].n}</button>` : ""}<button type="button" class="btn ghost small" data-hxgo="-1">Tous les chapitres</button></div></footer></div>`; };
+    let endObs = null;
+    const lu = i => { const id = CH[i].id; if(!vu(id)){ E.lu.push(id); if(o.onEtat) o.onEtat(E); } };
+    const draw = top => { const i = OUVERT[pfx]; if(endObs){ endObs.disconnect(); endObs = null; }
+      root.innerHTML = i == null ? couverture() : page(i); bind(root);
+      root.querySelectorAll("[data-hxgo]").forEach(b => b.onclick = () => { const k = +b.dataset.hxgo; if(OUVERT[pfx] != null && k > OUVERT[pfx]) lu(OUVERT[pfx]); OUVERT[pfx] = k < 0 ? null : k; draw(true); });
+      if(i != null && "IntersectionObserver" in window){ const end = root.querySelector("[data-hxend]"); endObs = new IntersectionObserver(es => { if(es.some(e => e.isIntersecting)){ lu(i); endObs.disconnect(); } }); endObs.observe(end); }
+      if(o.apres) o.apres(root);
+      if(top) window.scrollTo({top:0, behavior:"auto"}); };
+    if(OUVERT[pfx] != null && !CH[OUVERT[pfx]]) OUVERT[pfx] = null;
+    draw(false);
+    return {ouvrir:i => { OUVERT[pfx] = i; draw(true); }};
+  }
+  return {render, bind, zoom, mount};
 })();
