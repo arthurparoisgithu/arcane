@@ -4066,7 +4066,7 @@ function briefHTML(rd, syn){
   const sp = SPREADS[rd.spread], i = KEYPOS[rd.spread] ?? rd.cards.length-1, c = rd.cards[i], k = byId(c.id), last = rd.cards[rd.cards.length-1], lk = byId(last.id);
   const [pre, rest] = signe(syn.card.nom);
   const c0 = rd.cards[0], k0 = byId(c0.id);
-  const s1 = deck().synth ? `${rd.spread==="annee" ? "Ton année est placée" : "Ton tirage est placé"} sous le signe ${pre}<strong>${rest}</strong> : ${motsLigne(syn.card)}.` : `${rd.spread==="annee" ? "Ton année s'ouvre" : "Ton tirage s'ouvre"} sur <strong>${k0.nom}</strong>${c0.rev ? ", renversé" + (/^La /.test(k0.nom) ? "e" : "") + "," : ""} : ${c0.rev ? k0.noyau[1] : motsLigne(k0)}.`;
+  const s1 = deck().synth ? `${rd.spread==="annee" ? "Ton année est placée" : "Ton tirage est placé"} sous le signe ${pre}<strong>${rest}</strong> : ${motsLigne(syn.card)}.` : `${rd.spread==="annee" ? "Ton année s'ouvre" : "Ton tirage s'ouvre"} sur <strong>${k0.nom}</strong>${c0.rev ? (DECK_ID === "et" ? ", renversé" + (/^La /.test(k0.nom) ? "e" : "") : ", à l'envers") : ""} : ${c0.rev ? k0.noyau[1] : motsLigne(k0)}.`;
   return `<section class="brief"><h2>En bref</h2><ol>
     <li><span>${s1}</span></li>
     <li><span>Le point clé, ${keyLab(rd,i)} : <strong>${k.nom}</strong>${c.rev?", à l'envers,":""} annonce ${k.noyau[c.rev?1:0]}.</span></li>
@@ -4278,7 +4278,7 @@ function initToTop(){
 
 /* ===== Nouveaux tirages et tirages personnels ===== */
 /* phrases de position : voir phrases.js */
-Object.assign(POSLABEL, {situation:"Ta situation", aplus:"Chemin A : ce qu'il apporte", amoins:"Chemin A : ce qu'il coûte", bplus:"Chemin B : ce qu'il apporte", bmoins:"Chemin B : ce qu'il coûte", cdec:"Le conseil pour choisir",
+Object.assign(POSLABEL, {situation:"Ta situation", etat:"Ta situation", aplus:"Chemin A : ce qu'il apporte", amoins:"Chemin A : ce qu'il coûte", bplus:"Chemin B : ce qu'il apporte", bmoins:"Chemin B : ce qu'il coûte", cdec:"Le conseil pour choisir",
   intention:"Ton intention", semer:"Ce qu'il faut semer", soutien:"Ce qui t'aide", eclaire:"Ce que la lune éclaire", liberer:"Ce que tu libères", recolte:"Ce que tu récoltes",
   ouensuis:"Où tu en es", apprendre:"Ce que tu as à apprendre", prochainpas:"Ton prochain pas"});
 
@@ -4330,7 +4330,7 @@ miniMap = function(k){
    Les nouveaux tirages n'inventent aucune place : ils assemblent des places déjà écrites (phrases de position comprises),
    si bien que leurs lectures valent pour tous les jeux. */
 Object.assign(SPREADS, {
-  point:{label:"Faire le point", count:5, desc:"5 lames · ta situation, ce qui se cache, l'obstacle, le conseil, l'issue", group:1, pos:["situation","cache","obstacle","conseil","issue"], layout:"point"},
+  point:{label:"Faire le point", count:5, desc:"5 lames · ta situation, ce qui se cache, l'obstacle, le conseil, l'issue", group:1, pos:["etat","cache","obstacle","conseil","issue"], layout:"point"},
   miroir:{label:"Le miroir", count:4, desc:"4 lames · toi, ce que tu ne vois pas, ce que tu apprends, le conseil", group:1, pos:["toi","cache","apprendre","conseil"], layout:"miroir"},
   lien:{label:"Le lien en trois lames", count:3, desc:"3 lames · toi, l'autre, et ce qui vous relie : amour, amitié, famille ou travail", group:0, pos:["toi","autre","relie"], layout:"lien"},
   blocage:{label:"Dénouer un blocage", count:3, desc:"3 lames · ce qui bloque, d'où ça vient, par où passer", group:0, pos:["obstacle","racine","conseil"], layout:"blocage"},
@@ -4377,7 +4377,7 @@ function extraHTML(rd){
     let verdict;
     if(Math.abs(sA - sB) < 1) verdict = `Les lames ne tranchent pas : les deux chemins se valent. Ce qui compte, c'est la façon dont tu avances, et le conseil ${deNom(C[5].k.nom)} prend ici toute sa place.`;
     else { const win = sA > sB ? "A" : "B", w = win === "A" ? [C[1],C[2]] : [C[3],C[4]];
-      verdict = `Les lames penchent vers ${win === "A" ? nA : nB}. Ce qu'il t'apporte, ${w[0].k.nom}, pèse plus lourd que ce qu'il te coûte. Garde en tête le prix à payer : ${w[1].k.noyau[w[1].rev?1:0]}.`; }
+      verdict = `Les lames penchent vers ${win === "A" ? nA : nB}. Ce qu'il t'apporte, ${w[0].k.nom}, pèse plus lourd que ce qu'il te coûte. Garde en tête le prix à payer : ${w[1].k.noyau[DECK_ID === "et" || coteDur(w[1]) ? (w[1].rev?1:0) : (w[1].rev?0:1)]}.`; }
     return `<section class="extra"><h3>Les deux chemins</h3><p>${verdict}</p>
       <p class="help">${rA ? `${rA} lame${rA>1?"s":""} retournée${rA>1?"s":""} du côté A` : "Aucune lame retournée du côté A"}, ${rB ? `${rB} du côté B` : "aucune du côté B"}. Une lame retournée signale ce qui coince sur ce chemin.</p></section>`;
   }
@@ -4553,7 +4553,7 @@ function bindMine(root){
 const AB = (X, up, rev) => ({up: up.map(s => s.replaceAll("{X}", X)), rev: rev.map(s => s.replaceAll("{X}", X))});
 const PLUS_UP = ["Ce que t'apporterait le chemin {X} : {nom}, avec {noyau}.","Si tu prends le chemin {X}, {nom} t'offre {noyau}.","Le meilleur du chemin {X} : {nom}, avec {noyau}.","Côté {X}, la promesse : {nom}, avec {noyau}.","Choisir {X}, c'est gagner ce que montre {nom} : {noyau}.","Le chemin {X} a un vrai atout : {nom}, avec {noyau}."];
 const PLUS_REV = ["Le chemin {X} promet moins qu'il n'y paraît : {nom}, avec {noyau}.","Si tu prends le chemin {X}, le bénéfice reste fragile : {nom}, avec {noyau}.","Le meilleur du chemin {X} est voilé : {nom}, avec {noyau}.","Côté {X}, la promesse est en demi-teinte : {nom}, avec {noyau}.","Choisir {X} rapporterait moins que prévu : {nom}, avec {noyau}.","Le chemin {X} a un atout, mais abîmé : {nom}, avec {noyau}."];
-const MOINS_UP = ["Ce que te coûterait le chemin {X} : {nom}. Même {noyau} demande un effort.","Le prix du chemin {X} : {nom}. Même {noyau} se paie.","Côté {X}, l'effort à fournir : {nom}, avec {noyau}.","Le chemin {X} demande quelque chose en retour : {nom}. Même {noyau} a son revers.","Ce que le chemin {X} exigerait de toi : {nom}, avec {noyau}.","Si tu prends le chemin {X}, il faudra porter ce que montre {nom} : {noyau}."];
+const MOINS_UP = ["Ce que te coûterait le chemin {X} : {nom}, avec {noyau}. Même cela demande un effort.","Le prix du chemin {X} : {nom}, avec {noyau}. Même cela se paie.","Côté {X}, l'effort à fournir : {nom}, avec {noyau}.","Le chemin {X} demande quelque chose en retour : {nom}, avec {noyau}. Même cela a son revers.","Ce que le chemin {X} exigerait de toi : {nom}, avec {noyau}.","Si tu prends le chemin {X}, il faudra porter ce que montre {nom} : {noyau}."];
 const MOINS_REV = ["Ce que te coûterait le chemin {X} : {nom}, avec {noyau}.","Le prix du chemin {X} : {nom}, avec {noyau}.","Côté {X}, le risque : {nom}, avec {noyau}.","Le chemin {X} a un revers : {nom}, avec {noyau}.","Ce que le chemin {X} exigerait de toi : {nom}, avec {noyau}.","Si tu prends le chemin {X}, prépare-toi à {noyau}, prévient {nom}."];
 
 Object.assign(FRAMES, {
@@ -4565,7 +4565,7 @@ Object.assign(FRAMES, {
          rev:["Devant toi, {nom} prévient : attention à {noyau}.","Ce qui se dessine avec {nom} : {noyau}, si rien ne change.","À venir, {nom} signale {noyau}.","Si tu continues ainsi, {nom} annonce {noyau}. Tu peux encore infléchir la route.","L'horizon reste brumeux : {nom} y montre {noyau}.","Pour la suite, {nom} demande de la vigilance face à {noyau}.","Ce qui pourrait venir : {nom}, avec {noyau}. Rien n'est écrit, à toi d'agir."]},
   pour:{up:["Ce qui t'aide : {nom}, avec {noyau}.","{nom} joue en ta faveur et t'apporte {noyau}.","Ton meilleur allié ici, c'est {nom} : {noyau}.","Tu peux t'appuyer sur ce que montre {nom} : {noyau}.","Le vent est favorable : {nom} t'offre {noyau}.","Ta force dans cette histoire : {nom}, avec {noyau}."],
         rev:["Ton appui, {nom}, reste fragile pour l'instant : {noyau}.","{nom} est de ton côté, mais avant tout il faudra dépasser {noyau}.","Ton soutien existe, mais il vacille : {nom}, avec {noyau}.","{nom} peut t'aider, à condition de régler d'abord {noyau}.","Ton atout est là, mal employé pour l'instant : {nom}, avec {noyau}.","L'aide est réelle mais timide : {nom} montre {noyau}."]},
-  contre:{up:["Ce qui te freine : {nom}. Ici, même {noyau} devient un obstacle quand on en abuse.","En obstacle, {nom} montre que même {noyau} peut te retenir.","Le frein, c'est {nom} : trop chercher {noyau} peut te faire perdre de vue l'essentiel.","Attention, {nom} se met en travers de ta route : même {noyau} peut jouer contre toi.","Ce qui résiste : {nom}. L'excès guette, même avec {noyau}.","Le défi s'appelle {nom} : {noyau} n'aide que si tu gardes la mesure."],
+  contre:{up:["Ce qui te freine : {nom}, avec {noyau}. À trop forte dose, cela devient un obstacle.","En obstacle, {nom} : {noyau}. Même cela peut te retenir.","Le frein, c'est {nom} : trop chercher {noyau} peut te faire perdre de vue l'essentiel.","Attention, {nom} se met en travers de ta route : {noyau}. Mal dosé, cela joue contre toi.","Ce qui résiste : {nom}. L'excès guette, même avec {noyau}.","Le défi s'appelle {nom} : {noyau}. Cela n'aide que si tu gardes la mesure."],
           rev:["Ce qui te freine : {nom}, avec {noyau}.","L'obstacle principal, c'est {nom} : {noyau}.","Ce qui te retient : {nom}, et derrière, {noyau}.","{nom} se met en travers de ta route : {noyau}.","Le frein est clair : {nom} montre {noyau}.","Ce qui bloque, {nom} le nomme sans détour : {noyau}."]},
   evolution:{up:["Pour la suite, {nom} t'invite à miser sur {noyau}.","Le chemin passe par {nom} : {noyau}.","Pour avancer, laisse {nom} t'inspirer : {noyau}.","L'étape suivante prend appui sur ce que montre {nom} : {noyau}.","Ta route s'ouvre avec {nom} : {noyau}.","Ce qui fera évoluer les choses : {nom}, avec {noyau}."],
              rev:["Pour avancer, {nom} demande de travailler sur {noyau}.","Le chemin passe par {nom} : il faudra dépasser {noyau}.","Avant d'aller plus loin, {nom} montre ce qui reste à régler : {noyau}.","L'étape suivante demande du travail : {nom}, avec {noyau}.","Ta route se dégagera quand tu auras apprivoisé ce que montre {nom} : {noyau}.","Pour évoluer, {nom} t'invite à regarder en face {noyau}."]},
@@ -4576,7 +4576,7 @@ Object.assign(FRAMES, {
           rev:["Juste derrière toi, {nom} laisse {noyau}.","Ces derniers temps, {nom} a laissé {noyau}.","Ce qui vient de se passer pèse encore : {nom}, avec {noyau}.","Tout récemment, {nom} a montré {noyau}.","Le passé proche, selon {nom} : {noyau}, encore à digérer.","Hier encore, {nom} était là, avec {noyau}."]},
   coeur:{up:["Au cœur de la question, {nom} : {noyau}.","Ce qui est en jeu maintenant : {nom}, avec {noyau}.","Le centre du tirage, c'est {nom} : {noyau}.","L'essentiel se joue ici : {nom}, avec {noyau}.","Au fond, tout tourne autour de ce que montre {nom} : {noyau}.","Ta situation se résume ainsi : {nom}, avec {noyau}."],
          rev:["Au cœur de la question, {nom} : {noyau}.","Ce qui est en jeu maintenant : {nom}, avec {noyau}.","Le nœud du problème, c'est {nom} : {noyau}.","L'essentiel se joue ici, et ça coince : {nom}, avec {noyau}.","Au fond, tout tourne autour de ce que montre {nom} : {noyau}.","Ta situation se résume ainsi : {nom}, avec {noyau}."]},
-  croise:{up:["Ce qui croise ton chemin : {nom}. Même {noyau} peut te mettre au défi.","En travers de la situation, {nom} : {noyau}, qui te pousse à réagir.","Le défi du moment : {nom}. Même {noyau} demande que tu prennes position.","{nom} vient croiser ta route : {noyau}, une force qui bouscule.","Ce qui s'oppose, ou ce qui stimule : {nom}, avec {noyau}.","Le facteur qui change la donne : {nom}, avec {noyau}."],
+  croise:{up:["Ce qui croise ton chemin : {nom}, avec {noyau}. Même cela peut te mettre au défi.","En travers de la situation, {nom} : {noyau}, qui te pousse à réagir.","Le défi du moment : {nom}, avec {noyau}. Cela demande que tu prennes position.","{nom} vient croiser ta route : {noyau}, une force qui bouscule.","Ce qui s'oppose, ou ce qui stimule : {nom}, avec {noyau}.","Le facteur qui change la donne : {nom}, avec {noyau}."],
           rev:["Ce qui croise ton chemin : {nom}, avec {noyau}.","En travers de la situation, {nom} : {noyau}.","Le défi du moment : {nom}, avec {noyau}.","{nom} vient croiser ta route : {noyau}.","Ce qui fait obstacle de biais : {nom}, avec {noyau}.","Le grain de sable : {nom}, avec {noyau}."]},
   racine:{up:["Les racines de la situation : {nom}, avec {noyau}.","Tout part d'ici : {nom}, avec {noyau}.","En profondeur, {nom} montre {noyau}.","Sous la surface, {nom} nourrit la situation : {noyau}.","La base de tout cela : {nom}, avec {noyau}.","Ce qui a tout mis en place : {nom}, avec {noyau}."],
           rev:["Les racines de la situation : {nom}, avec {noyau}, encore à apaiser.","Tout part d'ici : {nom}, avec {noyau}.","En profondeur, {nom} révèle {noyau}.","Sous la surface, {nom} cache {noyau}.","La base est fragile : {nom}, avec {noyau}.","Ce qui travaille en sous-sol : {nom}, avec {noyau}."]},
@@ -4592,7 +4592,7 @@ Object.assign(FRAMES, {
            rev:["Ce que tu crains : {nom}, avec {noyau}.","Ta peur discrète : {nom}, avec {noyau}.","Ce que tu redoutes au fond : {nom}, avec {noyau}.","Tes craintes, selon {nom} : {noyau}.","Ce qui t'inquiète ici : {nom}, avec {noyau}.","L'espoir se mêle de doute : {nom}, avec {noyau}."]},
   cache:{up:["Ce qui agit en coulisses : {nom}, avec {noyau}.","Sans que tu le voies, {nom} travaille pour toi : {noyau}.","Une influence discrète : {nom}, avec {noyau}.","Dans l'ombre, {nom} prépare {noyau}.","Ce que tu ne vois pas encore : {nom}, avec {noyau}.","Une force cachée t'accompagne : {nom}, avec {noyau}."],
          rev:["Ce qui agit en coulisses, sans que tu le voies : {nom}, avec {noyau}.","Une influence discrète, à démasquer : {nom}, avec {noyau}.","Dans l'ombre, {nom} entretient {noyau}.","Ce que tu ne vois pas encore : {nom}, avec {noyau}.","Sous la surface, {nom} cache {noyau}.","Un non-dit agit : {nom}, avec {noyau}."]},
-  obstacle:{up:["L'obstacle : {nom}. Ici, même {noyau} peut te retenir.","Ce qui se dresse devant toi : {nom}. Même {noyau} peut devenir un frein.","Le mur à franchir : {nom}. Attention à ne pas t'enfermer dans {noyau}.","La difficulté du moment : {nom}. Trop de place laissée à {noyau} complique les choses.","Ce qui résiste : {nom}. Même {noyau} demande ici de la mesure.","L'épreuve s'appelle {nom} : même {noyau} peut te ralentir."],
+  obstacle:{up:["L'obstacle : {nom}, avec {noyau}. Ici, même cela peut te retenir.","Ce qui se dresse devant toi : {nom}, avec {noyau}. Même cela peut devenir un frein.","Le mur à franchir : {nom}. Attention à ne pas t'enfermer dans {noyau}.","La difficulté du moment : {nom}. Trop de place laissée à {noyau} complique les choses.","Ce qui résiste : {nom}, avec {noyau}. Ici, cela demande de la mesure.","L'épreuve s'appelle {nom} : {noyau}. Même cela peut te ralentir."],
             rev:["L'obstacle : {nom}, avec {noyau}.","Ce qui se dresse devant toi : {nom}, avec {noyau}.","Le mur à franchir : {nom}, avec {noyau}.","La difficulté du moment : {nom}, avec {noyau}.","Ce qui résiste : {nom}, et derrière, {noyau}.","L'épreuve s'appelle {nom} : {noyau}."]},
   conseil:{up:["Le conseil : laisse {nom} te guider, avec {noyau}.","Le conseil des cartes : prends {nom} pour guide, avec {noyau}.","Pour avancer, cultive ce que montre {nom} : {noyau}.","Le meilleur conseil : t'appuyer sur {noyau}, comme le montre {nom}.","Écoute {nom} : il est temps de miser sur {noyau}.","Ce que tu peux faire maintenant : laisser {nom} t'inspirer, avec {noyau}."],
            rev:["Le conseil : travaille sur ce que montre {nom}, {noyau}.","Le conseil des cartes : regarde en face {noyau}, comme t'y invite {nom}.","Pour avancer, {nom} te conseille de dépasser {noyau}.","Ce que tu peux faire maintenant : apaiser {noyau}, comme le suggère {nom}.","Écoute {nom} : le travail porte sur {noyau}.","Le meilleur conseil : ne pas laisser {noyau} décider pour toi, prévient {nom}."]},
@@ -4600,7 +4600,7 @@ Object.assign(FRAMES, {
          rev:["L'autre personne : {nom}, avec {noyau}.","Ce que l'autre traverse : {nom}, avec {noyau}.","De son côté, ça coince : {nom}, avec {noyau}.","Son état d'esprit, selon {nom} : {noyau}.","En face de toi, {nom} : {noyau}. Laisse un peu de temps à l'autre.","Ce que l'autre n'ose pas dire : {nom}, avec {noyau}."]},
   relie:{up:["Ce qui vous relie : {nom}, avec {noyau}.","Le lien entre vous : {nom}, avec {noyau}.","Ce que vous partagez : {nom}, avec {noyau}.","Votre point commun, selon {nom} : {noyau}.","Ce qui fait la force du lien : {nom}, avec {noyau}.","Entre vous, {nom} tisse {noyau}."],
          rev:["Ce qui vous relie reste fragile : {nom}, avec {noyau}.","Le lien entre vous s'est un peu abîmé : {nom}, avec {noyau}.","Ce que vous partagez, pour l'instant : {nom}, avec {noyau}.","Votre point commun, selon {nom} : {noyau}.","Entre vous, {nom} montre {noyau}.","Le lien tient, mais il demande du soin : {nom}, avec {noyau}."]},
-  freine:{up:["Ce qui vous freine : {nom}. Même {noyau} peut peser entre vous.","Entre vous, le frein s'appelle {nom} : même {noyau} peut créer de la distance.","Ce qui ralentit la relation : {nom}. Même {noyau} demande ici un équilibre.","Le point de friction : {nom}. Même {noyau} peut devenir un sujet de tension.","Ce qui vous éloigne parfois : {nom}, même avec {noyau}.","Le défi à deux : {nom}. Même {noyau} doit trouver sa juste place."],
+  freine:{up:["Ce qui vous freine : {nom}, avec {noyau}. Même cela peut peser entre vous.","Entre vous, le frein s'appelle {nom} : {noyau}. Même cela peut créer de la distance.","Ce qui ralentit la relation : {nom}, avec {noyau}. Ici, cela demande un équilibre.","Le point de friction : {nom}, avec {noyau}. Même cela peut devenir un sujet de tension.","Ce qui vous éloigne parfois : {nom}, même avec {noyau}.","Le défi à deux : {nom}, avec {noyau}. Cela doit trouver sa juste place."],
           rev:["Ce qui vous freine : {nom}, avec {noyau}.","Entre vous, le frein s'appelle {nom} : {noyau}.","Ce qui ralentit la relation : {nom}, avec {noyau}.","Le point de friction : {nom}, avec {noyau}.","Ce qui vous éloigne : {nom}, avec {noyau}.","Le défi à deux : {nom}, avec {noyau}."]},
   avenir:{up:["L'avenir du lien : {nom} annonce {noyau}.","Pour la suite de la relation, {nom} promet {noyau}.","Ce que le lien peut devenir : {nom}, avec {noyau}.","Devant vous, {nom} : {noyau}.","La relation se dirige vers {noyau}, annonce {nom}.","Demain, à deux : {nom}, avec {noyau}."],
           rev:["L'avenir du lien : {nom} prévient, attention à {noyau}.","Pour la suite de la relation, {nom} signale {noyau}.","Ce que le lien peut devenir si rien ne change : {nom}, avec {noyau}.","Devant vous, {nom} : {noyau}. Il est encore temps d'en parler.","La relation risque de glisser vers {noyau}, prévient {nom}.","Demain, à deux, demande de la vigilance : {nom}, avec {noyau}."]},
@@ -4612,7 +4612,7 @@ Object.assign(FRAMES, {
   binah:{up:["Ce qui te donne forme et cadre : {nom}, avec {noyau}.","Binah, la Compréhension, passe par {nom} : {noyau}.","Ce qui structure ta vie : {nom}, avec {noyau}.","Ta façon de comprendre et d'organiser : {nom}, avec {noyau}.","Le cadre qui te protège : {nom}, avec {noyau}.","Ce qui donne une forme à tes idées : {nom}, avec {noyau}."],
          rev:["Ce qui te limite : {nom}, avec {noyau}.","Binah, la Compréhension, passe par {nom} : {noyau}.","Le cadre devient trop étroit : {nom}, avec {noyau}.","Ta façon d'organiser les choses te freine : {nom}, avec {noyau}.","Ce qui devrait te structurer t'enferme un peu : {nom}, avec {noyau}.","Tes limites du moment : {nom}, avec {noyau}."]},
   chesed:{up:["Ce qui t'est donné, tes ressources : {nom}, avec {noyau}.","Chesed, la Clémence, t'offre {nom} : {noyau}.","Ta générosité et tes atouts : {nom}, avec {noyau}.","Ce que la vie t'apporte : {nom}, avec {noyau}.","Ce sur quoi tu peux compter : {nom}, avec {noyau}.","Ta part d'abondance : {nom}, avec {noyau}."],
-          rev:["Tes ressources sont mal employées : {nom}, avec {noyau}.","Chesed, la Clémence, t'offre {nom} : {noyau}.","Ce qui t'est donné se disperse : {nom}, avec {noyau}.","Ta générosité s'épuise : {nom}, avec {noyau}.","Ce sur quoi tu comptais vacille : {nom}, avec {noyau}.","Tes atouts attendent d'être mieux employés : {nom}, avec {noyau}."]},
+          rev:["Tes ressources sont mal employées : {nom}, avec {noyau}.","Chesed, la Clémence, est mise à l'épreuve par {nom} : {noyau}.","Ce qui t'est donné se disperse : {nom}, avec {noyau}.","Ta générosité s'épuise : {nom}, avec {noyau}.","Ce sur quoi tu comptais vacille : {nom}, avec {noyau}.","Tes atouts attendent d'être mieux employés : {nom}, avec {noyau}."]},
   geburah:{up:["Ce que tu dois trancher, ton combat : {nom}. Ici, {noyau} demande du courage.","Geburah, la Rigueur, se manifeste par {nom} : {noyau}.","Ta force de décision : {nom}, avec {noyau}.","Ce qu'il faut couper net : {nom}. Pour y arriver, compte sur {noyau}.","Ton combat du moment : {nom}, avec {noyau}.","Là où tu dois dire non : {nom}, avec {noyau}."],
            rev:["Ton combat intérieur : {nom}, avec {noyau}.","Geburah, la Rigueur, se manifeste par {nom} : {noyau}.","Ta force de décision s'emballe ou se bloque : {nom}, avec {noyau}.","Ce qu'il faudrait trancher traîne : {nom}, avec {noyau}.","Ton combat te fatigue : {nom}, avec {noyau}.","La rigueur devient dureté : {nom}, avec {noyau}."]},
   tiphareth:{up:["Au cœur de l'Arbre, ton équilibre : {nom}, avec {noyau}.","Tiphareth, la Beauté, rayonne avec {nom} : {noyau}.","Ce qui t'harmonise : {nom}, avec {noyau}.","Ton centre, là où tout se rejoint : {nom}, avec {noyau}.","Ce qui te rend à toi-même : {nom}, avec {noyau}.","Ta vérité intérieure : {nom}, avec {noyau}."],
@@ -4630,6 +4630,8 @@ Object.assign(FRAMES, {
 
   situation:{up:["Ta situation aujourd'hui : {nom}, avec {noyau}.","Là où tu en es avant de choisir : {nom}, avec {noyau}.","Le point de départ : {nom}, avec {noyau}.","Avant de trancher, {nom} décrit ta situation : {noyau}.","Le décor de ton choix : {nom}, avec {noyau}.","Ce que tu vis au moment de choisir : {nom}, avec {noyau}."],
              rev:["Ta situation aujourd'hui : {nom}, avec {noyau}. C'est ce qui rend le choix difficile.","Là où tu en es avant de choisir : {nom}, avec {noyau}.","Le point de départ est inconfortable : {nom}, avec {noyau}.","Avant de trancher, {nom} montre ce qui te trouble : {noyau}.","Le décor de ton choix : {nom}, avec {noyau}. Pas étonnant que tu hésites.","Ce que tu vis au moment de choisir pèse : {nom}, avec {noyau}."]},
+  etat:{up:["Ta situation aujourd'hui : {nom}, avec {noyau}.","Là où tu en es : {nom}, avec {noyau}.","Le point de départ : {nom}, avec {noyau}.","Pour commencer, {nom} décrit ta situation : {noyau}.","Le décor : {nom}, avec {noyau}.","Ce que tu vis en ce moment : {nom}, avec {noyau}."],
+        rev:["Ta situation aujourd'hui : {nom}, avec {noyau}. C'est ce qui pèse.","Là où tu en es : {nom}, avec {noyau}.","Le point de départ est inconfortable : {nom}, avec {noyau}.","Pour commencer, {nom} montre ce qui te trouble : {noyau}.","Le décor : {nom}, avec {noyau}. Ce n'est pas simple.","Ce que tu vis en ce moment pèse : {nom}, avec {noyau}."]},
   aplus:AB("A", PLUS_UP, PLUS_REV), bplus:AB("B", PLUS_UP, PLUS_REV),
   amoins:AB("A", MOINS_UP, MOINS_REV), bmoins:AB("B", MOINS_UP, MOINS_REV),
   cdec:{up:["Pour choisir, laisse {nom} te guider, avec {noyau}.","Le conseil pour trancher : {nom}, avec {noyau}.","Ce qui t'aidera à décider : {nom}, avec {noyau}.","Au moment de choisir, écoute {nom} : {noyau}.","La clé du choix : {nom}, avec {noyau}.","Ton meilleur guide pour décider : {nom}, avec {noyau}."],
@@ -5047,7 +5049,7 @@ function bindBackup(root){
 const WO = {
   noms:{ mat:"Le Fou", sansnom:"La Mort" },
   orig:{ mat:"Le Fou", sansnom:"La Mort", temperance:"La Tempérance", maisondieu:"Le Feu du Ciel", etoile:"Les Étoiles" },
-  subst:[[/L'Arcane sans nom/g, "La Mort"], [/l'Arcane sans nom/g, "la Mort"], [/Arcane sans nom/g, "Mort"], [/\bMat\b/g, "Fou"]],
+  subst:[[/Retourné, l'Arcane sans nom/g, "Retournée, La Mort"], [/L'Arcane sans nom/g, "La Mort"], [/l'Arcane sans nom/g, "la Mort"], [/Arcane sans nom/g, "Mort"], [/\bMat\b/g, "Fou"]],
   cartes:{
     mat:["Un fou en habit de bouffon marche, le baluchon sur l'épaule, mordu par un lynx blanc ; un crocodile guette derrière un obélisque renversé.",
       "Le Fou ne porte pas de nombre : Wirth le place entre le Jugement et le Monde, et lui donne Shin, la lettre du feu. Il avance le regard levé, un baluchon au bout d'un bâton bleu, appuyé sur un bâton rouge. Un lynx blanc lui mord la jambe, et derrière lui, près d'un obélisque abattu, un crocodile attend. Wirth y voit l'être qui a renoncé à la raison commune : libre, mais exposé."],
@@ -7131,7 +7133,7 @@ const WS = {
     diable:"The Devil", maisondieu:"The Tower", etoile:"The Star", lune:"The Moon", soleil:"The Sun", jugement:"Judgement", monde:"The World" },
   n:{ force:8, justice:11 },
   /* Les noms dans les textes : ordre important (Papesse avant Pape) */
-  subst:[[/Papesse/g, "Grande Prêtresse"], [/\bPape\b/g, "Hiérophante"], [/Maison Dieu/g, "Tour"], [/L'Arcane sans nom/g, "La Mort"], [/l'Arcane sans nom/g, "la Mort"],
+  subst:[[/Papesse/g, "Grande Prêtresse"], [/\bPape\b/g, "Hiérophante"], [/Maison Dieu/g, "Tour"], [/Retourné, l'Arcane sans nom/g, "Retournée, La Mort"], [/L'Arcane sans nom/g, "La Mort"], [/l'Arcane sans nom/g, "la Mort"],
     [/Arcane sans nom/g, "Mort"], [/\bBateleur\b/g, "Magicien"], [/\bMat\b/g, "Fou"]],
   cartes:{
     mat:{ symb:"Un jeune homme s'avance au bord d'une falaise, une rose blanche à la main et un petit chien à ses pieds : il fait confiance à la vie.",
@@ -7274,7 +7276,7 @@ function elementsHTML(rd){
   const tot = Object.values(cnt).reduce((a,b) => a+b, 0), max = Math.max(...Object.values(cnt)), top = Object.keys(cnt).filter(k => cnt[k] === max && max > 0);
   const ps = [];
   if(!tot) ps.push("Toutes tes lames sont planétaires : le tirage parle moins d'un terrain précis que d'un climat général.");
-  else if(top.length === 1 && max >= 2) ps.push(`${ELEMS[top[0]].t.charAt(0).toUpperCase() + ELEMS[top[0]].t.slice(1)} domine ton tirage (${max} lame${max>1?"s":""}) : ta question se joue sur ce terrain : ${ELEMS[top[0]].d}.`);
+  else if(top.length === 1 && max >= 2) ps.push(`${ELEMS[top[0]].t.charAt(0).toUpperCase() + ELEMS[top[0]].t.slice(1)} domine ton tirage (${max} lame${max>1?"s":""}). Ta question se joue sur ce terrain : ${ELEMS[top[0]].d}.`);
   else ps.push(`Les éléments se partagent ton tirage (${Object.keys(cnt).filter(k => cnt[k]).map(k => `${ELEMS[k].t} ${cnt[k]}`).join(", ")}) : plusieurs terrains sont en jeu à la fois.`);
   const absent = Object.keys(cnt).filter(k => !cnt[k]);
   if(tot && ids.length >= 3 && absent.length && absent.length < 4) ps.push(`Aucune lame ne porte ${listFR(absent.map(k => ELEMS[k].t))} : ${absent.length === 1 ? `c'est peut-être ce qui manque à la situation : ${ELEMS[absent[0]].d}` : "ce sont peut-être des terrains que la situation oublie"}.`);
@@ -7490,9 +7492,13 @@ function synthesis(cards){
   if(s === 22) calc += ` (XXII, ${byId("mat").nom})`;
   return { card, calc };
 }
+/* Dix mineures se lisent à l'envers des autres : à l'endroit elles montrent la peine (le Trois d'Épées, le Cinq de Deniers…),
+   retournées elles en montrent la sortie. Les tournures et les places d'obstacle en tiennent compte. Etteilla a ses propres sens. */
+const SOMBRES = new Set(["coupes4","coupes5","epees2","epees3","epees5","epees8","epees9","epees10","deniers5","batons10"]);
+const coteDur = c => DECK_ID !== "et" && (SOMBRES.has(c.id) ? !c.rev : !!c.rev);
 function frame(pos, c, r, v){
   /* Chez Etteilla, une carte renversée n'est pas « bloquée » : elle a un autre sens, on garde donc les tournures de l'endroit */
-  const k = byId(c.id), list = FRAMES[pos][c.rev && DECK_ID !== "et" ? "rev" : "up"];
+  const k = byId(c.id), list = FRAMES[pos][coteDur(c) ? "rev" : "up"];
   return (v != null ? list[v % list.length] : pick(list, r)).replaceAll("{nom}", k.nom).replace("{noyau}", k.noyau[c.rev?1:0]);
 }
 function themeText(k, theme, rev){ return theme==="general" ? (rev ? k.rev : k.up) : k[theme][rev?1:0]; }
@@ -7510,16 +7516,19 @@ const rdSentences = txt => String(txt).split(/(?<=[.!?…])\s+(?=[A-ZÀ-ÖØ-Þ�
 function sansRedite(txt, deja, nom){
   const ph = rdSentences(txt); if(ph.length < 2) return txt;
   const ref = rdStems(deja), skip = rdStems(nom || "");
-  const keep = ph.filter(p => rdOverlap(p, ref, skip) < 0.5);
+  const ok = ph.map(p => rdOverlap(p, ref, skip) < 0.5);
+  /* une phrase qui commence par un pronom s'appuie sur la précédente : on garde alors les deux */
+  for(let i = 1; i < ph.length; i++) if(ok[i] && !ok[i - 1] && /^(Il|Elle|Ils|Elles|Lui|Son|Sa|Ses|Leur|Leurs|Pour une? (femme|homme), (il|elle))\b/.test(ph[i])) ok[i - 1] = true;
+  const keep = ph.filter((p, i) => ok[i]);
   return (keep.length ? keep : [ph[ph.length - 1]]).join(" ");
 }
 /* À une place d'obstacle, une lame à l'endroit se lit par son revers : on ne lui accole pas son sens favorable.
    Chez Etteilla, le sens renversé est un autre sens et non un revers : la règle ne s'applique pas. */
 const ADVERSE = new Set(["contre","obstacle","freine","croise","amoins","bmoins"]);
 function suitePlace(k, c, pos, theme){
-  if(ADVERSE.has(pos) && !c.rev && DECK_ID !== "et"){
-    const t = theme !== "general" && k[theme] ? k[theme][1] : "";
-    return t && !/retourn|renvers|à l'envers/i.test(t) ? t : `Son revers à surveiller : ${k.noyau[1]}.`;
+  if(ADVERSE.has(pos) && !coteDur(c) && DECK_ID !== "et"){
+    const o = c.rev ? 0 : 1, t = theme !== "general" && k[theme] ? k[theme][o] : "";   // l'autre face de la lame : son côté difficile
+    return t && !/retourn|renvers|à l'envers/i.test(t) ? t : `Son revers à surveiller : ${k.noyau[o]}.`;
   }
   return sansRedite(themeText(k, theme, c.rev), k.noyau[c.rev?1:0], k.nom);
 }
@@ -7622,8 +7631,10 @@ function readingHTML(rd){
   if(deck().tree) t += arbreTirHTML(rd);
   const gz = deck().regards ? gazeSentences(rd) : [];
   if(deck().elements) t += elementsHTML(rd);
-  if(gz.length) t += `<section class="gaze"><h3>Les regards</h3><p class="gaze-intro">Dans le Marseille, on lit aussi où regardent les personnages, une lecture développée par Alejandro Jodorowsky. La gauche est du côté du passé, la droite du côté de l'avenir.</p>${gz.map(x=>`<p>${x}</p>`).join("")}</section>`;
+  if(gz.length) t += `<section class="gaze"><h3>Les regards</h3><p class="gaze-intro">${DECK_ID === "wo" ? "Wirth a gardé la posture des figures du Marseille : on peut donc lire, comme dans ce jeu, où regardent les personnages" : "Dans le Marseille, on lit aussi où regardent les personnages"}, une lecture développée par Alejandro Jodorowsky. La gauche est du côté du passé, la droite du côté de l'avenir.</p>${gz.map(x=>`<p>${x}</p>`).join("")}</section>`;
+  const synthAt = t.length;
   t += `<section class="synth"><h3>${!deck().synth ? "L'ensemble" : rd.spread==="annee" ? "La lame de l'année" : "La synthèse"}</h3>`;
+  const synthBody = t.length;
   const drawnIds = rd.cards.map(c=>c.id);
   if(deck().synth) t += `<p>En additionnant les arcanes de ton tirage (${syn.calc}), tu obtiens <strong>${syn.card.nom}</strong>, la lame qui résume ${rd.spread==="annee" ? "ton année" : "l'ensemble"}. Son message : ${syn.card.noyau[0]}. Son conseil : ${syn.card.conseil[0].charAt(0).toLowerCase()+syn.card.conseil[0].slice(1)}${drawnIds.includes(syn.card.id) ? " Elle est déjà dans ton tirage : son message compte double." : ""}</p>`;
   if(rd.inv){
@@ -7639,7 +7650,8 @@ function readingHTML(rd){
   combosFor(drawnIds).forEach(([a,b,txt,kind]) => { t += `<p class="combo"><span class="ctag">${kind==="echo" ? "Écho entre les séries" : "Lames associées"}</span>${txt}</p>`; });
   const last = rd.cards[rd.cards.length-1], lk = byId(last.id);
   if(last.id === "mat") t += `<p class="combo">${CHEMIN.matFin}</p>`;
-  t += `</section><p class="conseil"><span>Le conseil des lames</span>${lk.conseil[last.rev?1:0]}</p></div>`;
+  if(t.length === synthBody) t = t.slice(0, synthAt); else t += `</section>`;   // un titre seul, sans rien dessous, ne s'affiche pas
+  t += `<p class="conseil"><span>Le conseil des lames</span>${lk.conseil[last.rev?1:0]}</p></div>`;
   return h + t + `</div>`;
 }
 function areaOf(pos){ return ({pour:"pour", contre:"contre", evolution:"evo", issue:"issue"})[pos] || "auto"; }
