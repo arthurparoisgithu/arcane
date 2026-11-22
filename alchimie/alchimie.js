@@ -1,7 +1,7 @@
 /* ===== Arcanes · Alchimie : l'interface =====
    Un quatrième univers, à côté du tarot, de l'astrologie et de la magie :
-   L'athanor (le jour, le feu, ton Œuvre), Le laboratoire (les outils), L'école (douze leçons), Histoire, Le carnet.
-   On y entre par la pilule de l'en-tête. Les outils du laboratoire sont dans alchimie-labo.js. */
+   L'athanor (le jour, le feu, ton Œuvre), Le laboratoire (les outils), L'école, Histoire, Le carnet.
+   On y entre par la pilule de l'en-tête. Les outils du laboratoire sont dans alchimie-labo.js, les objets interactifs dans alchimie-objets.js. */
 (() => {
   if(!window.ALCH_DATA || !window.ALCH_COURS) return;
   const D = window.ALCH_DATA, K = window.ALCH_COURS, VA = window.AlchVase;
@@ -21,7 +21,7 @@
 
   /* ---------- mémoire ---------- */
   const STORE = "arcanes.alchimie.v1";
-  const DEF = () => ({vue:"athanor", done:[], oeuvre:null, archives:[], planches:[], grand:{n:0, best:null, last:null, felures:0, bestL:{}}, signes:0, defis:[], niveau:0});
+  const DEF = () => ({vue:"athanor", done:[], oeuvre:null, archives:[], planches:[], grand:{n:0, best:null, last:null, felures:0, bestL:{}}, signes:0, defis:[], niveau:0, muet:[], table:0, betes:0});
   const load = () => { try{ const v = JSON.parse(localStorage.getItem(STORE) || "{}"); const s = Object.assign(DEF(), v && typeof v === "object" ? v : {}); s.grand = Object.assign(DEF().grand, s.grand || {}); return s; }catch(e){ return DEF(); } };
   let st = load();
   const save = () => { try{ localStorage.setItem(STORE, JSON.stringify(st)); }catch(e){} };
@@ -50,9 +50,10 @@
   /* ---------- le vase vivant ---------- */
   function mountVase(root, o){ const cv = q1("canvas[data-vase]", root); if(!cv || !VA) return null; try{ return VA.create(cv, o); }catch(e){ return null; } }
   function vaseEtat(){
-    if(st.oeuvre) return {p:D.OEUVRE[st.oeuvre.phase].p, heat:.3, txt:`Ton Œuvre est ${D.OEUVRE[st.oeuvre.phase].nom.toLowerCase()}.`};
+    const B = window.ALCH_BETES, bete = p => B && B.at(p) || null;
+    if(st.oeuvre){ const p = D.OEUVRE[st.oeuvre.phase].p, b = bete(p); return {p, heat:.3, bete:b, txt:`Ton Œuvre est ${D.OEUVRE[st.oeuvre.phase].nom.toLowerCase()}${b ? " : " + b.nom.toLowerCase() + " est dans le vase" : ""}.`}; }
     if(st.grand.n) return {p:5, heat:.24, dry:.9, stone:true, crown:true, txt:"La pierre repose dans le vase."};
-    return {p:0, heat:.2, txt:"La matière première attend."};
+    const b = bete(0); return {p:0, heat:.2, bete:b, txt:b ? "La matière première attend : le dragon dort dans le vase." : "La matière première attend."};
   }
 
   /* ---------- la feuille (détail) ---------- */
@@ -64,6 +65,7 @@
   }
   const close = () => { if(typeof closeSheet === "function") closeSheet(); else { const sh = document.getElementById("sheet"); if(sh) sh.hidden = true; document.body.classList.remove("locked"); } };
   function plancheSheet(id){ const P = D.PLANCHES[id]; if(!P) return;
+    if(EXT.planche){ try{ if(EXT.planche(id)) return; }catch(e){} }
     sheet(`<p class="eyebrow">Planche · d'après le Splendor solis</p><h2>${h(P.t)}</h2>${fig(P.img, "al-fig-plate", P.t)}<p class="al-p">${nb(h(P.x))}</p>
       <p class="help al-left">Le Splendor solis est un manuscrit peint au XVIe siècle. Ces aquarelles en sont des copies modernes, fidèles, réalisées par E. A. Ibbs d'après l'exemplaire de Londres (1582).</p>`); }
 
@@ -79,12 +81,12 @@
     root.innerHTML = `
       <header class="al-hero al-hero-home">
         <div class="al-hero-txt">
-          <p class="eyebrow">${cap(JOURS[now.getDay()])}, jour de ${h(m.planete)}</p>
+          <p class="eyebrow">${cap(JOURS[now.getDay()])}, jour ${h(m.planete.startsWith("le ") ? "du " + m.planete.slice(3) : "de " + m.planete)}</p>
           <h1>L'athanor</h1>${rule4}
           <p class="al-lede">Le fourneau où la matière mûrit lentement. Tu y retrouves le métal du jour, le feu à conduire et ton Œuvre en cours.</p>
           <div class="al-cta"><button type="button" class="btn" data-algo="labo:jeu">Conduire le Grand Œuvre</button><button type="button" class="btn ghost" data-algo="labo:oeuvre">${o ? "Reprendre mon Œuvre" : "Commencer mon Œuvre"}</button></div>
         </div>
-        <figure class="al-niche al-niche-home"><canvas class="al-vase" data-vase aria-label="Le vase sur son feu"></canvas><figcaption>${h(ve.txt)}</figcaption></figure>
+        <figure class="al-niche al-niche-home">${ve.bete && EXT.tools.bestiaire ? `<button type="button" class="al-vase-btn" data-algo="labo:bestiaire:${ve.bete.id}" aria-label="${h(ve.bete.nom)} : ouvrir le bestiaire"><canvas class="al-vase" data-vase></canvas></button>` : `<canvas class="al-vase" data-vase aria-label="Le vase sur son feu"></canvas>`}<figcaption>${h(ve.txt)}</figcaption></figure>
       </header>
       <section class="al-today" aria-label="Aujourd'hui">
         <button type="button" class="al-card al-tcard" data-algo="labo:metaux:${m.id}" style="--mc:${m.hex}">
@@ -107,9 +109,10 @@
         <div><p class="eyebrow">La planche du jour</p><h2>${h(P.t)}</h2><p class="al-p">${nb(h(P.x))}</p>
           <div class="al-acts"><button type="button" class="linkbtn" data-algo="labo:planches">Toutes les planches</button><button type="button" class="linkbtn" data-algo="ecole:l11">Apprendre à lire une image</button></div></div>
       </section>
+      <section><h2 class="al-k">Les objets qui parlent</h2><div class="al-tools al-tools-home">${toolCards(["bestiaire","muet","table"])}</div></section>
       <section><h2 class="al-k">Le laboratoire</h2><div class="al-tools al-tools-home">${toolCards(["metaux","elements","signes"])}</div></section>
       <section class="al-card al-warn"><h3>Un laboratoire sans danger</h3><p class="al-p">L'alchimie historique maniait le mercure, le plomb, l'arsenic et des acides forts. Arcanes ne propose aucune recette de ce genre : ici, on apprend l'histoire, on lit les images et on se sert des symboles pour réfléchir. Les seules expériences proposées se font avec de l'eau, du sel et une bougie.</p></section>`;
-    vaseHome = mountVase(root, {p:ve.p, heat:ve.heat, dry:ve.dry || 0, stone:!!ve.stone, crown:!!ve.crown});
+    vaseHome = mountVase(root, {p:ve.p, heat:ve.heat, dry:ve.dry || 0, stone:!!ve.stone, crown:!!ve.crown, bete:ve.bete ? ve.bete.d : null});
   }
   const toolCards = ids => ids.map(id => { const t = EXT.tools[id]; return t ? `<button type="button" class="al-card al-tool" data-algo="labo:${id}"><span class="al-tool-ico">${t.ico}</span><span class="al-tool-k">${h(t.genre)}</span><b>${h(t.t)}</b><span>${nb(h(t.x))}</span></button>` : ""; }).join("");
 
@@ -124,9 +127,12 @@
     if(T){ root.innerHTML = `<p class="crumb"><button type="button" class="linkbtn" data-algo="labo">‹ Le laboratoire</button></p><div class="al-toolview" data-tool="${lab.tool}"></div>`;
       labOff = T.render(q1(".al-toolview", root), lab.arg) || null; return; }
     root.innerHTML = `<header class="al-hero"><p class="eyebrow">Les outils</p><h1>Le laboratoire</h1>${rule4}
-        <p class="al-lede">Six outils pour pratiquer : conduire le feu, transformer quelque chose de ta vie, et apprendre le langage des métaux, des éléments, des signes et des images.</p></header>
+        <p class="al-lede">Neuf outils pour pratiquer : conduire le feu, transformer quelque chose de ta vie, apprendre le langage des métaux, des éléments et des signes, et faire parler les images.</p></header>
       <div class="al-tools al-tools-main">${toolCards(["jeu","oeuvre"])}</div>
-      <div class="al-tools">${toolCards(["metaux","elements","signes","planches"])}</div>`;
+      <h2 class="al-k">Les objets qui parlent</h2>
+      <div class="al-tools">${toolCards(["bestiaire","muet","table","planches"])}</div>
+      <h2 class="al-k">Le langage</h2>
+      <div class="al-tools">${toolCards(["metaux","elements","signes"])}</div>`;
   }
 
   /* ================================================================
@@ -147,7 +153,7 @@
         <p class="help al-left">${n ? `${n} leçon${n > 1 ? "s" : ""} sur ${tot}.` : "Tu n'as pas encore commencé."} ${next ? `<button type="button" class="linkbtn" data-algo="ecole:${next.id}">${n ? "Continuer" : "Commencer"} : ${h(next.t)}</button>` : "Tu as tout lu. Bravo."}</p></header>
       ${K.map((m, i) => `<section class="al-mod"><div class="al-mod-h"><span class="al-mod-n">${["I","II","III","IV","V","VI"][i]}</span><div><h2>${h(m.t)}</h2><p>${h(m.sous)}</p></div><img class="al-mod-img" src="${IMG(MODIMG[m.id][0])}" style="object-position:${MODIMG[m.id][1]}" alt="" loading="lazy" decoding="async"></div>
         <div class="al-lecs">${m.lec.map(l => `<button type="button" class="al-card al-lec ${st.done.includes(l.id) ? "done" : ""}" data-algo="ecole:${l.id}"><span class="al-lec-t">${h(l.t)}</span><span class="al-lec-a">${nb(h(l.acc))}</span><span class="al-lec-m">${st.done.includes(l.id) ? "Lue" : l.dur + " min"}</span></button>`).join("")}</div></section>`).join("")}
-      <section><h2 class="al-k">Le bestiaire</h2><p class="al-p al-narrow">Les animaux des images alchimiques ne sont pas un décor. Chacun désigne une matière, une étape ou un geste.</p>
+      <section><h2 class="al-k">Le bestiaire</h2><p class="al-p al-narrow">Les animaux des images alchimiques ne sont pas un décor. Chacun désigne une matière, une étape ou un geste. ${EXT.tools.bestiaire ? `<button type="button" class="linkbtn" data-algo="labo:bestiaire">Les voir se transformer dans le vase</button>` : ""}</p>
         <dl class="al-dl al-dl-2">${D.BESTIAIRE.map(b => `<div><dt>${h(b[0])}</dt><dd>${nb(h(b[1]))}</dd></div>`).join("")}</dl></section>
       <section><h2 class="al-k">Le glossaire</h2><label class="al-search"><span class="sr-only">Chercher un mot</span><input type="search" placeholder="Chercher un mot : athanor, élixir…" data-algloss></label>
         <dl class="al-dl al-gloss">${D.GLOSS.map(g => `<div><dt>${h(g[0])}</dt><dd>${nb(h(g[1]))}</dd></div>`).join("")}</dl><p class="help al-left" data-alnone hidden>Aucun mot ne correspond.</p></section>`;
@@ -230,6 +236,7 @@
           : `<div class="al-card"><p class="al-p">Aucune Œuvre en cours. Tu peux en commencer une dans le laboratoire : tu choisis ce que tu veux transformer, et l'outil t'accompagne à travers les quatre couleurs.</p><div class="al-acts"><button type="button" class="btn small" data-algo="labo:oeuvre">Commencer mon Œuvre</button></div></div>`}</section>
       ${st.archives.length ? `<section><h2 class="al-k">Les Œuvres accomplies</h2>${st.archives.map(a => `<details class="al-card al-arch"><summary><span>« ${h(a.sujet)} »</span><small>${fmtD(a.debut)} → ${fmtD(a.fin)}</small></summary>${notes(a)}</details>`).join("")}</section>` : ""}
       <section><h2 class="al-k">Le Grand Œuvre</h2><div class="al-card"><p class="al-p">${g.n ? `Tu as conduit le feu jusqu'au rouge ${g.n} fois. Ton meilleur temps : ${fmtT(g.best)}. Le vase s'est fêlé ${g.felures || 0} fois en tout.` : "Tu n'as pas encore conduit le feu jusqu'au rouge."} ${(st.defis || []).length ? `Défis du jour réussis : ${st.defis.length}.` : ""}</p><div class="al-acts"><button type="button" class="btn small ghost" data-algo="labo:jeu">${g.n ? "Rejouer" : "Essayer"}</button><button type="button" class="btn small ghost" data-algo="labo:planches">Voir les planches</button></div></div></section>
+      <section><h2 class="al-k">Les objets qui parlent</h2><div class="al-card"><p class="al-p">Livre muet : ${(st.muet || []).length} planche${(st.muet || []).length > 1 ? "s" : ""} lue${(st.muet || []).length > 1 ? "s" : ""} sur 15. Table d'émeraude : ${st.table | 0} phrase${(st.table | 0) > 1 ? "s" : ""} gravée${(st.table | 0) > 1 ? "s" : ""} sur 13.${st.betes ? " Tu as ouvert le bestiaire." : ""}</p><div class="al-acts"><button type="button" class="btn small ghost" data-algo="labo:muet">Le livre muet</button><button type="button" class="btn small ghost" data-algo="labo:table">La Table d'émeraude</button><button type="button" class="btn small ghost" data-algo="labo:bestiaire">Le bestiaire</button></div></div></section>
       <section class="al-card"><h3>La sauvegarde</h3><p class="al-p">La sauvegarde d'Arcanes emporte aussi ton carnet d'alchimie. Elle se fait depuis l'espace du tarot.</p>
         <div class="al-acts"><button type="button" class="linkbtn danger" data-alreset>Effacer mes données d'alchimie</button></div></section>`;
     if(E) E.bind(root);
