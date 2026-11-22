@@ -583,31 +583,45 @@ function gazeSentences(rd){
   const nb = NEIGHBORS[rd.spread]; if(!nb) return [];
   const r = mulberry((rd.seed ^ 0x5bd1e995) >>> 0);
   const C = rd.cards.map(c => ({...c, k:byId(c.id), g:gazeOf(c)}));
-  const nm = i => `<strong>${C[i].k.nom}</strong>${C[i].rev && (C[i].g==="L"||C[i].g==="R") ? " (retournée, son regard s'inverse)" : ""}`;
+  /* Chaque lame n'est glosée qu'une fois (ses mots-clés, son regard inversé) : la deuxième fois, on la nomme seulement */
+  const inv = new Set(), dit = new Set();
+  const nm = i => { const p = C[i].rev && (C[i].g==="L"||C[i].g==="R") && !inv.has(i) ? " (retournée, son regard s'inverse)" : ""; inv.add(i); return `<strong>${C[i].k.nom}</strong>${p}`; };
+  const gl = (i, pre = " (", post = ")") => { if(dit.has(i)) return ""; dit.add(i); return pre + motsLow(C[i].k) + post; };
   const looks = (i) => { const n = nb[i]; if(!n) return undefined; const g = C[i].g; if(g==="L") return n[0]; if(g==="R") return n[1]; return undefined; };
-  const out = [], used = new Set();
-  /* Regards mutuels et regards à sens unique */
+  const out = [], used = new Set(), vers = {};
+  /* Regards mutuels ; les regards à sens unique sont regroupés par lame regardée */
   Object.keys(nb).map(Number).forEach(i => {
     const j = looks(i);
     if(j === undefined || j === null) return;
     const key = [Math.min(i,j), Math.max(i,j)].join("-");
     if(used.has(key)) return;
-    if(looks(j) === i){ used.add(key);
+    used.add(key);
+    if(looks(j) === i){
+      const a = nm(i), b = nm(j); dit.add(i); dit.add(j);
       out.push(pick([
-        `${nm(i)} et ${nm(j)} se regardent. Ces deux lames dialoguent : ${motsLow(C[i].k)} d'un côté, ${motsLow(C[j].k)} de l'autre. Ce qui se joue entre elles est au cœur de ta question.`,
-        `${nm(i)} et ${nm(j)} se font face. Leur échange compte plus que chacune prise seule : d'un côté ${motsLow(C[i].k)}, de l'autre ${motsLow(C[j].k)}.`
+        `${a} et ${b} se regardent. Ces deux lames dialoguent : ${motsLow(C[i].k)} d'un côté, ${motsLow(C[j].k)} de l'autre. Ce qui se joue entre elles est au cœur de ta question.`,
+        `${a} et ${b} se font face. Leur échange compte plus que chacune prise seule : d'un côté ${motsLow(C[i].k)}, de l'autre ${motsLow(C[j].k)}.`
       ], r));
-    } else { used.add(key);
-      out.push(pick([
-        `${nm(i)} tourne son regard vers ${nm(j)}. Le message ${deNom(C[i].k.nom)} (${motsLow(C[i].k)}) cherche son appui dans celui ${deNom(C[j].k.nom)} (${motsLow(C[j].k)}).`,
-        `${nm(i)} a les yeux posés sur ${nm(j)} : pour avancer, appuie-toi sur ce que porte ${C[j].k.nom}, ${motsLow(C[j].k)}.`,
-        `${nm(i)} regarde vers ${nm(j)}. C'est de ce côté que se trouve sa réponse : ${C[j].k.noyau[C[j].rev?1:0]}.`
-      ], r));
+    } else (vers[j] = vers[j] || []).push(i);
+  });
+  Object.keys(vers).map(Number).forEach(j => {
+    const L = vers[j];
+    if(L.length > 1){
+      const noms = L.map(nm);
+      out.push(`${noms.slice(0,-1).join(", ")} et ${noms[noms.length-1]} regardent ${L.length === 2 ? "toutes deux" : "toutes"} vers ${nm(j)}${gl(j)} : c'est là que ton tirage converge. Ce que porte cette lame demande toute ton attention.`);
+      return;
     }
+    const i = L[0], v = Math.floor(r()*3), a = nm(i), b = nm(j);
+    if(v === 0) out.push(`${a} tourne son regard vers ${b}. Le message ${deNom(C[i].k.nom)}${gl(i)} cherche son appui dans celui ${deNom(C[j].k.nom)}${gl(j)}.`);
+    else if(v === 1) out.push(`${a} a les yeux posés sur ${b} : pour avancer, appuie-toi sur ce que porte ${C[j].k.nom}${gl(j, ", ", "")}.`);
+    else { const neuf = !dit.has(j); dit.add(j); out.push(`${a} regarde vers ${b}. C'est de ce côté que se trouve sa réponse${neuf ? " : " + C[j].k.noyau[C[j].rev?1:0] : ""}.`); }
   });
   /* Dos à dos */
   (SIDE_PAIRS[rd.spread]||[]).forEach(([a,b]) => {
-    if(C[a].g==="L" && C[b].g==="R") out.push(`${nm(a)} et ${nm(b)} se tournent le dos : d'un côté ${motsLow(C[a].k)}, de l'autre ${motsLow(C[b].k)}. Ces deux élans tirent dans des directions opposées, à toi de les réconcilier.`);
+    if(!(C[a].g==="L" && C[b].g==="R")) return;
+    const A = nm(a), B = nm(b), neuf = !dit.has(a) || !dit.has(b); dit.add(a); dit.add(b);
+    out.push(neuf ? `${A} et ${B} se tournent le dos : d'un côté ${motsLow(C[a].k)}, de l'autre ${motsLow(C[b].k)}. Ces deux élans tirent dans des directions opposées, à toi de les réconcilier.`
+                  : `${A} et ${B} se tournent le dos : ces deux élans tirent dans des directions opposées, à toi de les réconcilier.`);
   });
   /* Regards qui sortent du tirage */
   Object.keys(nb).map(Number).forEach(i => {
@@ -3907,6 +3921,15 @@ function chooseHTML(){
     ${GROUPS.slice(0,3).map((g,gi)=>`<section class="tgroup2"><h2 class="tg-h">${g}</h2><div class="carousel">${Object.entries(SPREADS).filter(([k,sp])=>sp.group===gi && (k !== "arbre" || deck().tree)).map(tile).join("")}</div></section>`).join("")}
     ${myGroupHTML(tile)}`;
 }
+/* Les réglages du tirage tiennent dans un volet replié ; son titre rappelle ceux qui sont actifs */
+function optsResume(sp){
+  const on = [];
+  if(prefs.full && !(sp.majorsOnly || state.spread === "jour")) on.push("78 cartes");
+  if(state.inv) on.push("à l'envers");
+  if(state.own) on.push("mon jeu");
+  if(prefs.sound) on.push("son");
+  return on.length ? on.join(" · ") : "mineures, lames à l'envers, ton jeu, le son";
+}
 function setupHTML(){
   const sp = SPREADS[state.spread];
   const chips = Object.entries(THEMES).map(([k,l]) => `<button type="button" class="chip${state.theme===k?" on":""}" data-theme="${k}" aria-pressed="${state.theme===k}">${l}</button>`).join("");
@@ -3923,9 +3946,10 @@ function setupHTML(){
         <input id="question" type="text" maxlength="140" placeholder="${state.spread==="ouinon" ? "Ex. : Dois-je accepter cette proposition ?" : state.spread==="couple" ? "Ex. : Où va notre relation ?" : state.spread==="decision" ? "Ex. : Dois-je rester dans mon poste ou partir ?" : "Ex. : Est-ce le bon moment pour changer de travail ?"}" value="${esc(state.question)}">
         <p class="help">${state.spread==="ouinon" ? "Pose une question à laquelle on peut répondre par oui ou par non." : sp.fixedTheme ? "Ce tirage se lit sous l'angle de l'amour et du lien." : "Elle sert de fil rouge. La lecture s'adapte au thème choisi."}</p></fieldset>`}
       <div class="setup-foot">
-        <div class="switches">${sp.majorsOnly || state.spread === "jour" ? "" : `<label class="switch"><input id="full" type="checkbox" ${prefs.full?"checked":""}><span></span>Avec les arcanes mineurs (78 cartes)</label>`}<label class="switch"><input id="inv" type="checkbox" ${state.inv?"checked":""}><span></span>Lire les lames à l'envers</label>
+        <details class="opts-more"${state.optsOpen ? " open" : ""}><summary><span>Options</span><em id="opts-sum">${optsResume(sp)}</em></summary>
+          <div class="switches">${sp.majorsOnly || state.spread === "jour" ? "" : `<label class="switch"><input id="full" type="checkbox" ${prefs.full?"checked":""}><span></span>Avec les arcanes mineurs (78 cartes)</label>`}<label class="switch"><input id="inv" type="checkbox" ${state.inv?"checked":""}><span></span>Lire les lames à l'envers</label>
         <label class="switch"><input id="own" type="checkbox" ${state.own?"checked":""}><span></span>J'utilise mon propre jeu</label>
-        <label class="switch"><input id="snd" type="checkbox" ${prefs.sound?"checked":""}><span></span>Le son des cartes</label></div>
+        <label class="switch"><input id="snd" type="checkbox" ${prefs.sound?"checked":""}><span></span>Le son des cartes</label></div></details>
         <button class="btn big" type="submit">${state.own ? "Entrer mes lames" : "Commencer le rituel"}</button>
       </div>
     </form></section>`;
@@ -4035,7 +4059,7 @@ function briefHTML(rd, syn){
   const sp = SPREADS[rd.spread], i = KEYPOS[rd.spread] ?? rd.cards.length-1, c = rd.cards[i], k = byId(c.id), last = rd.cards[rd.cards.length-1], lk = byId(last.id);
   const [pre, rest] = signe(syn.card.nom);
   const c0 = rd.cards[0], k0 = byId(c0.id);
-  const s1 = deck().synth ? `${rd.spread==="annee" ? "Ton année est placée" : "Ton tirage est placé"} sous le signe ${pre}<strong>${rest}</strong> : ${syn.card.noyau[0]}.` : `${rd.spread==="annee" ? "Ton année s'ouvre" : "Ton tirage s'ouvre"} sur <strong>${k0.nom}</strong>${c0.rev ? ", renversé" + (/^La /.test(k0.nom) ? "e" : "") + "," : ""} : ${k0.noyau[c0.rev?1:0]}.`;
+  const s1 = deck().synth ? `${rd.spread==="annee" ? "Ton année est placée" : "Ton tirage est placé"} sous le signe ${pre}<strong>${rest}</strong> : ${motsLigne(syn.card)}.` : `${rd.spread==="annee" ? "Ton année s'ouvre" : "Ton tirage s'ouvre"} sur <strong>${k0.nom}</strong>${c0.rev ? ", renversé" + (/^La /.test(k0.nom) ? "e" : "") + "," : ""} : ${c0.rev ? k0.noyau[1] : motsLigne(k0)}.`;
   return `<section class="brief"><h2>En bref</h2><ol>
     <li><span>${s1}</span></li>
     <li><span>Le point clé, ${keyLab(rd,i)} : <strong>${k.nom}</strong>${c.rev?", à l'envers,":""} annonce ${k.noyau[c.rev?1:0]}.</span></li>
@@ -7426,8 +7450,42 @@ function frame(pos, c, r, v){
 }
 function themeText(k, theme, rev){ return theme==="general" ? (rev ? k.rev : k.up) : k[theme][rev?1:0]; }
 
+/* ---------- Sans redite : une lame ne se définit qu'une fois par place ---------- */
+const RD_STOP = new Set("avec dans pour sans sous vers chez entre comme mais donc alors aussi bien tres meme plus moins deja encore tout toute tous toutes cette cela elle elles leur leurs etre avoir fait faire peut sont quand dont celui celle ceux votre notre vous nous cest quil quelle".split(" "));
+function rdStems(txt, skip){
+  const out = new Set();
+  String(txt).replace(/<[^>]+>/g, " ").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split(/[^a-z]+/).forEach(w => { if(w.length >= 4 && !RD_STOP.has(w) && !(skip && skip.has(w.slice(0,5)))) out.add(w.slice(0,5)); });
+  return out;
+}
+function rdOverlap(s, ref, skip){ const S = rdStems(s, skip); if(!S.size) return 0; let n = 0; S.forEach(w => { if(ref.has(w)) n++; }); return n / S.size; }
+const rdSentences = txt => String(txt).split(/(?<=[.!?…])\s+(?=[A-ZÀ-ÖØ-Þ«"“])/);
+/* Retire de `txt` les phrases qui redisent `deja` (le noyau de la lame, que la phrase de position vient de donner) */
+function sansRedite(txt, deja, nom){
+  const ph = rdSentences(txt); if(ph.length < 2) return txt;
+  const ref = rdStems(deja), skip = rdStems(nom || "");
+  const keep = ph.filter(p => rdOverlap(p, ref, skip) < 0.5);
+  return (keep.length ? keep : [ph[ph.length - 1]]).join(" ");
+}
+/* À une place d'obstacle, une lame à l'endroit se lit par son revers : on ne lui accole pas son sens favorable.
+   Chez Etteilla, le sens renversé est un autre sens et non un revers : la règle ne s'applique pas. */
+const ADVERSE = new Set(["contre","obstacle","freine","croise","amoins","bmoins"]);
+function suitePlace(k, c, pos, theme){
+  if(ADVERSE.has(pos) && !c.rev && DECK_ID !== "et"){
+    const t = theme !== "general" && k[theme] ? k[theme][1] : "";
+    return t && !/retourn|renvers|à l'envers/i.test(t) ? t : `Son revers à surveiller : ${k.noyau[1]}.`;
+  }
+  return sansRedite(themeText(k, theme, c.rev), k.noyau[c.rev?1:0], k.nom);
+}
+/* Le sens d'une lame sans ses correspondances (Golden Dawn, Arbre de Vie) : celles-ci vivent dans le volet des traditions de la fiche */
+function sensEssentiel(k){
+  if(k.minor) return k.sens;
+  const S = LORE[k.id].sens; if(!deck().tree) return S;
+  return S.map(p => rdSentences(p).filter(x => !/Golden Dawn|Arbre de Vie|\bsentiers?\b/.test(x)).join(" ")).filter(Boolean);
+}
+const motsLigne = k => k.mots.map(s => s.toLowerCase()).join(", ");
+
 /* ---------- Lecture ---------- */
-function sigBlock(k){ return `<details class="more"><summary>Ce que signifie ${k.nom}</summary>${(k.minor ? k.sens : LORE[k.id].sens).map(p=>`<p>${p}</p>`).join("")}<p><button type="button" class="linkbtn" data-sheet="${k.id}">Ouvrir la fiche complète</button>${deck().tree ? ` · <button type="button" class="linkbtn" data-arbre-sheet="${k.id}">Sa place dans l'Arbre de Vie</button>` : ""}</p></details>`; }
+function sigBlock(k){ return `<details class="more"><summary>Ce que signifie ${k.nom}</summary>${sensEssentiel(k).map(p=>`<p>${p}</p>`).join("")}<p><button type="button" class="linkbtn" data-sheet="${k.id}">Ouvrir la fiche complète</button>${deck().tree ? ` · <button type="button" class="linkbtn" data-arbre-sheet="${k.id}">Sa place dans l'Arbre de Vie</button>` : ""}</p></details>`; }
 function posLabel(rd, i){ const p = SPREADS[rd.spread].pos[i]; if(p === "mois"){ const mo = monthOf(rd, i); return mo.m.charAt(0).toUpperCase() + mo.m.slice(1) + " " + mo.y; }
   let l = POSLABEL[p]; if(rd.opts && /^Chemin [AB] /.test(l)){ const o = rd.opts[l[7]==="A"?0:1]; if(o) l = l.replace(/^Chemin ([AB])/, `Chemin $1 (${esc(o)})`); } return l; }
 
@@ -7464,7 +7522,7 @@ function readingHTML(rd){
       <p class="mots">${k.mots.join(" · ")}</p>
       <p class="lead">${themeText(k,"general",c.rev)}</p>
       ${deck().elements ? `<p class="gaze1"><span>Son élément</span>${elemSingle(c)}</p>` : deck().regards && gazeSingle(c) ? `<p class="gaze1"><span>Son regard</span>${gazeSingle(c)}</p>` : ""}
-      <section class="sig"><h3>Signification de la lame</h3>${LORE[k.id].sens.map(p=>`<p>${p}</p>`).join("")}
+      <section class="sig"><h3>Signification de la lame</h3>${sensEssentiel(k).map(p=>`<p>${p}</p>`).join("")}
         <p class="sig-link"><button type="button" class="linkbtn" data-sheet="${k.id}">Lire sa place dans le chemin</button>${deck().tree ? ` · <button type="button" class="linkbtn" data-arbre-sheet="${k.id}">Sa place dans l'Arbre de Vie</button>` : ""}</p></section>
       <dl class="mini">
         <div><dt>Amour</dt><dd>${k.amour[c.rev?1:0]}</dd></div>
@@ -7483,7 +7541,7 @@ function readingHTML(rd){
     h += `<div class="rd-text">
       <p class="verdict v${v.replace("-","m")}"><span>La réponse des lames</span>${VERDICT[v]}</p>
       <p class="lead">${VERDICT_TXT[v]} ${k.nom}${c.rev?", à l'envers,":""} te répond ainsi. Son message : ${k.noyau[c.rev?1:0]}.</p>
-      <p>${themeText(k,"general",c.rev)}</p>
+      <p>${sansRedite(themeText(k,"general",c.rev), k.noyau[c.rev?1:0], k.nom)}</p>
       ${deck().elements ? `<p class="gaze1"><span>Son élément</span>${elemSingle(c)}</p>` : deck().regards && gazeSingle(c) ? `<p class="gaze1"><span>Son regard</span>${gazeSingle(c)}</p>` : ""}
       ${sigBlock(k)}
       <p class="conseil"><span>Le conseil des lames</span>${k.conseil[c.rev?1:0]}</p>
@@ -7509,7 +7567,7 @@ function readingHTML(rd){
     const k = byId(c.id), pos = sp.pos[i];
     let f = frame(pos, c, r, rd.fv ? rd.fv[i] : null);
     if(pos === "mois") f = f.replace("{mois}", monthOf(rd,i).m);
-    t += `<section class="pos" data-pos="${i}"><div class="pos-top"><span class="pos-thumb${c.rev?" rev":""}">${cardSVG(k)}</span><h3><span class="pos-n">${i+1}</span><span class="pos-lab">${posLabel(rd,i)}</span><span class="pos-card">${k.nom}${c.rev?" · à l'envers":""}</span></h3></div>${sp.custom && sp.sens[i] ? `<p class="pos-sens">${sp.sens[i]}</p>` : ""}<p>${f} ${themeText(k, rd.theme, c.rev)}</p>${sigBlock(k)}</section>`;
+    t += `<section class="pos" data-pos="${i}"><div class="pos-top"><span class="pos-thumb${c.rev?" rev":""}">${cardSVG(k)}</span><h3><span class="pos-n">${i+1}</span><span class="pos-lab">${posLabel(rd,i)}</span><span class="pos-card">${k.nom}${c.rev?" · à l'envers":""}</span></h3></div>${sp.custom && sp.sens[i] ? `<p class="pos-sens">${sp.sens[i]}</p>` : ""}<p>${f} ${suitePlace(k, c, pos, rd.theme)}</p>${sigBlock(k)}</section>`;
   });
   t += `</div><div class="posnav" aria-label="Positions"><button type="button" class="posnav-arrow" data-posprev aria-label="Position précédente">‹</button><span class="posnav-dots">${rd.cards.map((c,i)=>`<button type="button" aria-label="Position ${i+1}" aria-current="${i===0}"></button>`).join("")}</span><span class="posnav-n">1 / ${rd.cards.length}</span><button type="button" class="posnav-arrow" data-posnext aria-label="Position suivante">›</button></div>`;
 
@@ -7645,8 +7703,11 @@ function bindTirer(){
   root.querySelectorAll("[data-theme]").forEach(b => b.onclick = () => { state.theme = b.dataset.theme; saveQ(); renderTirer(); });
   const today = root.querySelector("[data-open]"); if(today) today.onclick = () => openReading(today.dataset.open);
   const q = $("#question"); if(q) q.oninput = () => state.question = q.value;
-  const inv = $("#inv"); if(inv) inv.onchange = () => state.inv = inv.checked;
-  const full = $("#full"); if(full) full.onchange = () => { prefs.full = full.checked; savePrefs(); };
+  const om = $(".opts-more"), osum = () => { const e = $("#opts-sum"); if(e) e.textContent = optsResume(SPREADS[state.spread]); };
+  if(om) om.ontoggle = () => { state.optsOpen = om.open; };
+  if(snd) snd.addEventListener("change", osum);
+  const inv = $("#inv"); if(inv) inv.onchange = () => { state.inv = inv.checked; osum(); };
+  const full = $("#full"); if(full) full.onchange = () => { prefs.full = full.checked; savePrefs(); osum(); };
   const own = $("#own"); if(own) own.onchange = () => { state.own = own.checked; saveQ(); renderTirer(); };
   const form = $("#setup"); if(form) form.onsubmit = e => { e.preventDefault(); saveQ();
     if(state.own){ state.manual = []; state.step = "manual"; } else { shuffleDeck(); state.step="pick"; }
@@ -7716,26 +7777,37 @@ function openSheet(id){
   const step = DECK_ID === "et" ? (k.id === "mat" ? "La fin du jeu" : `Carte ${k.n} du chemin`) : k.id==="mat" ? "Le point de départ, et le retour" : `Pas ${ROMAN[k.n]} du chemin`;
   const et = DECK_ID === "et", E = et ? ET.maj[id] : null;
   const others = et ? ["conver","vieville","wirth","rws"] : DECK_ID === "ws" ? ["conver","visconti","vieville","wirth"] : DECK_ID === "wo" ? ["conver","visconti","vieville","rws"] : ["visconti","vieville","wirth","rws"];
+  /* Chaque information à un seul endroit : les correspondances vivent dans le volet des traditions, le regard dans celui de l'image */
+  const sens = sensEssentiel(k);
+  const gzRef = deck().regards ? rdStems(GAZE_LABEL[GAZE[id]] + " " + GAZE_TXT[GAZE[id]]) : null;
+  const symb = gzRef ? L.symboles.filter(s => rdOverlap(s, gzRef) < 0.5) : L.symboles;
   const othName = d => d === "conver" ? baseNom(id) : DECK_NAMES[d][id], othImg = d => d === "conver" ? `lames/${pad2(BASE_N[id])}` : d+"/"+id, othDate = d => d === "conver" ? "1760" : DECKS[d].date;
   sh.querySelector(".sheet-body").innerHTML = deckText(`<div class="sheet-top"><div class="sheet-art"><button type="button" class="xp-open-art" data-xpopen="${id}" aria-label="Explorer les symboles de la lame ${k.nom}">${cardSVG(k)}<span class="xp-badge" aria-hidden="true">${HOT[DECK_ID][id].length}</span></button><button type="button" class="btn ghost xp-open" data-xpopen="${id}">Explorer la lame</button></div>
       <div><p class="eyebrow">${et ? `Carte ${etNum(id)} · En haut : ${E.sur[0]} · En bas : ${E.sur[1]}` : DECK_ID === "sb" ? `Atout ${k.n ? ROMAN[k.n] : "0"}` : k.id==="mat" ? (DECK_ID === "ws" ? "Arcane 0" : "Sans numéro") : "Arcane " + ROMAN[k.n]}${DECK_ID === "ws" ? ` · <span lang="en">${WS.orig[id]}</span>` : DECK_ID === "wo" && WO.orig[id] && WO.orig[id] !== k.nom ? ` · Sur la carte : ${WO.orig[id]}` : ""}</p><h2>${k.nom}</h2><p class="mots">${k.mots.join(" · ")}</p><p class="symb">${k.symb}</p></div></div>
-    <section class="rub"><h3><span>I</span>Signification</h3>${L.sens.map(p=>`<p>${p}</p>`).join("")}</section>
-    <section class="rub"><h3><span>II</span>${DECK_ID === "sb" ? "Dans la procession" : DECK_ID === "et" ? "Dans le chemin d'Etteilla" : "Le chemin initiatique"}</h3>
+    <div class="volets">
+    <details class="rub volet" name="fiche-volet" open><summary><span>I</span><b>L'essentiel</b><em>Son sens, et ce qu'elle dit dans ta vie</em></summary>
+      ${sens.map(p=>`<p>${p}</p>`).join("")}
+      ${row("En général",[k.up,k.rev])}${row("Amour",k.amour)}${row("Travail",k.travail)}${row("Argent",k.argent)}${row("Conseil",k.conseil)}
+    </details>
+    <details class="rub volet" name="fiche-volet"><summary><span>II</span><b>L'image et ses symboles</b><em>Ce que l'on voit sur la carte, son nombre${deck().regards ? ", son regard" : deck().elements ? ", son élément" : ""}</em></summary>
+      ${symbolsFor(id).length ? `<p class="symchips">${symbolsFor(id).map(s=>`<button type="button" class="chip small" data-gosym="${s.id}">${s.hex?`<span class="swatch" style="background:${s.hex}"></span>`:""}${s.nom}</button>`).join("")}</p>` : ""}<ul class="syms">${symb.map(s=>{const i=s.indexOf(" : ");return i>0?`<li><strong>${s.slice(0,i)}</strong> : ${s.slice(i+3)}</li>`:`<li>${s}</li>`;}).join("")}</ul>
+      <h4>Le nombre</h4><p>${dg.txt}${dg.deg ? " Cette lecture des nombres est la numérologie du tarot d'Alejandro Jodorowsky et Marianne Costa." : ""}${echo ? ` Son écho dans l'autre série : <button type="button" class="linkbtn" data-sheet="${echo.id}">${echo.nom} (${ROMAN[echo.n]})</button>.` : ""}</p>
+      ${deck().regards ? `<h4>Le regard</h4><p>${GAZE_LABEL[GAZE[id]]}. ${GAZE_TXT[GAZE[id]]}</p>` : deck().elements ? `<h4>L'élément</h4><p>${elemSingle({id})}</p>` : ""}
+      <!--ns--><h4>Dans les autres jeux</h4><div class="sheet-decks">${others.filter(d => d!=="visconti" || DECK_NAMES.visconti[id]).map(d=>`<figure>${deckImg(othImg(d), othName(d))}<figcaption>${othName(d)}<span>${othDate(d)}</span></figcaption></figure>`).join("")}</div><!--/ns-->
+      <!--ns--><p>${DECK_ID === "sb" ? "Les images ci-dessus montrent l'arcane qui porte le même numéro dans d'autres jeux. Compare-les avec le héros du Sola Busca : parfois l'image se ressemble, souvent seul le numéro les relie." : et ? "Les images ci-dessus montrent l'arcane du Marseille à la place duquel Arcanes range cette carte, et ses versions dans d'autres jeux." : DECK_ID === "ws" ? "Par rapport au Marseille : " + RWS_NOTE[id].charAt(0).toLowerCase() + RWS_NOTE[id].slice(1) : RWS_NOTE[id]}</p><!--/ns-->
+    </details>
+    <details class="rub volet" name="fiche-volet"><summary><span>III</span><b>${deck().tree ? "Les traditions" : DECK_ID === "sb" ? "La procession" : DECK_ID === "et" ? "Le chemin d'Etteilla" : "Le chemin"}</b><em>${deck().tree ? "Le chemin initiatique, les lettres, l'Arbre de Vie, le ciel" : "Sa place dans le jeu, et ce que l'on en sait"}</em></summary>
       <p class="eyebrow">${step}</p><p class="chem">${L.chemin}</p>
-      <h4>Les symboles de la lame</h4>${symbolsFor(id).length ? `<p class="symchips">${symbolsFor(id).map(s=>`<button type="button" class="chip small" data-gosym="${s.id}">${s.hex?`<span class="swatch" style="background:${s.hex}"></span>`:""}${s.nom}</button>`).join("")}</p>` : ""}<ul class="syms">${L.symboles.map(s=>{const i=s.indexOf(" : ");return i>0?`<li><strong>${s.slice(0,i)}</strong> : ${s.slice(i+3)}</li>`:`<li>${s}</li>`;}).join("")}</ul>
       <div class="corr">
         <div class="corr-txt">
-          <h4>Le nombre</h4><p>${dg.txt}${dg.deg ? " Cette lecture des nombres est la numérologie du tarot d'Alejandro Jodorowsky et Marianne Costa." : ""}${echo ? ` Son écho dans l'autre série : <button type="button" class="linkbtn" data-sheet="${echo.id}">${echo.nom} (${ROMAN[echo.n]})</button>.` : ""}</p>
-          ${deck().regards ? `<h4>Le regard</h4><p>${GAZE_LABEL[GAZE[id]]}. ${GAZE_TXT[GAZE[id]]}</p>` : deck().elements ? `<h4>L'élément</h4><p>${elemSingle({id})}</p>` : ""}
-          ${!deck().tree ? deckNoteHTML(id) : `${deck().tree === "fr" ? frLetterHTML(id) : ""}<h4>Dans la Golden Dawn${deck().tree === "fr" ? ", l'école anglaise" : ""}</h4><p><span class="heb" lang="he">${g.l}</span> Lettre ${g.n}, ${g.s}. Correspondance : ${g.a}. Sentier ${g.p} de l'Arbre de Vie, qui relie ${SEPH[g.de]} à ${SEPH[g.to]}.${deck().tree === "fr" ? " C'est cette attribution, plus tardive (1888), que suit l'Arbre de Vie d'Arcanes." : ""}</p>`}
+          ${!deck().tree ? deckNoteHTML(id) : `${deck().tree === "fr" ? frLetterHTML(id) : ""}<h4>Dans la Golden Dawn${deck().tree === "fr" ? ", l'école anglaise" : ""}</h4><p><span class="heb" lang="he">${g.l}</span> Lettre ${g.n}, ${g.s}. <span data-corr>Correspondance : ${g.a}. </span>Sentier ${g.p} de l'Arbre de Vie, qui relie ${SEPH[g.de]} à ${SEPH[g.to]}.${deck().tree === "fr" ? " C'est cette attribution, plus tardive (1888), que suit l'Arbre de Vie d'Arcanes." : ""}</p>`}
         </div>
         ${!deck().tree ? "" : `<div class="corr-tree">${treeSVG(id)}<p>Sentier ${g.p}</p></div>`}
       </div>
-      <!--ns--><h4>Dans les autres jeux</h4><div class="sheet-decks">${others.filter(d => d!=="visconti" || DECK_NAMES.visconti[id]).map(d=>`<figure>${deckImg(othImg(d), othName(d))}<figcaption>${othName(d)}<span>${othDate(d)}</span></figcaption></figure>`).join("")}</div><!--/ns-->
-      <!--ns--><p>${DECK_ID === "sb" ? "Les images ci-dessus montrent l'arcane qui porte le même numéro dans d'autres jeux. Compare-les avec le héros du Sola Busca : parfois l'image se ressemble, souvent seul le numéro les relie." : et ? "Les images ci-dessus montrent l'arcane du Marseille à la place duquel Arcanes range cette carte, et ses versions dans d'autres jeux." : DECK_ID === "ws" ? "Par rapport au Marseille : " + RWS_NOTE[id].charAt(0).toLowerCase() + RWS_NOTE[id].slice(1) : RWS_NOTE[id]}</p><!--/ns-->
+      <div data-pont-slot></div>
       <p><button type="button" class="linkbtn" data-go-chemin="${id}">${et ? "Voir cette carte dans le chemin d'Etteilla" : DECK_ID === "sb" ? "Voir cet atout dans la procession" : `Voir cette lame dans le chemin ${deNom(byId("mat").nom)}`}</button> · <button type="button" class="linkbtn" data-go-hist="${id}">La comparer à travers les siècles</button></p>
-    </section>
-    <section class="rub"><h3><span>III</span>Dans ta vie</h3>${row("En général",[k.up,k.rev])}${row("Amour",k.amour)}${row("Travail",k.travail)}${row("Argent",k.argent)}${row("Conseil",k.conseil)}</section>`);
+    </details>
+    </div>`);
   sh.querySelectorAll("[data-sheet]").forEach(b => b.onclick = () => { openSheet(b.dataset.sheet); });
   sh.querySelectorAll("[data-gosym]").forEach(b => b.onclick = () => goSymbol(b.dataset.gosym));
   sh.querySelectorAll("[data-xpopen]").forEach(b => b.onclick = () => openExplore(b.dataset.xpopen));

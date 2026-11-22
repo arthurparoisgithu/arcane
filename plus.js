@@ -359,7 +359,9 @@
 
   function appendTo(html){
     const body = document.querySelector("#sheet .sheet-body"); if(!body || !html || body.querySelector("[data-pont]")) return;
-    const box = body.querySelector(".a-sheet") || body; box.insertAdjacentHTML("beforeend", html);
+    const slot = body.querySelector("[data-pont-slot]"), box = slot || body.querySelector(".a-sheet") || body; box.insertAdjacentHTML("beforeend", html);
+    /* dans la fiche de lame, « Dans le ciel » donne déjà la correspondance : on ne la répète pas dans la ligne de la Golden Dawn */
+    if(slot && html.includes("Dans le ciel")) body.querySelectorAll("[data-corr]").forEach(e => e.remove());
     box.querySelectorAll("[data-pont] [data-sheet]").forEach(b => b.onclick = e => { e.stopPropagation(); openSheet(b.dataset.sheet); });
   }
 

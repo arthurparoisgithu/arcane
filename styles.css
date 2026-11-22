@@ -2015,3 +2015,30 @@ button.pt-astre:hover{border-color:var(--ink);background:color-mix(in srgb,var(-
 .obs-row h4 .ag{position:static;display:inline-flex;width:auto;height:auto;margin:0;font-size:22px;line-height:1;transform:none}
 /* L'Observatoire sans cadre : il prend toute la largeur disponible, le ciel de l'app passe derrière */
 .obs-frame{border-radius:0;width:min(calc(100vw - 12px),1240px);margin-left:calc(50% - min(calc(50vw - 6px),620px))}
+
+/* ===== Tirage : les réglages dans un volet à ouvrir ===== */
+.setup-foot{align-items:stretch}
+.opts-more{flex:1 1 260px;border:1px solid var(--line);border-radius:14px;padding:0 14px;min-width:0}
+.opts-more>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:10px;padding:12px 0;font-family:var(--f-ui);font-size:15px}
+.opts-more>summary::-webkit-details-marker{display:none}
+.opts-more>summary>span{font-weight:500;letter-spacing:.02em}
+.opts-more>summary>em{font-style:normal;font-size:13px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.opts-more>summary::after{content:"";flex:none;margin-left:auto;align-self:center;width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);transition:transform .2s;opacity:.55}
+.opts-more[open]>summary::after{transform:rotate(-135deg)}
+.opts-more .switches{padding:4px 0 14px}
+.setup-foot>.btn.big{align-self:center}
+
+/* ===== Fiche de lame : trois volets, chaque information une seule fois ===== */
+.volets{margin-top:14px}
+.rub.volet{margin-top:0;padding-top:0}
+.volet>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;column-gap:10px;align-items:baseline;padding:14px 0}
+.volet>summary::-webkit-details-marker{display:none}
+.volet>summary>span{font-family:var(--f-display);font-size:16px;color:var(--vermillon);min-width:22px}
+.volet>summary>b{font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1.1}
+.volet>summary>em{grid-column:2;font-style:normal;font-family:var(--f-ui);font-size:13px;color:var(--ink-soft)}
+.volet>summary::after{content:"";grid-column:3;grid-row:1;align-self:center;width:9px;height:9px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);transition:transform .2s;opacity:.55}
+.volet[open]>summary::after{transform:rotate(-135deg)}
+.volet[open]{padding-bottom:12px}
+.volets>.volet:last-child{border-bottom:1px solid var(--line)}
+.volet>summary:focus-visible{outline:2px solid var(--vermillon);outline-offset:4px;border-radius:6px}
+.volet .pont{border-top:0;margin-top:6px;padding-top:0}
