@@ -235,7 +235,8 @@
       <section class="rub"><h3><span>II</span>En ${S.nom}</h3>${two(S.trad, S.mod)}${fiche("s:" + k, "Toute la fiche →", "more")}</section>
       ${H ? `<section class="rub"><h3><span>III</span>En maison ${ROM[p.house]} · ${H.nom}</h3>${two(H.trad, H.mod)}</section>` : ""}
       ${etat}
-      ${asp.length ? `<section class="rub"><h3><span>${H ? "V" : "IV"}</span>Ses aspects</h3><ul class="a-asplist">${asp.map(x => `<li>${pg(x.a)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.b)} <span>${aspSentence(x)} <i>Orbe ${fmtOrb(x.orb)}, ${x.app ? "appliquant" : "séparant"}.</i></span></li>`).join("")}</ul></section>` : ""}`;
+      ${asp.length ? `<section class="rub"><h3><span>${H ? "V" : "IV"}</span>Ses aspects</h3><ul class="a-asplist">${asp.map(x => `<li>${pg(x.a)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.b)} <span>${aspSentence(x)} <i>Orbe ${fmtOrb(x.orb)}, ${x.app ? "appliquant" : "séparant"}.</i></span></li>`).join("")}</ul></section>` : ""}
+      ${JOUR ? `<p class="a-why-r">Pourquoi on dit ça ? Une planète dit <i>quoi</i>, un signe dit <i>comment</i>, une maison dit <i>où</i>. La phrase du haut assemble les trois.</p>` + JOUR.lessonBtns(["place"]) : ""}`;
   }
   let lastCharts = {}; // pour ouvrir les fiches depuis la roue
   document.addEventListener("click", e => {
@@ -244,6 +245,8 @@
     if(t === "p") sheet(planetFiche(v)); else if(t === "s") sheet(signFiche(+v)); else if(t === "h") sheet(houseFiche(+v)); else if(t === "a") sheet(aspectFiche(v));
     else if(t === "np" && lastCharts.natal) sheet(placedFiche(lastCharts.natal.ch, v, lastCharts.natal));
     else if(t === "cp" && lastCharts.ciel) sheet(placedFiche(lastCharts.ciel.ch, v, lastCharts.ciel));
+    else if(t === "l"){ const [, mod, lec] = b.dataset.afiche.split(":"), M = ASTRO_COURS.find(m => m.id === mod); if(!M) return;   // « l:module » ou « l:module:leçon »
+      if(typeof closeSheet === "function") closeSheet(); lv = {mod, lec:lec != null && M.lecons[+lec] ? +lec : null, fiches:null}; aView("apprendre"); scrollTo({top:0}); }
   });
   document.addEventListener("keydown", e => { if((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("g.w-pl")){ e.preventDefault(); e.target.dispatchEvent(new MouseEvent("click", {bubbles:true})); } });
 
@@ -260,8 +263,11 @@
     "Journée de relation et de diplomatie : un accord, une réconciliation, un beau moment à deux.","Journée intense : va au fond d'une question, mais méfie-toi des rancunes.",
     "Journée d'horizon : lis, voyage, parle de ce qui a du sens pour toi.","Journée de sérieux : avance sur un projet au long cours, une étape à la fois.",
     "Journée d'idées et d'amitié : sors de tes habitudes, retrouve ton groupe.","Journée de rêve et d'intuition : écoute tes impressions, fais place au silence et à l'art."];
-  let cielWhen = null;
+  let cielWhen = null, jourCtx = null;
   const moonPic = f => typeof moonSVG === "function" ? moonSVG(f) : "";
+  const JOUR = window.AstroJour ? window.AstroJour({C, D, SG, PL, ASP, h, cap, gl, pg, sgl, fmtPos, fmtOrb, fmtD, pn, fs, ton, sheet, IMG, PHASES, MOON_TIP}) : null;
+  const deP = id => (id === "lune" ? "de la " : id === "soleil" ? "du " : "de ") + PL[id].court;
+  const why = (k, lab) => JOUR ? `<button type="button" class="a-why" data-awhy="${k}">${lab || "Pourquoi on dit ça ?"}</button>` : "";
   function moiTheme(){ const t = st.themes.find(x => x.moi); return t ? {t, ch:chartOf(t)} : null; }
   function renderCiel(){
     const root = q1("#v-a-ciel"), now = cielWhen || new Date(), L = st.lieu, tz = L.tz;
@@ -276,21 +282,37 @@
     const evTxt = e => e.type === "ingres" ? `${pg(e.id)} ${PL[e.id].court} entre en ${sgl(e.sign)} ${SG[e.sign].nom}${e.retro ? " (en rétrogradant)" : ""}`
       : e.type === "station" ? `${pg(e.id)} ${PL[e.id].court} ${e.retro ? "devient rétrograde" : "reprend sa marche directe"} à ${fmtPos(e.lon)}`
       : e.type === "lune" ? `☾ Éclipse de Lune ${({penumbral:"par la pénombre", partial:"partielle", total:"totale"})[e.kind] || ""}` : `☉ Éclipse de Soleil ${({partial:"partielle", annular:"annulaire", total:"totale", hybrid:"hybride"})[e.kind] || ""}`;
-    const trLi = x => `<li>${pg(x.t)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.n)} <span><b>${PL[x.t].court} ${ASP[x.asp].nom.toLowerCase()} ${ton(x.n)}</b> : ${ASP[x.asp].sens}, entre ${PL[x.t].fs} (dans le ciel) et ${fs(x.n)}. <i>Orbe ${fmtOrb(x.orb)}, ${x.app ? "en approche" : "en train de passer"}.</i></span></li>`;
+    const all = me ? C.transits(me.ch, now, sc) : [], dj = JOUR && me ? JOUR.duJour(all, now) : null;
+    jourCtx = {me, now, tz, ms, mi, ch, dj, ev, lun, all};
     const hourCard = hour ? `<article class="a-card a-c3"><p class="eyebrow">Jour et heure planétaires</p>
         <div class="a-c3-g">${gl(PL[hour.dayRuler].gl, "pl")}<span class="a-c3-sep">·</span>${gl(PL[hour.hourRuler].gl, "pl")}</div>
-        <h3>Jour ${["venus","lune"].includes(hour.dayRuler) ? "de la " : "de "}${PL[hour.dayRuler].court}, heure ${["lune","venus"].includes(hour.hourRuler) ? "de la " : "de "}${PL[hour.hourRuler].court}</h3>
+        <h3>Jour ${deP(hour.dayRuler)}, heure ${deP(hour.hourRuler)}</h3>
         <p class="help">Jusqu'à ${fmtD(hour.end, tz, hm)}. Du lever au coucher du Soleil, la tradition compte douze heures inégales, chacune gouvernée par un astre dans l'ordre chaldéen. Les jours de la semaine en gardent la trace : lundi la Lune, mardi Mars, mercredi Mercure…</p></article>` : "";
-    const meCard = me ? `<article class="a-card a-c3"><p class="eyebrow">Tes transits · ${h(me.t.nom)}</p>
-        ${tr.length ? `<ul class="a-c3-list">${tr.slice(0, 3).map(x => `<li>${pg(x.t)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.n)}<span>${PL[x.t].court} ${ASP[x.asp].nom.toLowerCase()} ${ton(x.n)}</span></li>`).join("")}</ul><button type="button" class="btn ghost small" data-thgo="temps">Tous mes transits</button>` : `<p class="help">Aucun transit serré aujourd'hui : un ciel calme pour toi.</p>`}</article>`
-      : `<article class="a-card a-c3 a-cta"><p class="eyebrow">Tes transits</p><h3>Le ciel et toi</h3><p class="help">Calcule ton thème natal et marque-le comme le tien : chaque jour, Arcanes te dira quelles planètes touchent ton thème.</p><button type="button" class="btn small" data-agoto="theme">Calculer mon thème</button></article>`;
     const ss = C.si(ch.P.soleil.lon), a0 = asp.slice().sort((x, y) => x.orb - y.orb)[0];
     const resume = `Lune en ${SG[ms].nom} (${ph[0].toLowerCase()}), Soleil en ${SG[ss].nom}.${a0 ? ` L'aspect le plus serré du moment : ${PL[a0.a].court} ${ASP[a0.asp].nom.toLowerCase()} ${PL[a0.b].court}.` : ""}`;
-    const toi = me ? `<section class="a-card a-toi"><div class="a-toi-h"><p class="eyebrow">Le ciel et toi · ${h(me.t.nom)}</p><h2>${tr.length ? "Ce qui touche ton thème aujourd'hui" : "Un ciel calme pour toi"}</h2></div>
-        ${tr.length ? `<ul class="a-toi-l">${tr.slice(0, 3).map(trLi).join("")}</ul>` : `<p class="help">Aucune planète ne forme d'aspect serré avec ton thème aujourd'hui.</p>`}
-        <div class="a-toi-f"><button type="button" class="btn ghost small" data-thgo="temps">Tous mes transits</button><button type="button" class="btn ghost small" data-thgo="annee">Mon année</button></div></section>` : "";
-    root.innerHTML = `<header class="a-hero"><p class="eyebrow">${cap(fmtD(now, tz, dayFmt))} · ${fmtD(now, tz, hm)} · ${h(L.nom)}</p><h1>Le ciel du jour</h1>
-        <p class="a-lede">${resume} Touche une planète pour lire sa fiche.</p></header>${toi}
+    /* la phrase du jour : d'abord ce que le ciel dit, ensuite seulement la roue qui l'explique */
+    const lunePh = `<p class="a-ph-m">${moonPic(mi.f)}<span><b>La Lune en ${SG[ms].nom}, ${ph[0].toLowerCase()}.</b> ${me ? MOON_TIP[ms] : ph[1]} ${why("lune", "Pourquoi ?")}</span></p>`;
+    const trio = me ? `<p class="a-trio" aria-label="Ton trio de naissance">${[["soleil","Soleil",me.ch.P.soleil.lon],["lune","Lune",me.ch.P.lune.lon]].concat(me.ch.heure ? [["asc","Ascendant",me.ch.asc]] : []).map(([id, n, lon]) => `<button type="button" data-afiche="s:${C.si(lon)}">${pg(id)}<span>${n}</span><b>${SG[C.si(lon)].nom}</b></button>`).join("")}</p>` : "";
+    let phrase;
+    if(me && dj && (dj.pJour || dj.pFond)){ const A = dj.pJour || dj.pFond, B = dj.pJour && dj.pFond ? dj.pFond : null, xa = dj.pJour ? dj.jour : dj.fond;
+      phrase = `<div class="a-ph"><p class="a-ph-t">${h(A.txt)}</p>
+          <p class="a-ph-k">${pg(xa.t)}${gl(ASP[xa.asp].gl, "asp " + ASP[xa.asp].cls)}${pg(xa.n)} <span>${h(A.titre)}${A.duree ? ` · ${h(A.duree)}` : ""}</span> ${why(dj.pJour ? "jour" : "fond")}</p></div>
+        ${B ? `<div class="a-ph a-ph-2"><p class="eyebrow">En toile de fond</p><p class="a-ph-t">${h(B.txt)}</p><p class="a-ph-k">${pg(dj.fond.t)}${gl(ASP[dj.fond.asp].gl, "asp " + ASP[dj.fond.asp].cls)}${pg(dj.fond.n)} <span>${h(B.titre)} · ${h(B.duree)}</span> ${why("fond")}</p></div>` : ""}${lunePh}`;
+    } else if(me){
+      phrase = `<div class="a-ph"><p class="a-ph-t">Rien ne touche ton thème de près aujourd'hui : un ciel calme pour toi. ${h(MOON_TIP[ms])}</p><p class="a-ph-k">${sgl(ms)} <span>Lune en ${SG[ms].nom} · ${ph[0].toLowerCase()}</span> ${why("lune")}</p></div>`;
+    } else {
+      phrase = `<div class="a-ph"><p class="a-ph-t">${h(MOON_TIP[ms])}</p><p class="a-ph-k">${sgl(ms)} <span>Lune en ${SG[ms].nom} · ${ph[0].toLowerCase()}</span> ${why("lune")}</p></div>
+        <div class="a-ph-cta"><p><b>Cette phrase vaut pour tout le monde.</b> Avec ta date, ton heure et ton lieu de naissance, Arcanes te dit chaque jour quelle planète touche ton thème, et pourquoi.</p><button type="button" class="btn small" data-agoto="theme">Calculer mon thème</button></div>`;
+    }
+    const autres = me && all.length > 1 ? `<details class="a-fold a-fold-tr"><summary><span><b>Tout ce qui touche ton thème</b><small>${all.length} transit${all.length > 1 ? "s" : ""} en cours, du plus lent au plus rapide</small></span><i class="a-chev" aria-hidden="true"></i></summary>
+        <div class="a-fold-b"><ul class="a-asplist a-trlist">${all.slice(0, 8).map((x, i) => `<li>${pg(x.t)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.n)} <span><b>${JOUR ? h(JOUR.titre(x)) : `${PL[x.t].court} ${ASP[x.asp].nom.toLowerCase()} ${ton(x.n)}`}</b> : ${JOUR ? h(JOUR.lire(x, !["lune","soleil","mercure","venus","mars"].includes(x.t), now).txt) : ASP[x.asp].sens} <i>Orbe ${fmtOrb(x.orb)}, ${x.app ? "en approche" : "en train de passer"}.</i> ${why("tr:" + i, "Pourquoi ?")}</span></li>`).join("")}</ul>
+          <div class="a-toi-f"><button type="button" class="btn ghost small" data-thgo="temps">Mes rendez-vous</button><button type="button" class="btn ghost small" data-thgo="annee">Mon année</button></div></div></details>` : "";
+    root.innerHTML = `<header class="a-hero a-jour"><p class="eyebrow">${cap(fmtD(now, tz, dayFmt))} · ${fmtD(now, tz, hm)} · ${h(L.nom)}</p><h1>${me ? "Ton ciel aujourd'hui" : "Le ciel aujourd'hui"}</h1>
+        ${phrase}
+        <div class="a-jour-acts">${JOUR ? `<button type="button" class="btn" data-ashare>Partager mon ciel</button>` : ""}${me ? `<button type="button" class="btn ghost" data-thgo="guide">Lire mon thème</button>` : ""}</div>${trio}</header>
+      ${autres}
+      <div class="a-h2row a-h2why"><h2 class="lsub">Le ciel en ce moment</h2></div>
+      <p class="a-lede a-lede-sky">C'est de cette carte que sort tout ce qui précède. ${resume} Touche une planète pour lire sa fiche.</p>
       <div class="a-sky">
         <figure class="a-sky-wheel">${wheel(ch, {prefix:"cp", label:"Le ciel en ce moment"})}
           <figcaption class="help">Ascendant (AS) à gauche, Milieu du Ciel (MC) en haut, pour ${h(L.nom)} · maisons ${SYS_NOM[ch.system] || ""}${ch.fallback ? " (repli : latitude trop haute)" : ""}.</figcaption>
@@ -300,10 +322,8 @@
         <aside class="a-sky-moon"><div class="a-bigmoon">${moonPic(mi.f)}</div>
           <p class="eyebrow">La Lune</p><h2>${ph[0]}</h2><p class="a-moon-sub">en ${sgl(ms)} ${SG[ms].nom} · ${Math.round(mi.ill*100)} % éclairée</p>
           <p>${ph[1]}</p>
-          <dl class="a-lun">${lun.map(x => `<div><dt>${x.type === "nl" ? "Nouvelle lune" : "Pleine lune"}</dt><dd>${fmtD(x.date, tz, {day:"numeric", month:"long"})} · ${fmtD(x.date, tz, hm)}<br>en ${SG[C.si(x.lon)].nom}</dd></div>`).join("")}</dl></aside></div>
-      <div class="a-c3s">
-        <article class="a-card a-c3"><p class="eyebrow">Le ton du jour</p><div class="a-c3-g">${sgl(ms)}</div><h3>La Lune en ${SG[ms].nom}</h3><p class="help">${MOON_TIP[ms]}</p></article>
-        ${hourCard}${me ? "" : meCard}</div>
+          <dl class="a-lun">${lun.map((x, i) => `<div><dt>${x.type === "nl" ? "Nouvelle lune" : "Pleine lune"}</dt><dd>${fmtD(x.date, tz, {day:"numeric", month:"long"})} · ${fmtD(x.date, tz, hm)}<br>en ${SG[C.si(x.lon)].nom}<br>${why("lu:" + i, "Pourquoi ça compte ?")}</dd></div>`).join("")}</dl></aside></div>
+      ${hourCard ? `<div class="a-c3s a-c3s-1">${hourCard}</div>` : ""}
       <p class="eyebrow a-foldk">Le détail</p>
       <details class="a-fold"><summary><span><b>Où sont les planètes</b><small>${ids.length} positions · signe, maison, état</small></span><i class="a-chev" aria-hidden="true"></i></summary>
         <div class="a-fold-b"><div class="a-table" role="table">${ids.map(id => { const p = ch.P[id]; return `<button type="button" class="a-row" data-afiche="cp:${id}" role="row">${pg(id)}<span class="a-rn">${PL[id].court}</span><span class="a-rp">${fmtPos(p.lon)}</span><span class="a-rh">${p.house ? "maison " + ROM[p.house] : ""}</span><span class="a-rt">${tags(ch, id)}</span></button>`; }).join("")}</div>
@@ -311,9 +331,20 @@
       <details class="a-fold"><summary><span><b>Les aspects du moment</b><small>${asp.length ? `${asp.length} aspect${asp.length > 1 ? "s" : ""} serré${asp.length > 1 ? "s" : ""} entre les planètes` : "Aucun aspect serré"}</small></span><i class="a-chev" aria-hidden="true"></i></summary>
         <div class="a-fold-b">${asp.length ? `<ul class="a-asplist">${asp.map(x => `<li>${pg(x.a)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.b)} <span>${aspSentence(x)} <i>Orbe ${fmtOrb(x.orb)}, ${x.app ? "il se forme" : "il se défait"}.</i></span></li>`).join("")}</ul>` : `<p class="help">Aucun aspect serré entre les planètes en ce moment.</p>`}</div></details>
       <div class="a-h2row"><h2 class="lsub">À venir</h2><button type="button" class="btn ghost small" data-popen="outils:calendrier">Tout le calendrier</button></div>
-      <div class="a-frise" role="list">${ev.map(e => `<article class="a-ev" role="listitem"><p class="a-evd"><b>${fmtD(e.date, tz, {day:"numeric"})}</b><span>${fmtD(e.date, tz, {month:"short"})}</span></p><p class="a-evt">${evTxt(e)}</p></article>`).join("")}</div>
+      <div class="a-frise" role="list">${ev.map((e, i) => `<article class="a-ev" role="listitem"><p class="a-evd"><b>${fmtD(e.date, tz, {day:"numeric"})}</b><span>${fmtD(e.date, tz, {month:"short"})}</span></p><p class="a-evt">${evTxt(e)}</p>${why("ev:" + i, "Pourquoi ?")}</article>`).join("")}</div>
       <div class="a-explore" data-obs-slot></div>
       <article class="a-card a-desc"><div><p class="eyebrow">Un jeu</p><h3>Les dés astrologiques</h3><p class="help">Une question, trois dés : une planète, un signe, une maison.</p></div><button type="button" class="btn small" data-ades>Lancer les dés</button></article>`;
+    qa("[data-awhy]", root).forEach(b => b.onclick = () => { const [k, i] = b.dataset.awhy.split(":"), J = jourCtx; if(!JOUR || !J) return;
+      if(k === "lune") JOUR.pourquoi("lune", {ms:J.ms, idx:J.mi.idx, ill:J.mi.ill, lon:J.ch.P.lune.lon});
+      else if(k === "jour" || k === "fond") JOUR.pourquoi("transit", {x:J.dj[k], ch:J.me.ch, now:J.now});
+      else if(k === "tr") JOUR.pourquoi("transit", {x:J.all[+i], ch:J.me.ch, now:J.now});
+      else if(k === "ev") JOUR.pourquoi("ev", {e:J.ev[+i], tz:J.tz});
+      else if(k === "lu") JOUR.pourquoi("lunaison", {l:J.lun[+i], tz:J.tz}); });
+    const shb = q1("[data-ashare]", root); if(shb) shb.onclick = () => { const J = jourCtx, P = PHASES[J.mi.idx], si = C.si;
+      const A = J.dj && (J.dj.pJour || J.dj.pFond), natal = J.me && J.me.ch;
+      const t3 = natal ? [["Soleil", natal.P.soleil.lon], ["Lune", natal.P.lune.lon]].concat(natal.heure ? [["Ascendant", natal.asc]] : []) : [["Soleil du jour", J.ch.P.soleil.lon], ["Lune du jour", J.ch.P.lune.lon]];
+      JOUR.partager({now:J.now, date:fmtD(J.now, J.tz, dateFmt), f:J.mi.f, phase:P[0], sous:`Lune en ${SG[J.ms].nom}`, titre:A ? A.titre : "Le ton du jour", phrase:A ? A.txt : MOON_TIP[J.ms],
+        trio:t3.map(([k, lon]) => ({k, v:SG[si(lon)].nom, img:IMG("s" + si(lon))})), pied:natal ? (natal.heure ? "✶  Mon Soleil, ma Lune, mon Ascendant  ✶" : "✶  Mon Soleil et ma Lune  ✶") : "✶  Le ciel du jour  ✶"}); };
     const go = q1("#a-when-go", root); if(go) go.onclick = () => { const v = q1("#a-when", root).value; if(!v) return; const [d, t] = v.split("T"), [y, m, dd] = d.split("-").map(Number), [hh, mm] = t.split(":").map(Number); cielWhen = C.localToUTC(y, m, dd, hh, mm, L); renderCiel(); };
     const nw = q1("[data-anow]", root); if(nw) nw.onclick = () => { cielWhen = null; renderCiel(); };
     const wb = q1("[data-awhen]", root); if(wb) wb.onclick = () => { const o = q1(".a-other", root); o.hidden = !o.hidden; wb.setAttribute("aria-expanded", String(!o.hidden)); if(!o.hidden) q1("#a-when", root).focus(); };
@@ -509,6 +540,8 @@
       <p class="help">${e1 === e2 ? `Vous avez le même élément dominant : ${EN[e1] || e1}. On se comprend vite, on peut aussi s'y enfermer à deux.` : `Vos éléments dominants diffèrent : ${EN[e1] || e1} pour ${h(t.nom)}, ${EN[e2] || e2} pour ${h(o.nom)}.`} Seules les sept planètes classiques sont comparées${t.heure && o.heure ? "" : ", sans les maisons quand une heure de naissance manque"}.</p>
       <p class="help">Ce n'est pas un verdict. Une tension peut rendre une relation vivante, une entente peut l'endormir : la synastrie décrit un climat, elle ne dit pas si deux personnes iront bien ensemble. Comparer les thèmes de deux époux se lit déjà chez Ptolémée, au IIe siècle.</p></div>`;
   }
+  let tempsTr = null;
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-twhy]"); if(!b || !JOUR || !tempsTr) return; JOUR.pourquoi("transit", {x:tempsTr.tr[+b.dataset.twhy], ch:tempsTr.ch, now:tempsTr.now}); });
   function tTemps(ch, t){
     const now = new Date(), sc = school(), tz = (t.lieu && t.lieu.tz) || undefined;
     const sr = C.solarReturn(ch, new Date(now.getTime() - 2*86400000));
@@ -516,7 +549,8 @@
     const key = t.id + ":" + now.toDateString();
     if(!tempsCache[key]) tempsCache[key] = {j:C.nextReturn("jupiter", ch.P.jupiter.lon, now, 4600), s:C.nextReturn("saturne", ch.P.saturne.lon, now, 11000)};
     const R = tempsCache[key], tr = C.transits(ch, now, sc).slice(0, 10), pr = C.profection(ch);
-    return `<h2 class="lsub">Les transits du jour</h2>${tr.length ? `<ul class="a-asplist">${tr.map(x => `<li>${pg(x.t)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.n)} <span><b>${PL[x.t].court} ${ASP[x.asp].nom.toLowerCase()} ${ton(x.n)}</b> : ${ASP[x.asp].sens}. <i>Orbe ${fmtOrb(x.orb)}.</i></span></li>`).join("")}</ul>` : `<p class="help">Aucun transit serré aujourd'hui.</p>`}
+    tempsTr = {tr, ch, now};
+    return `<h2 class="lsub">Les transits du jour</h2>${tr.length ? `<ul class="a-asplist">${tr.map((x, i) => `<li>${pg(x.t)}${gl(ASP[x.asp].gl, "asp " + ASP[x.asp].cls)}${pg(x.n)} <span><b>${JOUR ? h(JOUR.titre(x)) : `${PL[x.t].court} ${ASP[x.asp].nom.toLowerCase()} ${ton(x.n)}`}</b> : ${JOUR ? h(JOUR.lire(x, !["lune","soleil","mercure","venus","mars"].includes(x.t), now).txt) : ASP[x.asp].sens + "."} <i>Orbe ${fmtOrb(x.orb)}.</i> ${JOUR ? `<button type="button" class="a-why" data-twhy="${i}">Pourquoi ?</button>` : ""}</span></li>`).join("")}</ul>` : `<p class="help">Aucun transit serré aujourd'hui.</p>`}
       <h2 class="lsub">Les rendez-vous</h2><ul class="a-ul">
         ${sr ? `<li><b>Révolution solaire</b> : le Soleil revient à sa place de naissance le ${fmtD(sr, tz, dateFmt)} à ${fmtD(sr, tz, hm)}${tz ? " (heure du lieu de naissance)" : ""}. Le thème dressé pour cet instant décrit l'année qui commence.</li>` : ""}
         ${pr ? `<li><b>Profection</b> : jusqu'à ton prochain anniversaire, maison ${ROM[pr.house]} et maître de l'année ${PL[pr.lord].court}.</li>` : ""}
@@ -812,11 +846,8 @@
   function renderHist(){
     const root = q1("#v-a-histoire"), HX = window.ArcanesHistoire;
     const CH = JSON.parse(JSON.stringify(window.ASTRO_HISTOIRE || []).replace(/"@(h\d)"/g, (m, k) => JSON.stringify(IMG(k))));
-    root.innerHTML = HX.render({pfx:"ah", eyebrow:"Vingt-cinq siècles de regards sur le ciel", titre:"Une histoire de l'astrologie",
-      lede:"Des présages de Babylone aux applications d'aujourd'hui, par Alexandrie, Bagdad, les universités du Moyen Âge et la psychologie. Qui l'a inventée, comment elle a voyagé, pourquoi elle est sortie des sciences, et ce qu'en disent les études.",
-      avant:"<b>Comment lire.</b> Chaque chapitre donne les lieux, le récit, les figures et les réponses aux questions qu'on se pose. Touche une image pour l'agrandir.",
-      chapitres:CH,
-      fin:`<section class="hx-fin"><h2>Pour vérifier et aller plus loin</h2><ul>
+    if(!st.hist || !Array.isArray(st.hist.lu)) st.hist = {lu:[]};
+    const sources = `<section class="hx-fin"><h2>Pour vérifier et aller plus loin</h2><ul>
         <li>Francesca Rochberg, <i>The Heavenly Writing</i>, Cambridge University Press, 2004</li>
         <li>Auguste Bouché-Leclercq, <i>L'Astrologie grecque</i>, 1899</li>
         <li>Tamsyn Barton, <i>Ancient Astrology</i>, Routledge, 1994</li>
@@ -824,9 +855,12 @@
         <li>Nicholas Campion, <i>A History of Western Astrology</i>, 2 vol., Continuum, 2008-2009</li>
         <li>Chris Brennan, <i>Hellenistic Astrology</i>, Amor Fati, 2017</li>
         <li>Geoffrey Dean et Ivan Kelly, « Is Astrology Relevant to Consciousness and Psi? », <i>Journal of Consciousness Studies</i>, 2003</li></ul>
-        <div class="a-acts a-hend"><button type="button" class="btn" data-hquiz>Tester mes connaissances</button></div></section>`});
-    HX.bind(root);
-    q1("[data-hquiz]", root).onclick = () => { startQuiz("histoire"); aView("quiz"); };
+        <div class="a-acts a-hend"><button type="button" class="btn" data-hquiz>Tester mes connaissances</button></div></section>`;
+    HX.mount(root, {pfx:"ah", eyebrow:"Vingt-cinq siècles de regards sur le ciel", titre:"Une histoire de l'astrologie",
+      lede:"Dix chapitres, de Babylone à ton téléphone. Chacun s'ouvre sur une scène : un roi caché, une ville fondée à l'heure dite, un astrologue convoqué après un incendie. Qui a inventé l'astrologie, comment elle a voyagé, pourquoi elle est sortie des sciences, et ce qu'en disent les études.",
+      chapitres:CH, etat:st.hist, onEtat:e => { st.hist = e; save(); }, fin:sources,
+      finChap:`<div class="hxp-fini"><p class="eyebrow">Fin de l'histoire</p><h3>Tu as tout lu.</h3><p>Le reste se passe dans ton propre ciel.</p><div class="a-acts"><button type="button" class="btn" data-hquiz>Tester mes connaissances</button><button type="button" class="btn ghost" data-agoto="ciel">Mon ciel aujourd'hui</button></div></div>`,
+      apres:r => qa("[data-hquiz]", r).forEach(b => b.onclick = () => { startQuiz("histoire"); aView("quiz"); })});
   }
 
   /* =================================================================
