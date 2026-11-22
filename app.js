@@ -3915,10 +3915,10 @@ async function drawDaily(){
 /* ---------- Choix du tirage et réglages ---------- */
 function chooseHTML(){
   const tile = ([k,sp]) => `<button type="button" class="stile tilt" data-spread="${k}">
-      <span class="stile-art">${miniMap(k)}</span><span class="stile-n">${sp.count} lame${sp.count>1?"s":""}${k==="croix" && deck().synth?" et une synthèse":""}</span>
+      <span class="stile-art">${spreadArt(k)}</span><span class="stile-n">${sp.count} lame${sp.count>1?"s":""}${k==="croix" && deck().synth?" et une synthèse":""}</span>
       <span class="stile-name">${sp.label}</span><span class="stile-desc">${sp.desc.split(" · ").slice(1).join(" · ") || sp.desc}</span></button>`;
-  return `<header class="sec-head"><h1>Choisis ton tirage</h1><p>Du message du jour à la grande croix celtique : chaque tirage pose les lames à une place qui a un sens.</p></header>
-    ${GROUPS.slice(0,3).map((g,gi)=>`<section class="tgroup2"><h2 class="tg-h">${g}</h2><div class="carousel">${Object.entries(SPREADS).filter(([k,sp])=>sp.group===gi && (k !== "arbre" || deck().tree)).map(tile).join("")}</div></section>`).join("")}
+  return `<header class="sec-head"><h1>Choisis ton tirage</h1><p>Pars de ce que tu cherches : une réponse, un point sur ta situation, un lien, un choix. Chaque tirage pose les lames à une place qui a un sens.</p></header>
+    ${NEEDS.map(N => { const L = N.k.filter(k => SPREADS[k] && (k !== "arbre" || deck().tree)); return L.length ? `<section class="tgroup2"><h2 class="tg-h">${N.t}</h2><p class="tg-s">${N.s}</p><div class="tlist">${L.map(k => tile([k, SPREADS[k]])).join("")}</div></section>` : ""; }).join("")}
     ${myGroupHTML(tile)}`;
 }
 /* Les réglages du tirage tiennent dans un volet replié ; son titre rappelle ceux qui sont actifs */
@@ -3936,8 +3936,8 @@ function setupHTML(){
   const positions = state.spread==="annee" ? `<span class="pchip">Les douze prochains mois</span>` : sp.pos.map((p,i)=>`<span class="pchip"><b>${i+1}</b>${POSLABEL[p]}</span>`).join("");
   return `<section class="setup2">
     <p class="crumb"><button type="button" class="linkbtn" id="toChoose">← Tous les tirages</button></p>
-    <div class="setup-top"><div class="setup-art">${miniMap(state.spread)}</div>
-      <div><p class="eyebrow">${GROUPS[sp.group]} · ${sp.count} lame${sp.count>1?"s":""}</p><h1>${sp.label}</h1><p class="setup-desc">${sp.desc.split(" · ").slice(1).join(" · ") || sp.desc}</p><div class="pchips">${positions}</div></div></div>
+    <div class="setup-top"><div class="setup-art">${spreadArt(state.spread)}</div>
+      <div><p class="eyebrow">${needLabel(state.spread) || GROUPS[sp.group] || "Mes tirages"} · ${sp.count} lame${sp.count>1?"s":""}</p><h1>${sp.label}</h1><p class="setup-desc">${sp.desc.split(" · ").slice(1).join(" · ") || sp.desc}</p><div class="pchips">${positions}</div></div></div>
     <form class="setup" id="setup">
       ${sp.noTheme || sp.fixedTheme ? "" : `<fieldset><legend><span class="step">1</span>Ton thème</legend><div class="chips">${chips}</div></fieldset>`}
       ${state.spread==="decision" ? `<fieldset><legend><span class="step">2</span>Tes deux options <em>(facultatif)</em></legend><div class="opts2"><label><span>Chemin A</span><input id="optA" maxlength="40" value="${esc(state.optA||"")}" placeholder="Ex. Rester"></label><label><span>Chemin B</span><input id="optB" maxlength="40" value="${esc(state.optB||"")}" placeholder="Ex. Partir"></label></div></fieldset>` : ""}
@@ -3993,10 +3993,17 @@ function cutPhase(){
 }
 function doCut(k){
   if(rit.phase !== "cut") return; rit.phase = "cutting";
-  const cut = $("#cut"); cut.querySelectorAll(".sliver").forEach((s,i) => { s.classList.toggle("lift", i >= k); if(i >= k) s.classList.add("go"); });
+  const cut = $("#cut"), sl = [...cut.querySelectorAll(".sliver")], n = sl.length;
   sfx("cut"); buzz(22);
   state.deck = state.deck.slice(k).concat(state.deck.slice(0,k));
-  ritLater(fanPhase, reduceMotion() ? 30 : 650);
+  if(reduceMotion()){ ritLater(fanPhase, 30); return; }
+  /* Le paquet se coupe pour de bon : la moitié de droite se soulève, passe par-dessus celle de gauche, puis se repose */
+  const step = n > 1 ? sl[1].offsetLeft - sl[0].offsetLeft : 0;
+  sl.forEach((x, i) => { x.classList.remove("lift"); x.style.setProperty("--dx", (i >= k ? -k*step : (n - k)*step) + "px"); x.classList.add(i >= k ? "cut-r" : "cut-l"); });
+  cut.classList.add("cutting");
+  ritLater(() => cut.classList.add("cross"), 260);
+  ritLater(() => { cut.classList.add("land"); buzz(8); }, 720);
+  ritLater(fanPhase, 1180);
 }
 function fanPhase(){
   rit.phase = "fan";
@@ -4319,6 +4326,46 @@ miniMap = function(k){
   return s ? `<svg viewBox="0 0 40 30" class="mini-map" aria-hidden="true">${s}</svg>` : _miniMap(k);
 };
 
+/* ===== Cinq tirages de plus, et le choix par besoin =====
+   Les nouveaux tirages n'inventent aucune place : ils assemblent des places déjà écrites (phrases de position comprises),
+   si bien que leurs lectures valent pour tous les jeux. */
+Object.assign(SPREADS, {
+  point:{label:"Faire le point", count:5, desc:"5 lames · ta situation, ce qui se cache, l'obstacle, le conseil, l'issue", group:1, pos:["situation","cache","obstacle","conseil","issue"], layout:"point"},
+  miroir:{label:"Le miroir", count:4, desc:"4 lames · toi, ce que tu ne vois pas, ce que tu apprends, le conseil", group:1, pos:["toi","cache","apprendre","conseil"], layout:"miroir"},
+  lien:{label:"Le lien en trois lames", count:3, desc:"3 lames · toi, l'autre, et ce qui vous relie : amour, amitié, famille ou travail", group:0, pos:["toi","autre","relie"], layout:"lien"},
+  blocage:{label:"Dénouer un blocage", count:3, desc:"3 lames · ce qui bloque, d'où ça vient, par où passer", group:0, pos:["obstacle","racine","conseil"], layout:"blocage"},
+  projet:{label:"Lancer un projet", count:5, desc:"5 lames · ton intention, ce qui t'aide, l'obstacle, le prochain pas, l'issue", group:1, pos:["intention","soutien","obstacle","prochainpas","issue"], layout:"projet"}
+});
+Object.assign(LAYOUTS, {
+  point:{ar:1.3, w:16.5, max:560, slots:[[50,50],[18,27],[82,27],[18,74],[82,74]]},
+  miroir:{ar:1.15, w:17, max:500, slots:[[50,19],[19,50],[81,50],[50,81]]},
+  lien:{ar:1.6, w:21, max:540, slots:[[19,60],[81,60],[50,38]]},
+  blocage:{ar:1.5, w:20, max:520, slots:[[50,30],[23,68],[77,68]]},
+  projet:{ar:1.75, w:14.5, max:720, slots:[[9,76],[29.5,63],[50,50],[70.5,37],[91,24]]}
+});
+const NEEDS = [
+  {t:"Une réponse rapide", s:"Une lame ou trois, pour y voir clair tout de suite.", k:["jour","ouinon","ppf"]},
+  {t:"Faire le point", s:"Regarder une situation sous tous ses angles.", k:["croix","point","fer","miroir"]},
+  {t:"Une relation", s:"Toi, l'autre, et ce qui se joue entre vous.", k:["lien","couple"]},
+  {t:"Un choix, un blocage", s:"Quand il faut trancher, ou comprendre ce qui retient.", k:["decision","blocage"]},
+  {t:"Un projet, un cycle", s:"Semer, avancer, et voir venir les mois.", k:["projet","lune","pasmat","annee"]},
+  {t:"Aller au fond", s:"Les grands tirages, pour une question qui compte.", k:["celtique","arbre"]}
+];
+const needLabel = k => { const N = NEEDS.find(n => n.k.includes(k === "lune_c" || k === "lune_d" ? "lune" : k)); return N ? N.t : ""; };
+/* La vignette d'un tirage : de vraies lames du jeu choisi, posées à leur place ; celle de la place clé est face visible */
+const SPREAD_EMB = {jour:"soleil", ouinon:"justice", ppf:"roue", croix:"monde", point:"ermite", fer:"chariot", miroir:"papesse", lien:"temperance", couple:"amoureux",
+  decision:"jugement", blocage:"pendu", projet:"bateleur", lune:"lune", lune_c:"lune", lune_d:"lune", pasmat:"mat", annee:"imperatrice", celtique:"empereur", arbre:"etoile"};
+const ART_FLAT = {jour:{ar:1.3, w:30, slots:[[50,50]]}, ouinon:{ar:1.3, w:30, slots:[[50,50]]}, ppf:{ar:1.5, w:24, slots:[[19,50],[50,50],[81,50]]},
+  croix:{ar:1.2, w:16.5, slots:[[19,50],[81,50],[50,19],[50,81]], center:[50,50]}};
+function spreadArt(k){
+  const sp = SPREADS[k], L = sp && (ART_FLAT[k] || LAYOUTS[sp.layout] || LAYOUTS[k]);
+  if(!L || !L.slots) return miniMap(k);
+  const D = deck(), n = L.slots.length, key = Math.min(n - 1, KEYPOS[k] ?? n - 1), emb = byId(SPREAD_EMB[k] || "etoile");
+  const cards = L.slots.map(([x, y, rot = 0], i) => `<i class="tcard${i === key ? " face" : ""}" style="left:${x}%;top:${y}%;width:${(rot ? L.w*.86 : L.w).toFixed(1)}%;--r:${rot}deg;--i:${i}">${i === key ? cardSVG(emb) : backSVG()}</i>`).join("");
+  const mid = L.center && (k !== "croix" || D.synth) ? `<i class="tcard soft" style="left:${L.center[0]}%;top:${L.center[1]}%;width:${L.w}%;--i:${n}"></i>` : "";
+  return `<span class="sart sart-${n > 7 ? "l" : n > 3 ? "m" : "s"}" style="aspect-ratio:${L.ar};--car:${(D.w / D.h).toFixed(3)}" aria-hidden="true">${cards}${mid}</span>`;
+}
+
 /* Sections propres à certains tirages */
 function extraHTML(rd){
   const C = rd.cards.map(c => ({...c, k:byId(c.id)}));
@@ -4482,7 +4529,7 @@ function myGroupHTML(tile){
   const list = customSpreads.filter(c => !c.deleted);
   return `<section class="tgroup2 mine" id="mine"><h2 class="tg-h">Mes tirages</h2>
     <p class="help mine-help">${list.length ? "Tes tirages personnels, enregistrés sur cet appareil." : "Invente tes propres tirages : autant de lames que tu veux, le sens de chaque place, et la disposition de ton choix."}</p>
-    <div class="carousel">${list.map(c => `<div class="stile-wrap${state.justCreated===c.id?" new":""}">${tile([c.id, SPREADS[c.id]])}
+    <div class="tlist">${list.map(c => `<div class="stile-wrap${state.justCreated===c.id?" new":""}">${tile([c.id, SPREADS[c.id]])}
       <div class="stile-acts" data-acts="${c.id}"><button type="button" class="linkbtn" data-cedit="${c.id}">Modifier</button><button type="button" class="linkbtn" data-cdup="${c.id}">Dupliquer</button><button type="button" class="linkbtn danger" data-cdel="${c.id}">Supprimer</button></div></div>`).join("")}
       <button type="button" class="stile stile-new tilt" id="cnew"><span class="stile-art"><span class="plus" aria-hidden="true">+</span></span><span class="stile-n">L'éditeur</span><span class="stile-name">Créer un tirage</span><span class="stile-desc">Le nombre de lames, le sens de chaque place, et leur disposition.</span></button></div></section>`;
 }
@@ -7603,9 +7650,21 @@ function revealCards(container, animate){
   if(!animate || reduceMotion()){ cards.forEach(c=>c.classList.add("up")); if(text) text.classList.add("shown"); return; }
   if(text) text.classList.add("waiting");
   container.classList.add("anim");
-  const step = Math.min(520, 3400 / cards.length);
-  cards.forEach((c,i) => setTimeout(()=>{ c.classList.add("up"); sfx("flip"); if(i === 0) buzz(15); }, 350 + i*step));
-  setTimeout(()=>{ if(text){ text.classList.remove("waiting"); text.classList.add("shown"); } }, 350 + cards.length*step + 300);
+  /* Chaque lame est annoncée au moment où elle se retourne : sa place, puis son nom. Un toucher sur le tirage passe la mise en scène. */
+  const rd = state.current, vis = container.querySelector(".rd-visual"), hint = vis && vis.querySelector(".rd-hint");
+  let voice = null; const T = [];
+  if(vis && rd && cards.length > 1){ voice = document.createElement("p"); voice.className = "rd-voice"; voice.setAttribute("aria-hidden", "true"); vis.appendChild(voice); if(hint) hint.hidden = true; }
+  const say = i => { if(!voice) return; const c = rd.cards[i];
+    const h = withDeck(rd.deck, () => deckText(c ? `<b>${i + 1} · ${posLabel(rd, i)}</b><span>${byId(c.id).nom}${c.rev ? " · à l'envers" : ""}</span>` : `<b>${rd.spread === "annee" ? "La lame de l'année" : "La synthèse"}</b><span>${synthesis(rd.cards).card.nom}</span>`));
+    voice.classList.remove("in"); void voice.offsetWidth; voice.innerHTML = h; voice.classList.add("in"); };
+  const step = cards.length > 1 ? Math.min(950, Math.max(520, 5200 / cards.length)) : 520;
+  let done = false;
+  const finish = () => { if(done) return; done = true; T.forEach(clearTimeout); cards.forEach(c => c.classList.add("up"));
+    if(voice) voice.remove(); if(hint) hint.hidden = false; if(vis) vis.removeEventListener("click", finish);
+    if(text){ text.classList.remove("waiting"); text.classList.add("shown"); } };
+  cards.forEach((c,i) => T.push(setTimeout(()=>{ c.classList.add("up"); say(i); sfx("flip"); if(i === 0) buzz(15); }, 350 + i*step)));
+  T.push(setTimeout(finish, 350 + cards.length*step + (voice ? 500 : 300)));
+  if(vis) vis.addEventListener("click", finish);
 }
 
 /* ---------- Vues ---------- */
