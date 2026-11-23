@@ -46,6 +46,7 @@
     const r = root("jour"), A = archDuJour(), Q = D.QUESTIONS[mod(dayN(), D.QUESTIONS.length)], k = dayKey(), J = st.jour[k] || {}, nl = nextLec(), cn = (st.coue[k] || 0);
     const date = new Date().toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long"});
     r.innerHTML = `<header class="ps-head"><p class="eyebrow">${h(date)}</p><h1>Psyché</h1><p class="ps-lede">L'âme, les rêves et l'inconscient : de Mesmer à Jung, une maison à visiter pièce par pièce, et des outils pour se regarder.</p></header>
+      <button type="button" class="ps-miroir" data-miroir><svg viewBox="0 0 40 52" width="56" height="73" aria-hidden="true" shape-rendering="crispEdges"><path d="M4 50V20C4 9 11 3 20 3s16 6 16 17v30z" fill="#b08a3c"/><path d="M6 50V20C6 10 12 5 20 5s14 5 14 15v30z" fill="#e2bd5a"/><path d="M9 48V21c0-8 5-12 11-12s11 4 11 12v27z" fill="#14162b"/><rect x="17" y="24" width="6" height="6" fill="#f4efe2"/><rect x="15" y="30" width="10" height="10" fill="#f4efe2"/><rect x="11" y="34" width="6" height="12" fill="#c2501c"/><rect x="12" y="36" width="3" height="8" fill="#ffe9a8"/><rect x="2" y="49" width="36" height="3" fill="#86603a"/></svg><div><small>Le jeu</small><b>Le Miroir</b><span>Une nuit, un miroir très loin, le cabinet de Jung, et une maison plus grande dedans que dehors.</span></div></button>
       <article class="ps-arch" style="--i:${D.ARCH.indexOf(A)}">
         <div class="ps-arch-sym" aria-hidden="true">${archSVG(D.ARCH.indexOf(A))}</div>
         <div><p class="eyebrow">L'archétype du jour</p><h2>${h(A.nom)}</h2><p class="ps-arch-sous">${h(A.sous)}</p><p>${h(A.txt)}</p>
@@ -73,7 +74,8 @@
      PRATIQUER
      ================================================================ */
   const TOOLS = [
-    ["descente", "La descente", "Le jeu : quatre étages, quatre symboles, et les ombres"],
+    ["miroir", "Le Miroir", "Le grand jeu : la nuit, le cabinet de Jung, la maison"],
+    ["descente", "La descente", "Un petit jeu : quatre étages, quatre symboles, et les ombres"],
     ["assoc", "Le test d'associations", "Cent mots, un chronomètre : l'expérience de Jung en 1904"],
     ["reves", "Le journal des rêves", "Noter, puis amplifier les symboles"],
     ["mandala", "L'atelier du mandala", "Dessiner un cercle en symétrie"],
@@ -87,8 +89,8 @@
     if(pv.tool && TOOLR[pv.tool]){ const T = TOOLS.find(t => t[0] === pv.tool);
       r.innerHTML = `${back("Les outils", "pratiquer")}<header class="ps-head sm"><p class="eyebrow">Pratiquer</p><h1>${h(T[1])}</h1></header><div class="ps-tool"></div>`;
       toolOff = TOOLR[pv.tool](q1(".ps-tool", r), pv.arg) || null; return; }
-    r.innerHTML = `<header class="ps-head"><p class="eyebrow">Pratiquer</p><h1>Les outils</h1><p class="ps-lede">Un jeu et six exercices tirés de l'histoire de la psychologie. Ils servent à se connaître et à réfléchir, jamais à se diagnostiquer.</p></header>
-      <div class="ps-tools">${TOOLS.map(([id, t, d], i) => `<button type="button" class="ps-toolc" data-psgo="outil:${id}"><span class="ps-toolc-n">${["I","II","III","IV","V","VI","VII"][i]}</span><b>${h(t)}</b><span>${h(d)}</span></button>`).join("")}</div>`;
+    r.innerHTML = `<header class="ps-head"><p class="eyebrow">Pratiquer</p><h1>Les outils</h1><p class="ps-lede">Deux jeux et six exercices tirés de l'histoire de la psychologie. Ils servent à se connaître et à réfléchir, jamais à se diagnostiquer.</p></header>
+      <div class="ps-tools">${TOOLS.map(([id, t, d], i) => `<button type="button" class="ps-toolc" data-psgo="outil:${id}"><span class="ps-toolc-n">${["I","II","III","IV","V","VI","VII","VIII"][i]}</span><b>${h(t)}</b><span>${h(d)}</span></button>`).join("")}</div>`;
   }
   const TOOLR = {};
 

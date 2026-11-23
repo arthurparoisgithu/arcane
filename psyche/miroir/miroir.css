@@ -1,0 +1,76 @@
+/* ===== Arcanes · Psyché · Le Miroir ===== indigo, os et or : les mêmes teintes que la palette du jeu */
+.mir-lock,.mir-lock body{overflow:hidden!important}
+.mir{position:fixed;inset:0;z-index:900;background:#0a0a14;color:#f4efe2;font-family:var(--f-ui,system-ui,sans-serif);user-select:none;-webkit-user-select:none;touch-action:none;overscroll-behavior:none}
+.mir canvas{image-rendering:pixelated;image-rendering:crisp-edges}
+.mir-3d{position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none;cursor:grab}
+.mir[data-mode="3d"] .mir-3d{display:block}
+.mir-2d{position:absolute;inset:0;display:none;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 54px) 0 0}
+.mir[data-mode="2d"] .mir-2d{display:flex}
+.mir-2d canvas{width:min(100vw,calc((100dvh - 300px)*1.6),960px);height:auto;aspect-ratio:16/10;box-shadow:0 0 0 1px #2a2622,0 0 0 4px #14162b,0 30px 60px -20px #000}
+.mir-fade{position:absolute;inset:0;background:#05050a;opacity:0;pointer-events:none;transition:opacity .7s ease;z-index:5}
+.mir-fade.on{opacity:1}
+.mir-top{position:absolute;left:0;right:0;top:0;z-index:8;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 8px;pointer-events:none}
+.mir-top>*{pointer-events:auto}
+.mir-b{width:42px;height:42px;border-radius:50%;border:1px solid rgba(244,239,226,.28);background:rgba(10,10,20,.55);color:#f4efe2;font:400 18px/1 var(--f-ui,sans-serif);cursor:pointer}
+.mir-b:hover{border-color:#e2bd5a;color:#e2bd5a}
+.mir-lieu{font:600 12px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase;color:#d9cfb8;text-shadow:0 1px 0 #000;pointer-events:none}
+.mir-cap{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translateX(-50%);z-index:7;width:min(92vw,560px);margin:0;padding:10px 14px;text-align:center;font:italic 400 17px/1.45 var(--f-text,Georgia,serif);color:#f4efe2;background:rgba(10,10,20,.62);border:1px solid rgba(226,189,90,.3);border-radius:3px;opacity:0;transition:opacity .6s;pointer-events:none;text-wrap:balance}
+.mir-cap.on{opacity:1}
+.mir[data-mode="2d"] .mir-cap,.mir[data-mode="2d"] .mir-ctl,.mir[data-mode="2d"] .mir-stick{display:none}
+.mir-ctl{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:7;display:flex;flex-direction:column;align-items:center;gap:12px;pointer-events:none}
+.mir-ctl>*{pointer-events:auto}
+.mir-act{max-width:min(90vw,460px);padding:13px 22px;border:1px solid #e2bd5a;border-radius:3px;background:rgba(20,22,43,.9);color:#ffe9a8;font:600 16px/1.3 var(--f-ui,sans-serif);cursor:pointer;box-shadow:0 0 0 3px rgba(10,10,20,.6),0 0 24px -4px rgba(226,189,90,.5);animation:mirpulse 1.8s ease-in-out infinite}
+@keyframes mirpulse{50%{box-shadow:0 0 0 3px rgba(10,10,20,.6),0 0 34px 0 rgba(226,189,90,.75)}}
+.mir-walk{width:62px;height:62px;border-radius:50%;border:1px solid rgba(244,239,226,.35);background:rgba(10,10,20,.5);color:#d9cfb8;font-size:20px;cursor:pointer;touch-action:none}
+.mir-walk.on{background:rgba(226,189,90,.3);border-color:#e2bd5a;color:#ffe9a8}
+.mir-stick{position:absolute;z-index:6;width:76px;height:76px;margin:-38px 0 0 -38px;border:1px solid rgba(244,239,226,.3);border-radius:50%;display:none;pointer-events:none}
+.mir-stick.on{display:block}
+.mir-stick i{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:rgba(226,189,90,.55)}
+/* les dialogues */
+.mir-dlg{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);z-index:9;width:min(94vw,680px);max-height:62dvh;overflow:auto;padding:16px 18px 18px;background:#14162b;border:1px solid #4a5a8a;border-top:3px solid #e2bd5a;border-radius:3px;box-shadow:0 0 0 4px rgba(10,10,20,.7),0 24px 50px -18px #000;cursor:pointer;user-select:text;-webkit-user-select:text;touch-action:manipulation}
+.mir-dlg[hidden]{display:none}
+.mir-dlg[data-who="nar"]{border-top-color:#4a5a8a}
+.mir-dlg[data-who="ombre"]{border-top-color:#f4efe2;background:#0a0a14}
+.mir-who{margin:0 0 6px;font:600 11.5px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase;color:#e2bd5a}
+.mir-dlg[data-who="ombre"] .mir-who{color:#cfd9ea}
+.mir-txt{margin:0;min-height:2.9em;font:400 19px/1.5 var(--f-text,Georgia,serif);color:#f4efe2;text-wrap:pretty}
+.mir-dlg[data-who="nar"] .mir-txt{font-style:italic;color:#d9cfb8}
+.mir-more{position:absolute;right:14px;bottom:8px;color:#e2bd5a;opacity:0;font-size:14px}
+.mir-dlg.fin .mir-more{opacity:1;animation:mirbob 1s ease-in-out infinite}
+@keyframes mirbob{50%{transform:translateY(3px)}}
+.mir-in:empty{display:none}
+.mir-in{margin-top:12px;cursor:default}
+.mir-in input,.mir-in textarea{display:block;width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid #4a5a8a;border-radius:3px;background:#0a0a14;color:#f4efe2;font:400 18px/1.45 var(--f-text,Georgia,serif);resize:vertical}
+.mir-in input:focus,.mir-in textarea:focus{outline:2px solid #e2bd5a;outline-offset:1px}
+.mir-in ::placeholder{color:#8fa3c8;opacity:.75;font-style:italic}
+.mir-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.mir-col{display:flex;flex-direction:column;gap:9px}
+.mir-btn{padding:12px 18px;min-height:46px;border:1px solid #e2bd5a;border-radius:3px;background:#e2bd5a;color:#14162b;font:700 15.5px/1.25 var(--f-ui,sans-serif);cursor:pointer;text-align:center}
+.mir-btn:hover{background:#ffe9a8}
+.mir-btn.ghost{background:transparent;color:#f4efe2;border-color:#4a5a8a}
+.mir-btn.ghost:hover{border-color:#e2bd5a;color:#ffe9a8;background:transparent}
+.mir :focus-visible{outline:2px solid #ffe9a8;outline-offset:2px}
+/* les feuilles : titre, pause, carnet, fin */
+.mir-sheet{position:absolute;inset:0;z-index:12;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(5,5,10,.82);overflow:auto;user-select:text;-webkit-user-select:text;touch-action:auto}
+.mir-sheet[hidden]{display:none}
+.mir-sheet-in{width:min(100%,520px);margin:auto;padding:26px 24px 24px;background:#14162b;border:1px solid #4a5a8a;border-top:3px solid #e2bd5a;border-radius:3px;box-shadow:0 30px 70px -20px #000}
+.mir-sheet.titre{background:radial-gradient(ellipse at 50% 20%,#1f2444,#0a0a14 70%)}
+.mir-sheet.titre .mir-sheet-in,.mir-sheet.fin .mir-sheet-in{text-align:center}
+.mir-eye{margin:0 0 8px;font:600 11.5px/1 var(--f-ui,sans-serif);letter-spacing:.22em;text-transform:uppercase;color:#e2bd5a}
+.mir-sheet h1{margin:0 0 14px;font:400 clamp(44px,11vw,64px)/1 var(--f-display,Georgia,serif);color:#f4efe2;letter-spacing:.02em}
+.mir-sheet h2{margin:0 0 12px;font:400 clamp(26px,6vw,34px)/1.1 var(--f-display,Georgia,serif);color:#f4efe2}
+.mir-page{margin:0 0 18px;font:400 18px/1.55 var(--f-text,Georgia,serif);color:#d9cfb8;text-wrap:pretty}
+.mir-note{margin:16px 0 0;font:400 13.5px/1.5 var(--f-ui,sans-serif);color:#8fa3c8}
+.mir-pages{display:flex;flex-direction:column;gap:14px;max-height:52dvh;overflow:auto;margin:0 -6px 6px;padding:0 6px}
+.mir-pages article{padding:0 0 14px;border-bottom:1px solid rgba(74,90,138,.5)}
+.mir-pages h3{margin:0 0 6px;font:400 22px/1.15 var(--f-display,Georgia,serif);color:#ffe9a8}
+.mir-pages p{margin:0 0 8px;font:400 16.5px/1.5 var(--f-text,Georgia,serif);color:#d9cfb8}
+.mir-lnk{padding:0;border:0;background:none;color:#e2bd5a;font:600 14px/1.3 var(--f-ui,sans-serif);text-decoration:underline;cursor:pointer}
+.mir-aide{margin:0 0 6px;padding-left:20px;font:400 16px/1.5 var(--f-ui,sans-serif);color:#d9cfb8}
+.mir-aide li{margin-bottom:9px}
+.mir-aide b{color:#f4efe2}
+.mir-md{display:block;width:min(100%,340px);height:auto;aspect-ratio:1;margin:6px auto 4px;border-radius:50%;border:3px solid #e2bd5a;touch-action:none;cursor:crosshair;image-rendering:auto!important}
+.mir-mdi{display:block;margin:0 auto;border-radius:50%;border:2px solid #e2bd5a;image-rendering:auto!important}
+@media (max-width:700px) and (orientation:portrait){.mir[data-mode="2d"] .mir-dlg{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 54px + 62.5vw + 16px);max-height:calc(100dvh - 62.5vw - 90px)}}
+@media (min-width:900px){.mir-walk{display:none}.mir-2d canvas{width:min(100vw,calc((100dvh - 270px)*1.6),1040px)}.mir-txt{font-size:21px}}
+@media (prefers-reduced-motion:reduce){.mir-act,.mir-more{animation:none}.mir-fade{transition-duration:.01s!important}}
