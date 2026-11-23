@@ -45,7 +45,7 @@ window.MiroirR3D = function(canvas){
         if(d > far){ for(let x = 0; x < W; x++) buf[row + x] = LUT[c1*8 + lv(L, x, y)]; }
         else { const fx0 = P.x + d*(dx - px), fy0 = P.y + d*(dy - py), sx = d*2*px/W, sy = d*2*py/W;
           for(let x = 0; x < W; x++){ const wx = fx0 + sx*x, wy = fy0 + sy*x; let c = c1, LL = L;
-            if(mode === "spark"){ if(d > 1.6){ const gx = wx*2.5, gy = wy*2.5, ix = Math.floor(gx), iy = Math.floor(gy), h = hash(ix, iy); if(h > .86){ const ux = gx - ix - .5, uy = gy - iy - .5; if(ux*ux + uy*uy < .014 + (h - .86)*.16){ c = h > .985 ? 19 : 7; LL = (.34 + .3*Math.sin(T*1.6 + h*90))*Math.min(1, 1.6*Math.exp(-d*.06)) + .06; } } } }
+            if(mode === "spark"){ if(d > 3.2){ const gx = wx*2.5, gy = wy*2.5, ix = Math.floor(gx), iy = Math.floor(gy), h = hash(ix, iy); if(h > .9){ const ux = gx - ix - .5, uy = gy - iy - .5; if(ux*ux + uy*uy < (.01 + (h - .9)*.12)*Math.min(1, d/9)){ c = h > .985 ? 19 : 7; LL = (.34 + .3*Math.sin(T*1.6 + h*90))*Math.min(1, 1.6*Math.exp(-d*.06)) + .06; } } } }
             else if(mode === "planks"){ const u = wx - Math.floor(wx); if(u < .07 || ((wy*.5 - Math.floor(wy*.5)) < .035 && hash(Math.floor(wx), Math.floor(wy*.5)) > .35)) c = c2; }
             else if(mode === "tiles"){ if(((Math.floor(wx) + Math.floor(wy)) & 1)) c = c2; }
             else if(mode === "earth"){ const s = d > 6 ? 4 : d > 3 ? 8 : d > 1.5 ? 16 : 32, h = hash(Math.floor(wx*s), Math.floor(wy*s) + s*977); if(h > .72) LL -= .075; else if(h < .1) LL += .05; }
@@ -57,7 +57,12 @@ window.MiroirR3D = function(canvas){
     if(lvl.stars){ const st = lvl.stars; for(let i = 0; i < st.length; i++){ const s = st[i]; let da = s[0] - P.a; da = Math.atan2(Math.sin(da), Math.cos(da)); if(Math.abs(da) > FOV*.62) continue;
         const x = (W/2 + Math.tan(da)*proj) | 0, y = (hz - 1 - s[1]*hz*1.05) | 0; if(x < 0 || x >= W || y < 0 || y >= hz) continue;
         const tw = .55 + .45*Math.sin(T*s[3] + i), b = s[2]*tw; buf[y*W + x] = LUT[(s[4] || 7)*8 + (b > .8 ? 7 : b > .6 ? 5 : b > .4 ? 4 : 3)];
+        if(lvl.mirror){ const y2 = hz + (hz - 1 - y); if(y2 < H && b > .45) buf[y2*W + x] = LUT[(s[4] || 7)*8 + (b > .8 ? 4 : 3)]; }
         if(s[2] > .94 && b > .8){ if(x + 1 < W) buf[y*W + x + 1] = LUT[6*8 + 4]; if(x > 0) buf[y*W + x - 1] = LUT[6*8 + 4]; if(y > 0) buf[(y - 1)*W + x] = LUT[6*8 + 4]; if(y + 1 < hz) buf[(y + 1)*W + x] = LUT[6*8 + 4]; } } }
+    /* les constellations allumées : des étoiles d'or reliées par un pointillé */
+    if(lvl.consts){ for(const c of lvl.consts){ if(!c.on) continue; const q = c.pts.map(p => { let da = p[0] - P.a; da = Math.atan2(Math.sin(da), Math.cos(da)); return Math.abs(da) > 1.25 ? null : [(W/2 + Math.tan(da)*proj) | 0, (hz - 1 - p[1]*hz*1.05) | 0]; });
+        for(const l of c.lines){ const A = q[l[0]], B = q[l[1]]; if(!A || !B) continue; const n = Math.max(Math.abs(B[0] - A[0]), Math.abs(B[1] - A[1])); for(let k = 2; k < n - 1; k += 2){ const x = (A[0] + (B[0] - A[0])*k/n) | 0, y = (A[1] + (B[1] - A[1])*k/n) | 0; if(x >= 0 && x < W && y >= 0 && y < hz) buf[y*W + x] = LUT[17*8 + (c.neuf ? 5 : 3)]; } }
+        q.forEach((A, i) => { if(!A) return; const x = A[0], y = A[1], tw = Math.sin(T*1.7 + i*2) > -.6 ? 7 : 5; for(const [ox, oy, l] of [[0, 0, tw], [1, 0, 4], [-1, 0, 4], [0, 1, 4], [0, -1, 4]]){ const xx = x + ox, yy = y + oy; if(xx >= 0 && xx < W && yy >= 0 && yy < hz) buf[yy*W + xx] = LUT[19*8 + l]; } }); } }
     /* les murs */
     let tgt = null;
     for(let x = 0; x < W; x++){

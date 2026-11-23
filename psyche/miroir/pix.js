@@ -214,5 +214,5 @@ window.MiroirPix = (() => {
     const win = () => { R(x, lit ? "#ffe9a8" : "#14162b", 33, 72, 7, 7); R(x, "#2a2622", 36, 72, 1, 7); R(x, "#2a2622", 33, 75, 7, 1); }; win(); R(x, "#0a0a14", 43, 77, 5, 13); if(lit){ halo(x, 36, 75, 10, "#c2501c", "#f08a24"); win(); R(x, "#f08a24", 43, 90, 5, 1); } x.restore(); return toRaw(mir); }
   /* pour voir une texture hors du moteur (le carnet, les essais) */
   const show = (t, lv) => { const c = cv(t.w, t.h), x = c.getContext("2d"), im = x.createImageData(t.w, t.h), o = new Uint32Array(im.data.buffer); for(let i = 0; i < o.length; i++) o[i] = t.raw ? t.d[i] : (t.i[i] ? LUT[t.i[i]*8 + (lv == null ? 5 : lv)] : 0); x.putImageData(im, 0, 0); return c; };
-  return {W, S, PAL, LUT, BAYER, setTheme, theme:() => theme, cabinet, visage, miroirFace, miroirDos, miroirMaison, mk, R, disc, rng, toTex, toRaw, cv, relight, halo, show};
+  return {W, S, PAL, LUT, BAYER, THEMES, setTheme, theme:() => theme, cabinet, visage, miroirFace, miroirDos, miroirMaison, mk, R, disc, rng, toTex, toRaw, cv, relight, halo, show};
 })();

@@ -71,6 +71,28 @@
 .mir-aide b{color:#f4efe2}
 .mir-md{display:block;width:min(100%,340px);height:auto;aspect-ratio:1;margin:6px auto 4px;border-radius:50%;border:3px solid #e2bd5a;touch-action:none;cursor:crosshair;image-rendering:auto!important}
 .mir-mdi{display:block;margin:0 auto;border-radius:50%;border:2px solid #e2bd5a;image-rendering:auto!important}
+/* les volets, le corpus, les jauges */
+.mir-vol{display:block;width:100%;height:auto;aspect-ratio:16/10;margin:4px 0 16px;box-shadow:0 0 0 1px #2a2622,0 0 0 4px #0a0a14}
+.mir-sheet.volet .mir-sheet-in{width:min(100%,560px)}
+.mir-corpus{display:flex;flex-direction:column;gap:14px;max-height:56dvh;overflow:auto;margin:0 -6px 6px;padding:0 6px}
+.mir-corpus section{padding:0 0 12px;border-bottom:1px solid rgba(74,90,138,.5)}
+.mir-corpus section.clos{opacity:.45}
+.mir-corpus h3{margin:0 0 3px;font:400 22px/1.15 var(--f-display,Georgia,serif);color:#f4efe2}
+.mir-corpus h3 b{font-weight:400;color:#e2bd5a;margin-right:8px}
+.mir-ep{margin:0 0 6px;font:400 13px/1.4 var(--f-ui,sans-serif);color:#8fa3c8}
+.mir-agit{margin:0 0 8px;font:400 15px/1.4 var(--f-text,Georgia,serif);color:#d9cfb8;font-style:italic}
+.mir-agit span{color:#ffe9a8}
+.mir-agit.barre span,.mir-fil li.barre span{text-decoration:line-through;text-decoration-color:rgba(226,189,90,.7);color:#8fa3c8}
+.mir-vl{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.mir-vl span{color:#4a5a8a;letter-spacing:.2em}
+.mir-fil{margin:0 0 18px;padding:0;list-style:none;text-align:left;font:400 15.5px/1.5 var(--f-text,Georgia,serif);color:#d9cfb8}
+.mir-fil li{display:flex;gap:10px;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(74,90,138,.4)}
+.mir-fil b{font:600 12px/1.9 var(--f-ui,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:#8fa3c8;white-space:nowrap}
+.mir-fil span{text-align:right;color:#ffe9a8}
+.mir-bar{height:6px;border:1px solid #4a5a8a;border-radius:3px;overflow:hidden;background:#0a0a14}
+.mir-bar i{display:block;height:100%;width:0;background:#e2bd5a}
+.mir-hold{flex:1;touch-action:none;user-select:none;-webkit-user-select:none}
+.mir-hold.on{background:#ffe9a8;box-shadow:0 0 24px -2px rgba(226,189,90,.8)}
 @media (max-width:700px) and (orientation:portrait){.mir[data-mode="2d"] .mir-dlg{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 54px + 62.5vw + 16px);max-height:calc(100dvh - 62.5vw - 90px)}}
 @media (min-width:900px){.mir-walk{display:none}.mir-2d canvas{width:min(100vw,calc((100dvh - 270px)*1.6),1040px)}.mir-txt{font-size:21px}}
 @media (prefers-reduced-motion:reduce){.mir-act,.mir-more{animation:none}.mir-fade{transition-duration:.01s!important}}
