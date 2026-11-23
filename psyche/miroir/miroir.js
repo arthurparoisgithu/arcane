@@ -4,9 +4,9 @@
    les trois coups, le choix, et la nuit de nouveau. Tout reste sur l'appareil (localStorage « arcanes.miroir.v1 »). */
 window.ArcanesMiroir = (() => {
   const PX = window.MiroirPix, W = PX.W, S = PX.S, KEY = "arcanes.miroir.v1";
-  const DEF = () => ({v:1, etape:"nuit", nom:"", reve:"", motReve:"", mots:[], lent:null, agace:"", lame:null, ailes:{}, carnet:[], lueurs:[], fin:null, lu1913:false, mandala:"", son:true, finie:0});
+  const DEF = () => ({v:1, niv:"hub", saga:{faits:{}, volets:[], agit:[]}, etape:"nuit", nom:"", reve:"", motReve:"", mots:[], lent:null, agace:"", lame:null, ailes:{}, carnet:[], lueurs:[], fin:null, lu1913:false, mandala:"", son:true, finie:0});
   let st = DEF(), root = null, eng = null, c3 = null, c2 = null, x2 = null, mode = "", paint = null, popt = {}, raf2 = 0, t2 = 0, busy = false, alive = false, capT = 0, lieu = "";
-  const load = () => { try{ const o = JSON.parse(localStorage.getItem(KEY)); if(o && o.v === 1) st = Object.assign(DEF(), o); }catch(e){} };
+  const load = () => { try{ const o = JSON.parse(localStorage.getItem(KEY)); if(o && o.v === 1){ st = Object.assign(DEF(), o); if(!o.saga){ st.saga = {faits:{}, volets:[], agit:[]}; st.niv = (o.etape === "nuit" || o.etape === "fin") ? "hub" : "VII"; if(o.etape === "fin") st.saga.faits.VII = "jeu"; } } }catch(e){} };
   const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} };
   const $ = s => root.querySelector(s), esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
   const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -20,7 +20,7 @@ window.ArcanesMiroir = (() => {
       pianoG = ac.createGain(); pianoG.gain.value = 0; const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 2100; pianoG.connect(f); f.connect(out); }
     const mute = v => { st.son = v; save(); if(out) out.gain.setTargetAtTime(v ? .9 : 0, ac.currentTime, .1); };
     function loop(name, type, freq, q, vol){ if(!ac) return; let a = amb[name]; if(!a){ const s = ac.createBufferSource(); s.buffer = nz; s.loop = true; const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q; const g = ac.createGain(); g.gain.value = 0; s.connect(f); f.connect(g); g.connect(out); s.start(); a = amb[name] = {g, f}; } a.g.gain.setTargetAtTime(vol, ac.currentTime, .8); }
-    const ambiance = o => { if(!ac) return; o = o || {}; loop("vent", "bandpass", 420, .7, o.vent || 0); loop("pluie", "highpass", 2600, .4, o.pluie || 0); loop("feu", "bandpass", 1500, 1.2, o.feu || 0); };
+    const ambiance = o => { if(!ac) return; o = o || {}; loop("vent", "bandpass", 420, .7, o.vent || 0); loop("pluie", "highpass", 2600, .4, o.pluie || 0); loop("feu", "bandpass", 1500, 1.2, o.feu || 0); loop("foule", "bandpass", 300, .5, o.foule || 0); loop("gaz", "highpass", 5200, .3, o.gaz || 0); };
     function burst(type, freq, dur, vol, q){ if(!ok()) return; const s = ac.createBufferSource(); s.buffer = nz; const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q || 1; const g = ac.createGain(), t = ac.currentTime; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); s.connect(f); f.connect(g); g.connect(out); s.start(t, Math.random()); s.stop(t + dur + .05); }
     function tone(freq, dur, vol, type, when){ if(!ok()) return; const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + (when || 0); o.type = type || "sine"; o.frequency.value = freq; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + .05); }
     const pas = () => { step ^= 1; burst("lowpass", step ? 190 : 150, .09, .1, .6); };
@@ -36,15 +36,21 @@ window.ArcanesMiroir = (() => {
     function note(m, t, v, d){ const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(); o.type = "triangle"; o2.type = "sine"; o.frequency.value = N(m); o2.frequency.value = N(m)*2.003; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .012); g.gain.exponentialRampToValueAtTime(.0008, t + d); o.connect(g); const g2 = ac.createGain(); g2.gain.value = .25; o2.connect(g2); g2.connect(g); g.connect(pianoG); o.start(t); o2.start(t); o.stop(t + d + .1); o2.stop(t + d + .1); }
     let pi = 0, pNext = 0; function piano(on){ if(!ac) return; if(on && !pianoT){ pNext = ac.currentTime + .2; pianoT = setInterval(() => { while(pNext < ac.currentTime + .6){ const bar = (pi >> 3) % 4, k = pi & 7; note(PAT[bar][k], pNext, k === 0 ? .2 : .11, 3.2); if(MEL[bar][k]) note(MEL[bar][k], pNext, .17, 4.2); pi++; pNext += .46; } }, 200); } if(!on && pianoT){ clearInterval(pianoT); pianoT = null; pianoG.gain.setTargetAtTime(0, ac.currentTime, .5); } }
     const pianoVol = v => { if(pianoG) pianoG.gain.setTargetAtTime(v, ac.currentTime, .4); };
-    const stop = () => { piano(false); ambiance({}); };
-    return {init, mute, ambiance, pas, tonnerre, toc, vitre, craque, clair, grave, or, piano, pianoVol, stop, resume:() => { if(ac && ac.state === "suspended") ac.resume(); }};
+    /* l'harmonica de verre : des sons tenus, très doux, un motif lent et original */
+    let verreT = null, vi = 0, vNext = 0; const VER = [69, 72, 76, 74, 72, 67, 69, 64, 65, 69, 72, 71, 69, 64, 62, 64];
+    function verre(on){ if(!ac) return; if(on && !verreT){ vNext = ac.currentTime + .2; verreT = setInterval(() => { if(!ok()) return; while(vNext < ac.currentTime + .8){ const m = VER[vi % VER.length], t = vNext; for(const [mm, v] of [[m, .07], [m - 12, .035], [m + 7, .02]]){ const o = ac.createOscillator(), g = ac.createGain(), lf = ac.createOscillator(), lg = ac.createGain(); o.type = "sine"; o.frequency.value = N(mm + 12); lf.frequency.value = 5.2; lg.gain.value = 3; lf.connect(lg); lg.connect(o.frequency); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .5); g.gain.linearRampToValueAtTime(v*.7, t + 1.4); g.gain.exponentialRampToValueAtTime(.0008, t + 2.6); o.connect(g); g.connect(out); o.start(t); lf.start(t); o.stop(t + 2.8); lf.stop(t + 2.8); } vi++; vNext += 1.25; } }, 300); } if(!on && verreT){ clearInterval(verreT); verreT = null; } }
+    const oiseau = () => { if(!ok()) return; const t = ac.currentTime, f0 = 2200 + Math.random()*1400; for(let i = 0; i < 2 + ((Math.random()*3) | 0); i++){ const o = ac.createOscillator(), g = ac.createGain(), tt = t + i*.11; o.type = "sine"; o.frequency.setValueAtTime(f0, tt); o.frequency.exponentialRampToValueAtTime(f0*(1.2 + Math.random()*.5), tt + .07); g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(.035, tt + .01); g.gain.exponentialRampToValueAtTime(.001, tt + .09); o.connect(g); g.connect(out); o.start(tt); o.stop(tt + .1); } };
+    const gong = () => { [110, 164.8, 220, 277].forEach((f, i) => tone(f, 3.2, .09 - i*.015, "sine")); };
+    const cri = () => { if(!ok()) return; const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime; o.type = "triangle"; o.frequency.setValueAtTime(500 + Math.random()*200, t); o.frequency.exponentialRampToValueAtTime(900 + Math.random()*300, t + .25); o.frequency.exponentialRampToValueAtTime(420, t + .6); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .05); g.gain.exponentialRampToValueAtTime(.001, t + .65); o.connect(g); g.connect(out); o.start(t); o.stop(t + .7); };
+    const stop = () => { piano(false); verre(false); ambiance({}); };
+    return {init, mute, ambiance, pas, tonnerre, toc, vitre, craque, clair, grave, or, piano, pianoVol, verre, oiseau, gong, cri, tone, stop, resume:() => { if(ac && ac.state === "suspended") ac.resume(); }};
   })();
 
   /* ================================================================ L'INTERFACE */
   function build(){
     root = document.createElement("div"); root.id = "mir"; root.className = "mir";
     root.innerHTML = `<canvas class="mir-3d" aria-label="La scène du jeu"></canvas><div class="mir-2d"><canvas width="160" height="100" aria-hidden="true"></canvas></div><div class="mir-fade on"></div>
-      <div class="mir-top"><button type="button" class="mir-b" data-m="menu" aria-label="Menu">☰</button><span class="mir-lieu" aria-live="polite"></span><button type="button" class="mir-b" data-m="carnet" aria-label="Le carnet">✎</button></div>
+      <div class="mir-top"><button type="button" class="mir-b" data-m="menu" aria-label="Menu">☰</button><span class="mir-lieu" aria-live="polite"></span><button type="button" class="mir-b" data-m="carnet" aria-label="Le corpus">✎</button></div>
       <p class="mir-cap" aria-live="polite"></p><div class="mir-stick" aria-hidden="true"><i></i></div>
       <div class="mir-ctl"><button type="button" class="mir-act" hidden></button><button type="button" class="mir-walk" aria-label="Avancer">▲</button></div>
       <div class="mir-dlg" hidden><p class="mir-who"></p><p class="mir-txt"></p><div class="mir-in"></div><span class="mir-more" aria-hidden="true">▾</span></div>
@@ -59,7 +65,7 @@ window.ArcanesMiroir = (() => {
     $(".mir-act").onclick = () => { if(eng.target) eng.onAct(eng.target); };
     const wk = $(".mir-walk"); const wOn = e => { e.preventDefault(); eng.auto = true; wk.classList.add("on"); }, wOff = () => { eng.auto = false; wk.classList.remove("on"); };
     wk.addEventListener("pointerdown", wOn); wk.addEventListener("pointerup", wOff); wk.addEventListener("pointerleave", wOff); wk.addEventListener("pointercancel", wOff);
-    root.querySelector("[data-m=menu]").onclick = () => menu(); root.querySelector("[data-m=carnet]").onclick = () => carnet();
+    root.querySelector("[data-m=menu]").onclick = () => menu(); root.querySelector("[data-m=carnet]").onclick = () => { if($(".mir-sheet").hidden) window.MiroirSaga.corpus(kit); };
     root.addEventListener("pointerdown", () => { Snd.init(); Snd.resume(); }, {capture:true});
     addEventListener("keydown", onKey); eng.start(); loop2();
   }
@@ -87,7 +93,7 @@ window.ArcanesMiroir = (() => {
       box.querySelector("[data-ok]").onclick = () => fin(f.value); const no = box.querySelector("[data-no]"); if(no) no.onclick = () => fin("");
       if(!o.long) f.addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); fin(f.value); } }); if(o.focus !== false) setTimeout(() => { try{ f.focus({preventScroll:true}); }catch(e){} }, 60); }); }
   function choose(who, txt, opts){ return new Promise(res => { const d = $(".mir-dlg"), w = $(".mir-who"), p = $(".mir-txt"), box = $(".mir-in"); d.hidden = false; d.onclick = null; dlgNext = null; d.classList.remove("fin"); d.dataset.who = who === "Jung" ? "jung" : who ? "autre" : "nar"; w.textContent = who || ""; w.hidden = !who; p.textContent = nb(txt || "");
-      box.innerHTML = `<div class="mir-col">${opts.map((t, i) => `<button type="button" class="mir-btn" data-i="${i}">${esc(nb(t))}</button>`).join("")}</div>`; box.querySelectorAll("button").forEach(b => b.onclick = () => { box.innerHTML = ""; res(+b.dataset.i); }); }); }
+      box.innerHTML = `<div class="mir-col">${opts.map((t, i) => `<button type="button" class="mir-btn" data-i="${i}">${esc(nb(t))}</button>`).join("")}</div>`; const t0 = performance.now(); box.querySelectorAll("button").forEach(b => b.onclick = e => { e.stopPropagation(); if(performance.now() - t0 < 380) return; box.innerHTML = ""; res(+b.dataset.i); }); }); }
   const J = t => say("Jung", t), Nr = t => say("", t);
 
   /* ---------- le carnet ---------- */
@@ -110,10 +116,10 @@ window.ArcanesMiroir = (() => {
       <div class="mir-pages">${st.carnet.map(id => `<article><h3>${esc(PAGES[id][0])}</h3><p>${esc(nb(PAGES[id][1]))}</p>${PAGES[id][2] ? `<button type="button" class="mir-lnk" data-x="lec:${PAGES[id][2]}">Lire la leçon</button>` : ""}</article>`).join("")}</div>${lame}<div class="mir-row"><button type="button" class="mir-btn" data-x>Fermer</button></div>`, "carnet");
     if(typeof v === "string" && v.startsWith("lec:")){ close(); try{ window.ArcanesPsyche.go(v); }catch(e){} } }
   async function menu(){ if(!$(".mir-sheet").hidden) return;
-    const v = await sheet(`<p class="mir-eye">Le Miroir</p><h2>Pause</h2><div class="mir-col"><button type="button" class="mir-btn" data-x="go">Reprendre</button><button type="button" class="mir-btn ghost" data-x="son">${st.son ? "Couper le son" : "Remettre le son"}</button>${st.etape === "nuit" && mode === "3d" ? `<button type="button" class="mir-btn ghost" data-x="saut">Aller directement au miroir</button>` : ""}<button type="button" class="mir-btn ghost" data-x="aide">Comment jouer</button><button type="button" class="mir-btn ghost" data-x="zero">Recommencer depuis le début</button><button type="button" class="mir-btn ghost" data-x="quit">Quitter le jeu</button></div><p class="mir-note">La partie est enregistrée sur cet appareil.</p>`);
-    if(v === "son"){ Snd.init(); Snd.mute(!st.son); } else if(v === "saut"){ eng.P.x = 68; eng.P.y = 50; eng.P.a = 0; } else if(v === "aide") await aide(); else if(v === "quit") close();
+    const v = await sheet(`<p class="mir-eye">Le Miroir</p><h2>Pause</h2><div class="mir-col"><button type="button" class="mir-btn" data-x="go">Reprendre</button><button type="button" class="mir-btn ghost" data-x="son">${st.son ? "Couper le son" : "Remettre le son"}</button><button type="button" class="mir-btn ghost" data-x="corpus">Le corpus (${st.saga.volets.length} volets sur 24)</button>${lieu !== "La nuit" ? `<button type="button" class="mir-btn ghost" data-x="hub">Revenir dans la nuit</button>` : ""}<button type="button" class="mir-btn ghost" data-x="aide">Comment jouer</button><button type="button" class="mir-btn ghost" data-x="zero">Recommencer depuis le début</button><button type="button" class="mir-btn ghost" data-x="quit">Quitter le jeu</button></div><p class="mir-note">La partie est enregistrée sur cet appareil.</p>`);
+    if(v === "son"){ Snd.init(); Snd.mute(!st.son); } else  if(v === "aide") await aide(); else if(v === "quit") close(); else if(v === "corpus") await window.MiroirSaga.corpus(kit); else if(v === "hub"){ endDlg(); busy = false; if(st.niv !== "VII") st.niv = "hub"; save(); await fade(true, 500); window.MiroirSaga.hub(kit); }
     else if(v === "zero"){ const c = await sheet(`<h2>Tout effacer ?</h2><p class="mir-page">Ta partie, ton rêve et ton carnet seront effacés de cet appareil.</p><div class="mir-row"><button type="button" class="mir-btn" data-x="oui">Effacer et recommencer</button><button type="button" class="mir-btn ghost" data-x>Annuler</button></div>`); if(c === "oui"){ const son = st.son; st = DEF(); st.son = son; save(); endDlg(); busy = false; start(); } } }
-  const aide = () => sheet(`<p class="mir-eye">Comment jouer</p><h2>Marcher, regarder, toucher</h2><ul class="mir-aide"><li><b>Au doigt ou à la souris :</b> pose le doigt et glisse vers le haut pour avancer, sur les côtés pour tourner. Le bouton ▲ avance tout seul tant que tu le tiens.</li><li><b>Au clavier :</b> les flèches, ou ZQSD. Espace pour agir.</li><li><b>Agir :</b> quand un bouton apparaît en bas, touche-le, ou touche la scène.</li><li><b>Le carnet</b> (✎) garde ce que tu as traversé.</li></ul><div class="mir-row"><button type="button" class="mir-btn" data-x>Compris</button></div>`);
+  const aide = () => sheet(`<p class="mir-eye">Comment jouer</p><h2>Marcher, regarder, toucher</h2><ul class="mir-aide"><li><b>Au doigt ou à la souris :</b> pose le doigt et glisse vers le haut pour avancer, sur les côtés pour tourner. Le bouton ▲ avance tout seul tant que tu le tiens.</li><li><b>Au clavier :</b> les flèches, ou ZQSD. Espace pour agir.</li><li><b>Agir :</b> quand un bouton apparaît en bas, touche-le, ou touche la scène.</li><li><b>Le corpus</b> (✎) garde les volets que tu as ouverts.</li></ul><div class="mir-row"><button type="button" class="mir-btn" data-x>Compris</button></div>`);
 
   /* ================================================================ ACTE I */
   const stars = (n, seed) => { const r = PX.rng(seed || 9), a = []; for(let i = 0; i < n; i++){ const b = Math.pow(r(), 2.2); a.push([r()*Math.PI*2, Math.pow(r(), 1.4)*.98 + .01, .35 + b*.65, .6 + r()*2.4, r() > .88 ? 19 : r() > .7 ? 6 : 7]); } return a; };
@@ -318,7 +324,7 @@ window.ArcanesMiroir = (() => {
   async function finale(tour){
     if(st.fin === "ouvert"){ await Nr("Dans le miroir, la cabane entre les arbres. Une fenêtre est allumée."); await Nr(tour ? "Tu as fait le tour : c'est la même image des deux côtés. Il n'y a plus d'envers." : "Fais le tour si tu veux : c'est la même image des deux côtés. Il n'y a plus d'envers."); }
     else { await Nr("Dans le miroir, la cabane entre les arbres. La fenêtre est éteinte."); await Nr("De l'autre côté du miroir, elle attend toujours. Tu sais où est la porte."); }
-    await say("La voix de Jung", "Debout, debout."); await say("La voix de Jung", "Allons."); endDlg(); st.etape = "fin"; st.finie = (st.finie || 0) + 1; save(); await fade(true, 1400); fin();
+    await say("La voix de Jung", "Debout, debout."); await say("La voix de Jung", "Allons."); endDlg(); st.etape = "fin"; st.finie = (st.finie || 0) + 1; st.saga.faits.VII = "jeu"; st.niv = "hub"; save(); await fade(true, 1400); setTimeout(() => window.MiroirSaga.apresMiroir(kit), 0);
   }
   async function fin(){
     Snd.piano(true); Snd.pianoVol(.4); setMode("2d"); paint = null; x2.fillStyle = "#0a0a14"; x2.fillRect(0, 0, 160, 100);
@@ -330,21 +336,26 @@ window.ArcanesMiroir = (() => {
   /* ================================================================ OUVRIR, REPRENDRE, FERMER */
   async function start(){
     $(".mir-fade").classList.add("on"); endDlg(); cap("", 0); busy = false;
+    if(st.niv !== "VII") return window.MiroirSaga.start(kit);
     const e = st.etape;
-    if(e === "nuit"){ nuit(false); await fade(false, 1600); }
+    if(e === "nuit" || e === "fin"){ st.niv = "hub"; save(); return window.MiroirSaga.start(kit); }
     else if(e === "cabinet"){ scene2(visage, {}); await run(cabinet1); }
     else if(e === "foret") foret(); else if(e === "hall") hall(false);
-    else if(e === "final") run(cabinet3); else if(e === "epilogue"){ nuit(true); await fade(false, 1200); } else fin();
+    else if(e === "final") run(cabinet3); else if(e === "epilogue"){ nuit(true); await fade(false, 1200); }
   }
-  async function open(){
-    if(alive) return; load(); alive = true; build(); PX.setTheme("nuit"); setMode("2d"); x2.fillStyle = "#0a0a14"; x2.fillRect(0, 0, 160, 100);
-    const neuf = st.etape === "nuit" && !st.lueurs.length && !st.nom;
-    const v = await sheet(`<p class="mir-eye">Psyché · le jeu</p><h1>Le Miroir</h1><p class="mir-page">${neuf ? "Une nuit, un miroir très loin, et dedans le cabinet d'un médecin suisse. Une heure environ, en plusieurs fois si tu veux." : st.etape === "fin" ? "Tu es allé au bout. Tu peux relire ton carnet ou recommencer." : "Ta partie t'attend où tu l'as laissée."}</p>
-      <div class="mir-col"><button type="button" class="mir-btn" data-x="go">${neuf ? "Commencer" : st.etape === "fin" ? "Voir la fin" : "Reprendre"}</button><button type="button" class="mir-btn ghost" data-x="aide">Comment jouer</button><button type="button" class="mir-btn ghost" data-x="quit">Plus tard</button></div>
+  async function open(opt){
+    if(alive) return; load(); alive = true; build();
+    if(opt && opt.corpus){ PX.setTheme("nuit"); setMode("2d"); x2.fillStyle = "#0a0a14"; x2.fillRect(0, 0, 160, 100); await window.MiroirSaga.corpus(kit); return close(); } PX.setTheme("nuit"); setMode("2d"); x2.fillStyle = "#0a0a14"; x2.fillRect(0, 0, 160, 100);
+    const neuf = st.etape === "nuit" && !st.nom && !Object.keys(st.saga.faits).length, tout = st.saga.faits.E === true;
+    const v = await sheet(`<p class="mir-eye">Psyché · le jeu</p><h1>Le Miroir</h1><p class="mir-page">${neuf ? "Une nuit, et un miroir très loin. Entre toi et lui, des lueurs : vingt-cinq siècles de rêves, de fluides et de sommeils. Sept niveaux, en plusieurs fois si tu veux." : tout ? "Tu es allé au bout. Le ciel est plein. Tu peux t'y promener, relire le corpus ou recommencer." : "Ta nuit t'attend où tu l'as laissée."}</p>
+      <div class="mir-col"><button type="button" class="mir-btn" data-x="go">${neuf ? "Commencer" : tout ? "Retourner dans la nuit" : "Reprendre"}</button>${st.saga.volets.length ? `<button type="button" class="mir-btn ghost" data-x="corpus">Le corpus (${st.saga.volets.length} volets sur 24)</button>` : ""}<button type="button" class="mir-btn ghost" data-x="aide">Comment jouer</button><button type="button" class="mir-btn ghost" data-x="quit">Plus tard</button></div>
       <p class="mir-note">Avec le son, c'est mieux. Ce que tu écris reste sur cet appareil. C'est un jeu, pas un soin : Jung y parle comme dans un rêve, ses répliques sont inventées.</p>`, "titre");
-    if(!alive) return; if(v === "quit" || v == null) return close(); if(v === "aide") await aide(); Snd.init(); Snd.resume(); start();
+    if(!alive) return; if(v === "quit" || v == null) return close(); if(v === "aide") await aide(); if(v === "corpus") await window.MiroirSaga.corpus(kit); Snd.init(); Snd.resume(); start();
   }
   function close(){ if(!alive) return; alive = false; Snd.stop(); cancelAnimationFrame(raf2); removeEventListener("keydown", onKey); try{ eng.stop(); }catch(e){} clearTimeout(capT); if(root) root.remove(); root = null; document.documentElement.classList.remove("mir-lock"); PX.setTheme("nuit"); busy = false; paint = null;
     try{ if(window.PSY_APP && window.PSY_APP.active()) window.PSY_APP.view("jour"); }catch(e){} }
-  return {open, close, state:() => st, _dbg:{go:(e, patch) => { Object.assign(st, patch || {}); st.etape = e; save(); start(); }, fn:{nuit, foret, hall, masques, mots, galerie, grotte, tour, cabinet3, fin, cabinet1}, eng:() => eng, set:o => Object.assign(st, o)}};
+  /* la trousse que les niveaux de la saga utilisent */
+  const kit = {PX, W, S, Snd, say, ask, choose, J, Nr, endDlg, scene2, visage, setMode, fade, flash, cap, setLieu, sheet, closeSheet, run, wait, stars, esc, nb, save, page, carnet, entrer, nuitMiroir:nuit, close,
+    get eng(){ return eng; }, get st(){ return st; }, get alive(){ return alive; }, get busy(){ return busy; }, get lieu(){ return lieu; }, get popt(){ return popt; }, demarrer:() => start(), $:s => $(s), resetMiroir:() => { const g = DEF(); for(const k of ["etape", "reve", "motReve", "mots", "lent", "agace", "lame", "ailes", "fin", "lu1913", "mandala"]) st[k] = g[k]; st.carnet = st.carnet.filter(id => !PAGES[id]); save(); }, PAGES};
+  return {open, close, state:() => st, kit, _dbg:{niv:(n, faits, patch) => { Object.assign(st, patch || {}); st.niv = n; Object.assign(st.saga.faits, faits || {}); save(); endDlg(); busy = false; start(); }, go:(e, patch) => { st.niv = "VII"; Object.assign(st, patch || {}); st.etape = e; save(); start(); }, fn:{nuit, foret, hall, masques, mots, galerie, grotte, tour, cabinet3, fin, cabinet1}, eng:() => eng, set:o => Object.assign(st, o)}};
 })();

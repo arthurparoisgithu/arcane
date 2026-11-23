@@ -250,3 +250,6 @@
 .ps-miroir b{display:block;font:400 28px/1.05 var(--f-display,Georgia,serif);margin:2px 0 5px}
 .ps-miroir small{display:block;font:600 11.5px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase;color:#e2bd5a}
 .ps-miroir span{display:block;font:400 15.5px/1.45 var(--f-ui,sans-serif);color:#cfd9ea}
+
+.ps-corpus{display:block;width:100%;margin:-8px 0 18px;padding:11px 16px;text-align:left;font:600 14.5px/1.3 var(--f-ui,sans-serif);color:#ffe9a8;cursor:pointer;border:1px solid #4a5a8a;border-radius:6px;background:#14162b}
+.ps-corpus:hover{border-color:#e2bd5a}
