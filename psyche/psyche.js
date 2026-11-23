@@ -18,5 +18,10 @@
   function leave(){ on = false; document.documentElement.classList.remove("u-psy"); document.body.classList.remove("u-psy"); if(ready()) ready().leave(); }
   const view = v => ready() ? ready().view(v) : enter(v);
   const go = t => { on = true; return ready() ? ready().go(t) : load().then(A => { if(A && on){ A.enter(); A.go(t); } }); };
-  window.ArcanesPsyche = {enter, leave, view, go, active:() => on, load, state:() => ready() ? ready().state() : null};
+  /* Le Miroir, le jeu : trois fichiers et une feuille de style, chargés seulement quand on le lance */
+  let jeu = null;
+  const miroir = () => { if(!jeu) jeu = (async () => { if(!document.querySelector('link[href="psyche/miroir/miroir.css"]')){ const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "psyche/miroir/miroir.css"; document.head.appendChild(l); }
+      for(const f of ["psyche/miroir/pix.js", "psyche/miroir/r3d.js", "psyche/miroir/miroir.js"]) await one(f); return window.ArcanesMiroir; })().catch(e => { jeu = null; throw e; }); return jeu.then(M => { M.open(); return M; }); };
+  document.addEventListener("click", e => { const t = e.target.closest && e.target.closest("[data-miroir]"); if(t){ e.preventDefault(); miroir().catch(() => {}); } });
+  window.ArcanesPsyche = {enter, leave, view, go, miroir, active:() => on, load, state:() => ready() ? ready().state() : null};
 })();
