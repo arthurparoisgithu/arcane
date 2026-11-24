@@ -21,7 +21,7 @@
   /* Le Miroir, le jeu : trois fichiers et une feuille de style, chargés seulement quand on le lance */
   let jeu = null;
   const miroir = o => { if(!jeu) jeu = (async () => { if(!document.querySelector('link[href="psyche/miroir/miroir.css"]')){ const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "psyche/miroir/miroir.css"; document.head.appendChild(l); }
-      for(const f of ["psyche/miroir/pix.js", "psyche/miroir/pix2.js", "psyche/miroir/r3d.js", "psyche/miroir/miroir.js", "psyche/miroir/saga.js"]) await one(f); return window.ArcanesMiroir; })().catch(e => { jeu = null; throw e; }); return jeu.then(M => { M.open(o); return M; }); };
+      for(const f of ["psyche/miroir/pix.js", "psyche/miroir/pix2.js", "psyche/miroir/r3d.js", "psyche/miroir/vol.js", "psyche/miroir/miroir.js", "psyche/miroir/saga.js"]) await one(f); return window.ArcanesMiroir; })().catch(e => { jeu = null; throw e; }); return jeu.then(M => { M.open(o); return M; }); };
   document.addEventListener("click", e => { const t = e.target.closest && e.target.closest("[data-miroir]"); if(t){ e.preventDefault(); miroir(t.dataset.miroir === "corpus" ? {corpus:true} : null).catch(() => {}); } });
   window.ArcanesPsyche = {enter, leave, view, go, miroir, active:() => on, load, state:() => ready() ? ready().state() : null};
 })();
