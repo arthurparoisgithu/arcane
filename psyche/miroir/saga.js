@@ -190,24 +190,53 @@ window.MiroirSaga = (() => {
         if(p >= 1){ fin = true; removeEventListener("keydown", kd); o.parle = false; box.innerHTML = ""; res(); return; } requestAnimationFrame(loop); }; requestAnimationFrame(loop); }); }
 
   /* ================================================================ I. ÉPIDAURE */
+  /* Le sanctuaire est le seul lieu du jeu bâti en vrais volumes (vol.js) : on arrive par la nuit, le temple seul au fond,
+     et le reste ne sort de l'ombre qu'à l'approche. Les gens et les objets restent plats, comme dans un rêve. */
   function sanctuaire(aube){
-    const eng = K.eng, st = K.st; PX.setTheme(aube ? "aube" : "nuit"); K.setLieu("Épidaure"); K.Snd.ambiance({vent:.08});
-    const etat = {lave:false, offre:false, lu:[false, false, false]};
+    const eng = K.eng, st = K.st, V = window.MiroirVol; PX.setTheme(aube ? "aube" : "nuit"); K.setLieu("Épidaure"); K.Snd.ambiance({vent:.08});
+    const etat = {lave:false, offre:false, lu:[false, false, false]}, CX = 50, YF = 20, pres = {v:aube ? 1 : 0};
     const STE = ["« Ambrosia d'Athènes, borgne. Elle riait de ces récits : comment un rêve rendrait-il un œil ? Elle dormit ici. Le dieu lui ouvrit la paupière et y versa un remède. Au matin, elle voyait. »", "« Un homme aux doigts raides, tous sauf un. Il se moquait des inscriptions. En rêve, il jouait aux osselets. Le dieu bondit sur sa main et lui étendit les doigts. Au jour, il sortit guéri. »", "« Un enfant aveugle, venu d'Hermione. Un des chiens du temple lui lécha les yeux. Il repartit voyant. »"];
-    const sp = []; for(const cx of [4.5, 10.5]) for(let y = 4.5; y < 13; y += 2) sp.push({x:cx, y, h:1.7, tex:S.colonne});
-    sp.push({x:3.4, y:11.5, h:.6, tex:S.fontaine, range:1.7, label:"La fontaine", act:async () => { if(aube){ await K.Nr("L'eau est rose, ce matin."); K.endDlg(); return; } etat.lave = true; K.Snd.vitre(); await K.Nr("L'eau est glacée. Tu te laves les mains et le visage, comme ceux qui sont passés avant toi."); K.endDlg(); }});
-    sp.push({x:7.5, y:6.5, h:.75, tex:S.autel, em:true, emL:.8, emMin:.5, range:1.8, label:"L'autel", act:async () => { if(aube){ await K.Nr("Le feu de l'autel est presque éteint."); K.endDlg(); return; } if(!etat.lave){ await K.say("Le prêtre", "L'eau d'abord. On n'approche pas le dieu avec la poussière de la route."); K.endDlg(); return; } etat.offre = true; await K.Nr("Tu poses un gâteau de miel sur la pierre. La flamme se couche, puis se redresse."); K.endDlg(); }});
-    [[11.6, 12.5], [12.2, 10.5], [11.6, 8.5]].forEach((p, i) => sp.push({x:p[0], y:p[1], h:.85, tex:S.stele, range:1.6, label:"Lire la stèle", act:async () => { etat.lu[i] = true; await K.Nr(STE[i]); K.endDlg(); }}));
-    sp.push({x:6.2, y:13.4, h:.62, tex:S.lampe}, {x:8.8, y:13.4, h:.62, tex:S.lampe}, {x:5.6, y:9.6, h:.36, tex:S.chien}, {x:9.6, y:4.2, h:.32, tex:S.serpent});
-    sp.push({x:4.4, y:2.7, h:.36, tex:S.dormeur}, {x:10.6, y:2.7, h:.36, tex:S.dormeur}, {x:2.6, y:2.7, h:.36, tex:S.dormeur});
-    const pretre = {x:8.7, y:7.2, h:.95, tex:S.pretre, range:1.9, label:"Le prêtre", act:async () => { if(aube) return; const m = !etat.lave ? "Lave-toi à la fontaine." : !etat.offre ? "Porte ton offrande à l'autel." : etat.lu.includes(false) ? "Lis les stèles, toutes. Elles disent ce que le dieu a fait pour d'autres." : "Tu es prêt. Va t'allonger sous le portique."; await K.say("Le prêtre", "Le dieu vient aux dormeurs. Mais on ne dort pas ici comme chez soi. " + m); K.endDlg(); }}; sp.push(pretre);
-    sp.push({x:7.5, y:2.7, h:.36, tex:S.couche, range:1.8, label:"S'allonger sous le portique", noAct:!!aube, act:async () => { const manque = !etat.lave ? "Tu as encore la poussière de la route sur les mains." : !etat.offre ? "Tu n'as rien offert." : etat.lu.includes(false) ? "Il reste des stèles que tu n'as pas lues." : ""; if(manque){ await K.Nr(manque + " Le prêtre secoue la tête."); K.endDlg(); return; }
+    /* les volumes : le temple (toujours visible), puis ce qui n'apparaît que de près */
+    const M = V.mesh(aube ? {sun:[.74, .3, .6], amb:.5, sunI:.5, sky:.06, dens:.012, kProche:.03} : {sun:[-.5, .5, .7], amb:.13, sunI:.34, sky:.03, dens:.006, kProche:.06});
+    const T = V.temple(M, CX, 10, YF), n0 = M.faces.length, A = V.portique(M, 42.4, 45, 21.6, 29.6, 8);
+    V.face(M, [[45, YF + .74, .003], [55.2, YF + .74, .003], [55.2, 31, .003], [45, 31, .003]], [0, 0, 1], {c:12, mat:7, bh:.7, g:5, k:M.kProche, ns:aube ? 0 : .95});
+    V.face(M, [[CX - 1.2, YF + .74, .006], [CX + 1.2, YF + .74, .006], [CX + 1.2, 37.5, .006], [CX - 1.2, 37.5, .006]], [0, 0, 1], {c:11, mat:7, bh:.6, g:5, k:M.kProche, ns:aube ? 0 : 1.15});
+    for(const [x, y, h] of [[56.4, 22.4, 3.5], [56.9, 17, 3.9], [56.4, 11.4, 3.4], [43.4, 17.2, 3.8], [43.6, 11.2, 3.4], [41.3, 20.4, 3.2], [47, 6.9, 3.6], [53.2, 6.7, 3.9], [50.1, 5.4, 3.3]]) V.cypres(M, x, y, h, {k:M.kProche*.6, g:8});
+    for(let i = n0; i < M.faces.length; i++) M.faces[i].al = pres;
+    /* les lumières : celles du temple brûlent toujours, celles de la cour s'allument à l'approche */
+    const feux = aube ? [{x:CX, y:T.porte[1] - .6, z:1.3, r:5.5, i:.4, g:2, fixe:1}] : [{x:CX, y:T.porte[1] + .35, z:1.3, r:3.8, i:.42, g:1, fixe:1}, {x:CX - 1.25, y:12.7, z:1.2, r:3.8, i:1, g:2, fixe:1}, {x:CX + 1.25, y:12.7, z:1.2, r:3.8, i:1, g:2, fixe:1},
+      {x:CX - 2, y:YF + 1.3, z:.75, r:3.4, i:.95, g:1}, {x:CX + 2, y:YF + 1.3, z:.75, r:3.4, i:.95, g:1}, {x:CX, y:24.4, z:.95, r:5, i:.85, g:1}, {x:44.2, y:24.57, z:.85, r:3.6, i:.95, g:4}, {x:44.2, y:26.63, z:.85, r:3.6, i:.95, g:4}];
+    feux.forEach(l => { l.i0 = l.i; M.lights.push(l); }); const L2 = aube ? [] : feux.map(l => [l.x, l.y, l.r, l.i*.6, 1]);
+    /* les gens et les objets */
+    const sp = [], cour = [], pose = (o, fixe) => { sp.push(o); if(!fixe) cour.push(o); return o; };
+    pose({x:53, y:30, h:.6, tex:S.fontaine, range:1.7, label:"La fontaine", act:async () => { if(aube){ await K.Nr("L'eau est rose, ce matin."); K.endDlg(); return; } etat.lave = true; K.Snd.vitre(); await K.Nr("L'eau est glacée. Tu te laves les mains et le visage, comme ceux qui sont passés avant toi."); K.endDlg(); }});
+    pose({x:CX, y:24.4, h:.75, tex:S.autel, em:true, emL:.8, emMin:.5, range:1.8, label:"L'autel", act:async () => { if(aube){ await K.Nr("Le feu de l'autel est presque éteint."); K.endDlg(); return; } if(!etat.lave){ await K.say("Le prêtre", "L'eau d'abord. On n'approche pas le dieu avec la poussière de la route."); K.endDlg(); return; } etat.offre = true; await K.Nr("Tu poses un gâteau de miel sur la pierre. La flamme se couche, puis se redresse."); K.endDlg(); }});
+    [[53.4, 28], [53.8, 26.2], [53.4, 24.4]].forEach((p, i) => pose({x:p[0], y:p[1], h:.85, tex:S.stele, range:1.6, label:"Lire la stèle", act:async () => { etat.lu[i] = true; await K.Nr(STE[i]); K.endDlg(); }}));
+    pose({x:CX - 2, y:YF + 1.3, h:.62, tex:S.lampe}); pose({x:CX + 2, y:YF + 1.3, h:.62, tex:S.lampe}); pose({x:47, y:27.3, h:.36, tex:S.chien}); pose({x:52.6, y:22, h:.32, tex:S.serpent});
+    for(const y of [22.5, 23.55, 27.66, 28.69]) pose({x:43.5, y, h:.36, z:A.zs, tex:S.dormeur}); pose({x:44.2, y:24.57, h:.62, z:A.zs, tex:S.lampe}); pose({x:44.2, y:26.63, h:.62, z:A.zs, tex:S.lampe});
+    const pretre = pose({x:51.3, y:25.7, h:.95, tex:S.pretre, range:1.9, label:"Le prêtre", act:async () => { if(aube) return; const m = !etat.lave ? "Lave-toi à la fontaine." : !etat.offre ? "Porte ton offrande à l'autel." : etat.lu.includes(false) ? "Lis les stèles, toutes. Elles disent ce que le dieu a fait pour d'autres." : "Tu es prêt. Va t'allonger sous le portique."; await K.say("Le prêtre", "Le dieu a sa maison, là-haut : tu peux y monter. Mais c'est aux dormeurs qu'il vient, et on ne dort pas ici comme chez soi. " + m); K.endDlg(); }});
+    pose({x:43.5, y:25.6, h:.36, z:A.zs, tex:S.couche, range:1.8, label:"S'allonger sous le portique", noAct:!!aube, act:async () => { const manque = !etat.lave ? "Tu as encore la poussière de la route sur les mains." : !etat.offre ? "Tu n'as rien offert." : etat.lu.includes(false) ? "Il reste des stèles que tu n'as pas lues." : ""; if(manque){ await K.Nr(manque + " Le prêtre secoue la tête."); K.endDlg(); return; }
       await K.Nr("Tu t'allonges parmi les dormeurs. Un serpent glisse entre les lits sans que personne ne bouge."); await K.Nr("Le toit du portique s'efface. Les étoiles entrent."); K.endDlg(); await K.fade(true, 1200); setTimeout(songe, 0); }});
-    eng.load({map:["TTTTTTTTTTTTTTT", "T.MMMAAAAAMMM.T", "T.............T", "T.............T", "T.............T", "T.............T", "T.............T", "T.............T", "T.............T", "T.............T", "T.............T", "T.............T", "T.............T", "T.............T", "T.............T", "TTTTTTTTTTTTTTT"], walls:{T:W.cypres, M:W.marbre, A:W.portique}, sprites:sp,
-      sky:aube ? [29, .25, .95] : [3, .03, .34], stars:K.stars(aube ? 40 : 300, 6), floor:"tiles", floorC:10, floorC2:11, dens:.11, lum:aube ? .82 : .5, far:18, speed:1.8, a0:aube ? Math.PI/2 : -Math.PI/2, lights:aube ? [] : [[7.5, 6.5, 4.5, .6], [6.2, 13.4, 3, .45], [8.8, 13.4, 3, .45], [7.5, 2.6, 3, .2]] }, aube ? [7.5, 3.6] : [7.5, 14.3]);
-    K.setMode("3d"); K.fade(false, 1100);
-    if(aube){ pretre.x = 7.5; pretre.y = 5; K.run(async () => { K.Snd.oiseau(); await K.Nr("Le jour. Le prêtre est debout au pied de ton lit."); const c = await K.choose("Le prêtre", "Qu'as-tu vu ?", ["Un œil qui s'ouvrait dans la nuit", "Des osselets, et une main qui se dépliait", "Un chien d'or"]); await K.say("Le prêtre", ["Le dieu t'a ouvert les yeux.", "Le dieu t'a délié les mains.", "Le dieu t'a envoyé son gardien."][c] + " Il t'ordonne des bains, de longues marches, et de revenir dormir."); await K.Nr("En te levant, tu repasses devant les stèles. L'œil, les osselets, le chien : tout y était déjà, gravé dans la pierre. Ton rêve n'a rien inventé."); await seuil("I"); }); }
-    else K.cap("Épidaure, la nuit. Des colonnes, des lampes, et des gens qui dorment sous un portique.", 8000);
+    /* dans la chambre du temple : la statue, deux lampes */
+    pose({x:CX, y:12.6, h:2.2, z:T.zs, tex:S.dieu, range:2.6, label:"La statue du dieu", act:async () => { await K.Nr("Asclépios, d'ivoire et d'or. Sa main tient un bâton où s'enroule un serpent. Un chien est couché à ses pieds."); await K.Nr(aube ? "Il a le visage que tu as vu cette nuit." : "Il ne bouge pas. Ce n'est pas ici qu'il vient."); K.endDlg(); }}, true);
+    pose({x:CX - 1.25, y:12.7, h:.62, z:T.zs, tex:S.lampe}, true); pose({x:CX + 1.25, y:12.7, h:.62, z:T.zs, tex:S.lampe}, true);
+    M.circ.push([CX, 24.4, .42], [53, 30, .4], [53.4, 28, .22], [53.8, 26.2, .22], [53.4, 24.4, .22], [CX, 12.5, .5]);
+    if(!aube) for(const o of cour) o.off = true;
+    let vu = aube ? 2 : 0, dedans = false, pit = 0;
+    eng.load({map:[" "], walls:{}, sprites:sp, mesh:M, block:(x, y) => V.bloque(M, x, y), ground:(x, y) => V.sol(M, x, y),
+      sky:aube ? [29, .25, .95] : [3, .03, .36], stars:K.stars(aube ? 40 : 460, 6), mirror:!aube, floor:aube ? "earth" : "spark", floorC:aube ? 11 : 2, dens:aube ? .05 : .085, lum:aube ? .85 : .5, far:26, speed:2, turn:1.8, a0:aube ? -.85 : -Math.PI/2, lights:L2,
+      tick:(dt, E, t) => { const P = E.P; P.x = Math.max(36, Math.min(64, P.x)); P.y = Math.max(3, Math.min(56, P.y));
+        /* la cour sort de la nuit quand on arrive */
+        const d = Math.hypot(P.x - CX, P.y - (YF + 2)), q = aube ? 1 : Math.max(pres.v, Math.max(0, Math.min(1, (19 - d)/8)));
+        if(q !== pres.v){ pres.v = q; for(const o of cour){ o.off = q <= 0; o.alpha = q < 1 ? q : null; } }
+        feux.forEach((l, i) => { const f = .9 + .1*Math.sin(t*(5 + i*1.3) + i*2); l.i = l.i0*f*(l.fixe ? 1 : q); if(L2[i]) L2[i][3] = l.i0*.6*(l.fixe ? 1 : q); });
+        if(vu < 1 && q > .25){ vu = 1; K.cap("Épidaure. Le sanctuaire sort de l'ombre : un autel, des stèles, un long portique où l'on dort.", 9000); }
+        const in1 = P.x > T.cella[0] && P.x < T.cella[2] && P.y > T.cella[1] && P.y < T.cella[3]; if(in1 && !dedans && !aube) K.cap("La maison du dieu.", 5000); dedans = in1;
+        /* le regard se lève vers le fronton à l'approche, et retombe quand on monte les marches */
+        const sz = E.size(), k = sz[0] > sz[1] ? .2 : .05, cible = P.z > .05 ? 0 : k*Math.max(0, Math.min(1, (16 - d)/9)); pit += (cible - pit)*Math.min(1, dt*2.5); E.pitch = pit; } }, aube ? [44.75, 24.57] : [CX, 52]);
+    K.setMode("3d"); K.fade(false, aube ? 1100 : 2200);
+    if(aube){ pretre.x = 46.3; pretre.y = 23.3; K.run(async () => { K.Snd.oiseau(); await K.Nr("Le jour. Tu te lèves. Le prêtre t'attend entre les colonnes."); const c = await K.choose("Le prêtre", "Qu'as-tu vu ?", ["Un œil qui s'ouvrait dans la nuit", "Des osselets, et une main qui se dépliait", "Un chien d'or"]); await K.say("Le prêtre", ["Le dieu t'a ouvert les yeux.", "Le dieu t'a délié les mains.", "Le dieu t'a envoyé son gardien."][c] + " Il t'ordonne des bains, de longues marches, et de revenir dormir."); await K.Nr("En te levant, tu repasses devant les stèles. L'œil, les osselets, le chien : tout y était déjà, gravé dans la pierre. Ton rêve n'a rien inventé."); await seuil("I"); }); }
+    else K.cap("La nuit. Tout au fond, un temple.", 8000);
   }
   function songe(){
     const eng = K.eng; PX.setTheme("songe"); K.setLieu("Le rêve"); K.Snd.ambiance({vent:.05}); K.Snd.verre(true);
