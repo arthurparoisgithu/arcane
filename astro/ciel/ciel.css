@@ -1,0 +1,100 @@
+/* ===== Arcanes · Astrologie : Le ciel qui tourne ===== */
+.cq{--or:#e2bd5a;--or2:#f6dc9a;--nuit:#03050d;--encre:#f4efe2;position:fixed;inset:0;z-index:9000;background:var(--nuit);color:var(--encre);overflow:hidden;font-family:var(--f-body,Georgia,serif);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;animation:cq-in .6s ease both}
+.cq.sort{animation:cq-out .45s ease both}
+@keyframes cq-in{from{opacity:0}}@keyframes cq-out{to{opacity:0}}
+html.cq-ouvert,html.cq-ouvert body{overflow:hidden}
+.cq-gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.cq-voile{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}
+.cq-haut{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;padding:max(14px,env(safe-area-inset-top)) 16px 0;pointer-events:none}
+.cq-b{pointer-events:auto;width:44px;height:44px;border-radius:50%;border:1px solid rgba(226,189,90,.45);background:rgba(3,5,13,.55);color:var(--or2);font:16px/1 Georgia,serif;cursor:pointer;backdrop-filter:blur(6px)}
+.cq-b:hover{border-color:var(--or)}
+.cq-lieu{font:600 11px/1.2 var(--f-body,Georgia,serif);letter-spacing:.22em;text-transform:uppercase;color:var(--or2);opacity:.85;text-align:center;flex:1;padding:0 10px}
+/* le grand titre, lettre à lettre */
+.cq-titre{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;opacity:0}
+.cq-titre.on{opacity:1}.cq-titre.off{opacity:0;transition:opacity 1.2s}
+.cq-titre small{display:block;font:600 11px/1 var(--f-body,Georgia,serif);letter-spacing:.32em;text-transform:uppercase;color:var(--or);margin-bottom:16px;animation:cq-monte 1.4s .2s both}
+.cq-titre b{display:block;font:400 clamp(34px,8vw,64px)/1.05 var(--f-display,Georgia,serif);color:var(--or2);text-shadow:0 0 24px rgba(226,189,90,.45)}
+.cq-titre b span{display:inline-block;animation:cq-lettre 1.1s cubic-bezier(.2,.7,.2,1) both}
+@keyframes cq-lettre{from{opacity:0;filter:blur(10px);transform:translateY(14px) scale(1.15)}}
+@keyframes cq-monte{from{opacity:0;transform:translateY(8px);letter-spacing:.6em}}
+/* la légende et la parole */
+.cq-cap{position:absolute;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));width:min(560px,calc(100% - 32px));transform:translate(-50%,10px);padding:16px 20px;border-radius:14px;background:linear-gradient(180deg,rgba(10,14,34,.82),rgba(5,7,18,.9));border:1px solid rgba(226,189,90,.28);box-shadow:0 10px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,230,170,.08);font:400 17px/1.5 var(--f-display,Georgia,serif);text-align:center;opacity:0;pointer-events:none;transition:opacity .45s,transform .6s cubic-bezier(.2,.7,.2,1);backdrop-filter:blur(8px)}
+.cq-cap.on{opacity:1;transform:translate(-50%,0)}
+.cq-cap.tap{pointer-events:auto;cursor:pointer;bottom:calc(40px + env(safe-area-inset-bottom))}
+.cq-cap i{display:block;font:600 10.5px/1 var(--f-body,Georgia,serif);font-style:normal;letter-spacing:.24em;text-transform:uppercase;color:var(--or);margin-bottom:9px}
+.cq-cap small{display:block;font-size:13px;color:#b8b2a3;margin-top:6px}
+.cq-suite{display:block;margin-top:10px;font:600 9.5px/1 var(--f-body,Georgia,serif);letter-spacing:.2em;text-transform:uppercase;color:rgba(226,189,90,.55);animation:cq-pulse 2.4s infinite}
+@keyframes cq-pulse{50%{opacity:.35}}
+/* le bas de l'écran */
+.cq-bas{position:absolute;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));display:flex;justify-content:center;pointer-events:none}
+.cq-bas>*{pointer-events:auto}
+.cq-bas{transition:opacity .4s}.cq.parle .cq-bas{opacity:0;pointer-events:none}.cq.parle .cq-bas>*{pointer-events:none}
+.cq-go{font:600 12px/1 var(--f-body,Georgia,serif);letter-spacing:.2em;text-transform:uppercase;color:#1a1206;background:linear-gradient(180deg,#f6dc9a,#d4a64a);border:0;border-radius:999px;padding:16px 26px;cursor:pointer;box-shadow:0 0 0 1px rgba(255,236,190,.4),0 8px 30px rgba(226,189,90,.35);opacity:0;transform:translateY(12px) scale(.96);transition:opacity .45s,transform .5s cubic-bezier(.2,.8,.2,1.2)}
+.cq-go.on{opacity:1;transform:none}
+.cq-go.ghost{background:transparent;color:var(--or2);box-shadow:inset 0 0 0 1px rgba(226,189,90,.55)}
+/* maintenir pour que les nuits passent */
+.cq-tenir{position:relative;width:118px;height:118px;border-radius:50%;border:1px solid rgba(226,189,90,.55);background:radial-gradient(circle,rgba(40,30,12,.85),rgba(5,7,18,.85));color:var(--or2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;touch-action:none;transition:transform .2s;opacity:0}
+.cq-tenir.on{opacity:1;transition:opacity .6s,transform .2s}
+.cq-tenir b{font:400 19px/1 var(--f-display,Georgia,serif)}
+.cq-tenir small{font:600 9px/1 var(--f-body,Georgia,serif);letter-spacing:.16em;text-transform:uppercase;color:#b8b2a3}
+.cq-tenir-r{position:absolute;inset:-7px;border-radius:50%;border:1px solid rgba(226,189,90,.25)}
+.cq-tenir.tient{transform:scale(.94);box-shadow:0 0 40px rgba(255,170,90,.45)}
+.cq-tenir.tient .cq-tenir-r{animation:cq-onde 1.1s infinite;border-color:rgba(255,190,120,.6)}
+@keyframes cq-onde{from{transform:scale(.9);opacity:1}to{transform:scale(1.35);opacity:0}}
+/* les molettes */
+.cq-mols{display:flex;align-items:center;gap:14px;opacity:0;transform:translateY(16px);transition:opacity .6s,transform .7s cubic-bezier(.2,.8,.2,1)}
+.cq-mols.on{opacity:1;transform:none}
+.cq-mol{width:112px;display:flex;flex-direction:column;align-items:center;gap:3px;touch-action:none;cursor:grab}
+.cq-mol svg{width:96px;height:96px;filter:drop-shadow(0 0 10px rgba(226,189,90,.25));transition:transform .2s}
+.cq-mol.prise svg{transform:scale(1.06);filter:drop-shadow(0 0 18px rgba(226,189,90,.55))}
+.cq-mol-f{fill:rgba(5,7,18,.85);stroke:rgba(226,189,90,.7);stroke-width:1.2}
+.cq-mol-i{fill:url(#none);fill:rgba(30,22,8,.6);stroke:rgba(226,189,90,.3)}
+.cq-mol-t line{stroke:rgba(226,189,90,.55);stroke-width:1.2}
+.cq-mol-a line{stroke:#f6dc9a;stroke-width:2.4;stroke-linecap:round}.cq-mol-a circle{fill:#f6dc9a}
+.cq-mol b{font:400 15px/1.1 var(--f-display,Georgia,serif);color:var(--or2)}
+.cq-mol small{font:600 9.5px/1.2 var(--f-body,Georgia,serif);letter-spacing:.08em;color:#b8b2a3;text-align:center;min-height:2.4em}
+.cq-jauge{width:70px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.cq-jauge::before{content:"";display:block;width:70px;height:4px;border-radius:2px;background:rgba(226,189,90,.18);margin-bottom:-10px}
+.cq-jauge span{display:block;width:70px;height:4px;border-radius:2px;background:linear-gradient(90deg,#8fb4ff,#f6dc9a);transform-origin:left;transform:scaleX(0);transition:transform .25s}
+.cq-jauge small{font:600 8.5px/1 var(--f-body,Georgia,serif);letter-spacing:.14em;text-transform:uppercase;color:#8d887c}
+.cq-jauge.chaud span{box-shadow:0 0 12px rgba(246,220,154,.8)}
+.cq-mols.ok .cq-mol{pointer-events:none}.cq-mols.ok .cq-jauge small{color:var(--or2)}
+/* le panneau : questions et volets */
+.cq-panneau{position:absolute;left:50%;bottom:0;width:min(600px,100%);max-height:86%;overflow:auto;transform:translate(-50%,40px);opacity:0;transition:opacity .5s,transform .7s cubic-bezier(.2,.8,.2,1);padding:26px 24px calc(28px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;background:linear-gradient(180deg,rgba(14,18,40,.94),rgba(5,7,18,.97));border:1px solid rgba(226,189,90,.3);border-bottom:0;box-shadow:0 -20px 60px rgba(0,0,0,.6);backdrop-filter:blur(10px)}
+.cq-panneau.on{opacity:1;transform:translate(-50%,0)}
+.cq-qui{font:600 10.5px/1 var(--f-body,Georgia,serif);letter-spacing:.24em;text-transform:uppercase;color:var(--or);margin:0 0 12px}
+.cq-panneau h2{font:400 clamp(23px,5.4vw,30px)/1.2 var(--f-display,Georgia,serif);color:var(--or2);margin:0 0 18px}
+.cq-panneau p{font:400 16.5px/1.6 var(--f-body,Georgia,serif);color:#e6e0d2;margin:0 0 12px}
+.cq-panneau p b{color:var(--or2);font-weight:600}
+.cq-opts{display:grid;gap:10px}
+.cq-opts button{font:400 16px/1.35 var(--f-display,Georgia,serif);text-align:left;color:var(--encre);background:rgba(226,189,90,.06);border:1px solid rgba(226,189,90,.3);border-radius:12px;padding:14px 16px;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.cq-opts button:hover{border-color:var(--or)}
+.cq-opts button.bon{background:rgba(226,189,90,.25);border-color:var(--or2);box-shadow:0 0 24px rgba(226,189,90,.35)}
+.cq-opts button.faux{animation:cq-non .5s;border-color:#c86a52}
+@keyframes cq-non{25%{transform:translateX(-6px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.cq-non{margin-top:14px!important;font-style:italic;color:#d9b9a8!important}
+.cq-panneau .cq-go{margin-top:10px}
+.cq-img{display:flex;justify-content:center;margin:0 0 14px}
+.cq-svg{width:min(320px,100%);height:auto;overflow:visible}
+.cq-svg .d{fill:none;stroke:#e2bd5a;stroke-width:1.1;stroke-dasharray:600;stroke-dashoffset:600;animation:cq-trace 2.4s cubic-bezier(.4,0,.2,1) forwards}
+.cq-svg .e{animation-delay:.6s}.cq-svg .t{stroke:#ff9a62;stroke-width:1.4;stroke-dasharray:2400;stroke-dashoffset:2400;animation-duration:5s;animation-delay:1s}
+.cq-svg .f{fill:#8fb4ff;filter:drop-shadow(0 0 6px #8fb4ff)}.cq-svg .m{fill:#ff9a62;filter:drop-shadow(0 0 6px #ff9a62)}
+.cq-svg .g{fill:#f6dc9a;font:12px Georgia,serif;text-anchor:middle;opacity:0;animation:cq-app .8s 1.6s forwards}
+@keyframes cq-trace{to{stroke-dashoffset:0}}@keyframes cq-app{to{opacity:1}}
+.cq-suite-l{list-style:none;padding:0;margin:0 0 16px;display:grid;gap:8px;counter-reset:n}
+.cq-suite-l li{position:relative;padding:12px 14px 12px 44px;border:1px solid rgba(226,189,90,.18);border-radius:12px;color:#9d978a;font-size:14px;line-height:1.4}
+.cq-suite-l li::before{counter-increment:n;content:counter(n,upper-roman);position:absolute;left:14px;top:12px;font:400 15px/1 var(--f-display,Georgia,serif);color:rgba(226,189,90,.5)}
+.cq-suite-l li b{display:block;font:400 16px/1.3 var(--f-display,Georgia,serif);color:#cfc8b8}
+.cq-suite-l li.fait{border-color:rgba(226,189,90,.55);background:rgba(226,189,90,.07)}.cq-suite-l li.fait b{color:var(--or2)}
+.cq-acts{display:flex;flex-wrap:wrap;gap:10px}
+@media (prefers-reduced-motion:reduce){.cq-titre b span,.cq-svg .d{animation-duration:.01s}}
+
+/* la carte d'entrée, dans l'accueil de l'astrologie */
+.a-cieljeu{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;width:100%;margin:18px 0;padding:16px 18px;text-align:left;font:inherit;color:#f4efe2;cursor:pointer;border:1px solid #4a5a8a;border-left:3px solid #e2bd5a;border-radius:6px;background:radial-gradient(ellipse at 12% 40%,#1d2a5a,#070a1a 64%)}
+.a-cieljeu:hover{border-color:#e2bd5a}
+.a-cieljeu svg{display:block}
+.a-cieljeu small{display:block;font:600 10.5px/1 var(--f-body,Georgia,serif);letter-spacing:.2em;text-transform:uppercase;color:#e2bd5a}
+.a-cieljeu b{display:block;font:400 26px/1.05 var(--f-display,Georgia,serif);margin:4px 0 5px;color:#f6dc9a}
+.a-cieljeu span{display:block;font-size:14px;line-height:1.45;color:#c9c3b4}
+.a-cieljeu .anneau{transform-origin:30px 30px;animation:a-tourne 14s linear infinite}
+@keyframes a-tourne{to{transform:rotate(360deg)}}
