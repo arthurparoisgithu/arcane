@@ -2,7 +2,7 @@
    La nuit sert de carte. Chaque lueur est un niveau, une époque de l'histoire de la psyché, avec sa façon de jouer.
    Au bout de chaque niveau, un seuil : trois questions sur ce qu'on vient de vivre. Chaque bonne réponse ouvre un volet
    illustré, qui rejoint le corpus. Les trois volets lus, une constellation s'allume et la lueur suivante paraît.
-   I Épidaure · II Mesmer et les commissaires · III Puységur · IV Faria et Braid · V Charcot et Bernheim · VI Janet et Freud
+   I Épidaure · II Mesmer et les commissaires · III Puységur · IV Braid (Faria dans les volets) · V Charcot et Bernheim · VI Janet et Freud
    VII Jung (le jeu « Le Miroir », dans miroir.js) · Épilogue : Coué, et aujourd'hui. */
 window.MiroirSaga = (() => {
   let K = null, jeton = 0; const PX = window.MiroirPix, S = PX.S, W = PX.W;
@@ -50,10 +50,10 @@ window.MiroirSaga = (() => {
         {id:"III3", t:"Croyez et veuillez", q:"Pour Puységur, qu'est-ce qui agit ?", o:["Le baquet et ses tiges", "La volonté de celui qui magnétise", "Les astres"], ok:1, non:"Il te l'a dit lui-même : il pense un air, et Victor le chante.",
           img:tab({ciel:"#6a5a8a", items:[[S.orme, 80, 90, 1.05], [S.paysans[0], 40, 94, 1.5], [S.paysans[2], 120, 94, 1.5], [S.paysans[1], 80, 96, 1.5]], lights:[[80, 60, 100, .7]], amb:.2, sol:"#2f4a3a", seed:9}, "bougie"),
           txt:"« Croyez et veuillez » : pour Puységur, le fluide compte moins que la volonté de bien faire. Ses somnambules passent pour lucides. On leur demande de voir les maladies, les objets perdus, parfois l'avenir. Tout le XIXe siècle des voyantes, des tables tournantes et du spiritisme sort de cet orme. La science, elle, gardera une seule chose : le lien entre celui qui endort et celui qui dort."}]},
-    IV:{nom:"L'objet brillant", lieu:"Paris et Manchester", ep:"1813 – 1843", agit:"l'attention de celui qui s'endort", ciel:"l'Œil", qui:"Braid", pos:[46, 53.4], lueur:() => S.lueurObjet,
+    IV:{nom:"L'objet brillant", lieu:"Manchester", ep:"1813 – 1843", agit:"l'attention de celui qui s'endort", ciel:"l'Œil", qui:"Braid", pos:[46, 53.4], lueur:() => S.lueurObjet,
       fin:"Ni fluide, ni volonté. Un regard qui se fatigue, une pensée qui se rétrécit. Je l'écrirai, et on me croira fou des deux côtés.",
       volets:[
-        {id:"IV1", t:"Faria : tout est dans le dormeur", q:"Pourquoi « Dormez ! » a-t-il marché sur l'un et pas sur les autres ?", o:["L'abbé l'a regardé plus fort", "Il s'y attendait de tout son être", "Il était malade"], ok:1, non:"Revois-les tous les trois : l'un penché, l'autre bras croisés, la dernière tournée vers la fenêtre.",
+        {id:"IV1", t:"Faria : tout est dans le dormeur", q:"Avant Braid, qui disait déjà que tout vient de celui qui s'endort ?", o:["Mesmer", "L'abbé Faria", "Le marquis de Puységur"], ok:1, non:"Braid te l'a dit en commençant : un abbé venu de Goa, trente ans plus tôt.",
           img:img(PX.etude, {lieu:"faria", sujets:[{c:"#2e3a66", perruque:true, ferme:true, tilt:2, dy:1}, {c:"#4f6a52", c2:"#2f4a3a", croise:true, h:"#5c3f26"}, {c:"#8a3a30", robe:true, chignon:true, h:"#3d2a1c", tilt:-1}], geste:"haut"}, "bougie"),
           txt:"L'abbé Faria, prêtre né à Goa, donne à Paris, à partir de 1813, des séances publiques. Il n'utilise ni baquet ni passes : il fixe le sujet et commande « Dormez ! ». Il affirme qu'aucun fluide ne passe de lui à l'autre et que tout vient de celui qui s'endort, de son attente et de sa concentration. On se moque de lui. Il a soixante-dix ans d'avance."},
         {id:"IV2", t:"Braid invente le mot", q:"Qu'est-ce qui a fermé tes paupières ?", o:["Le regard de Braid", "Ma propre attention, fixée sur un point", "La chaleur du gaz"], ok:1, non:"Braid n'a rien dit et rien fait. Où étaient tes yeux pendant tout ce temps ?",
@@ -209,21 +209,30 @@ window.MiroirSaga = (() => {
     if(aube){ pretre.x = 7.5; pretre.y = 5; K.run(async () => { K.Snd.oiseau(); await K.Nr("Le jour. Le prêtre est debout au pied de ton lit."); const c = await K.choose("Le prêtre", "Qu'as-tu vu ?", ["Un œil qui s'ouvrait dans la nuit", "Des osselets, et une main qui se dépliait", "Un chien d'or"]); await K.say("Le prêtre", ["Le dieu t'a ouvert les yeux.", "Le dieu t'a délié les mains.", "Le dieu t'a envoyé son gardien."][c] + " Il t'ordonne des bains, de longues marches, et de revenir dormir."); await K.Nr("En te levant, tu repasses devant les stèles. L'œil, les osselets, le chien : tout y était déjà, gravé dans la pierre. Ton rêve n'a rien inventé."); await seuil("I"); }); }
     else K.cap("Épidaure, la nuit. Des colonnes, des lampes, et des gens qui dorment sous un portique.", 8000);
   }
+  /* Le rêve : le seul endroit du jeu où les colonnes ne sont plus en gros pixels. Elles flottent, en vrai volume, lisses comme du marbre
+     sous la lune (flot.js), au-dessus d'un sol qui reflète tout. On peut les toucher, comme le serpent, le chien et ce que le rêve fait apparaître. */
   function songe(){
-    const eng = K.eng; PX.setTheme("songe"); K.setLieu("Le rêve"); K.Snd.ambiance({vent:.05}); K.Snd.verre(true);
-    const WP = [[16, 50], [24, 45.5], [33, 54], [42, 46.5], [53, 50]], TAB = [null, [S.oeil, "Un œil s'ouvre dans la nuit. Tu as lu cela quelque part."], [S.des, "Des osselets roulent tout seuls. Une main se déplie."], [S.chienOr, "Un chien d'or te regarde venir. Il a l'air de te connaître."], null];
-    const sp = [], r = PX.rng(17); for(let i = 0; i < 26; i++) sp.push({x:12 + r()*46, y:38 + r()*24, h:1.5 + r(), z:.25 + r()*1.3, tex:S.colonne, alpha:.75});
-    const ser = {x:WP[0][0], y:WP[0][1], h:.42, z:.18, tex:S.serpentOr, em:true, emL:.9, emMin:.6, emK:.02}; sp.push(ser);
-    const dieu = {x:57, y:50, h:2.3, tex:S.dieu, em:true, emL:.9, emMin:.5, emK:.02, off:true, range:3, label:"S'approcher du dieu", act:async () => { await K.Nr("Il est très grand. Il ne dit rien. Un serpent d'or s'enroule à son bâton."); await K.Nr("Il pose la main sur ton front."); K.endDlg(); K.Snd.gong(); await K.fade(true, 1500); K.Snd.verre(false); setTimeout(() => sanctuaire(true), 0); }}; sp.push(dieu);
+    const eng = K.eng, F = window.MiroirFlot; PX.setTheme("songe"); K.setLieu("Le rêve"); K.Snd.ambiance({vent:.05}); K.Snd.verre(true);
+    const WP = [[16, 50], [24, 45.5], [33, 54], [42, 46.5], [53, 50]];
+    const TOUCHE = {oeil:"Il cligne. Tu sens tes propres yeux s'ouvrir plus grand, comme ceux d'Ambrosia.", des:"Tu les lances. Ils retombent sur quatre faces différentes : le coup d'Aphrodite, le meilleur. Ta main s'ouvre toute seule.", chien:"Il te lèche la main, comme il a léché les yeux de l'enfant d'Hermione. Sa langue est chaude, et elle brille."};
+    const TAB = [null, [S.oeil, "Un œil s'ouvre dans la nuit. Tu as lu cela quelque part.", "Regarder l'œil", "oeil"], [S.des, "Des osselets roulent tout seuls. Une main se déplie.", "Ramasser les osselets", "des"], [S.chienOr, "Un chien d'or te regarde venir. Il a l'air de te connaître.", "Caresser le chien", "chien"], null];
+    const PIERRE = ["La pierre est froide. Elle tourne lentement sous ta paume.", "Elle n'est posée sur rien, et elle tient quand même.", "Une colonne du sanctuaire. Ici, elle a oublié de peser.", "Sous tes doigts, les cannelures défilent comme l'eau d'une source."];
+    const sp = [], cols = [], r = PX.rng(17), loinDuChemin = (x, y) => { for(let i = 0; i < WP.length - 1; i++){ const [ax, ay] = WP[i], [bx, by] = WP[i + 1], vx = bx - ax, vy = by - ay, t = Math.max(0, Math.min(1, ((x - ax)*vx + (y - ay)*vy)/(vx*vx + vy*vy))); if(Math.hypot(x - ax - t*vx, y - ay - t*vy) < 2.1) return false; } return Math.hypot(x - 10, y - 50) > 3 && Math.hypot(x - 57, y - 50) > 3; };
+    let essais = 0, pi = 0; while(cols.length < 19 && essais++ < 500){ const x = 9 + r()*52, y = 35 + r()*30; if(!loinDuChemin(x, y) || cols.some(c => Math.hypot(c.x - x, c.y - y) < 3)) continue;
+      const k = cols.length, bas = k % 3 === 0, casse = k % 4 === 1, z = bas ? .1 + r()*.35 : .6 + r()*1.9, penche = r() < .55;
+      const col = F.colonne({x, y, z, h:2.2 + r()*1.4, r:.26 + r()*.1, tambours:casse ? 4 : 3, ecart:casse ? .14 + r()*.2 : 0, casse, sansChapiteau:k % 5 === 2, axe:penche ? [(r() - .5)*.5, (r() - .5)*.5, 1] : [0, 0, 1], rot0:r()*6, tour:(r() < .5 ? -1 : 1)*(.03 + r()*.07), houle:.08 + r()*.14, ph:r()*6, or:.7 + r()*.6});
+      cols.push(col); if(z < 1.1) sp.push({x, y, h:1, tex:S.colonne, ov:true, vide:true, range:2.3, label:"Toucher la colonne", act:async () => { K.Snd.clair(); col.tour *= -2.2; setTimeout(() => col.tour /= -2.2, 2600); await K.Nr(PIERRE[pi++ % PIERRE.length]); K.endDlg(); }}); }
+    const ser = {x:WP[0][0], y:WP[0][1], h:.42, z:.18, tex:S.serpentOr, em:true, emL:.9, emMin:.6, emK:.02, ov:true, range:1.9, label:"Toucher le serpent", act:async () => { K.Snd.or(); await K.Nr(i < WP.length - 1 ? "Il est tiède. Il ne fuit pas. Il attend que tu cesses de vouloir." : "Il s'enroule une fois autour de ton poignet, puis il te laisse."); K.endDlg(); }}; sp.push(ser);
+    const dieu = {x:57, y:50, h:2.3, tex:S.dieu, em:true, emL:.9, emMin:.5, emK:.02, off:true, ov:true, range:3, label:"S'approcher du dieu", act:async () => { await K.Nr("Il est très grand. Il ne dit rien. Un serpent d'or s'enroule à son bâton."); await K.Nr("Il pose la main sur ton front."); K.endDlg(); K.Snd.gong(); await K.fade(true, 1500); K.Snd.verre(false); setTimeout(() => sanctuaire(true), 0); }}; sp.push(dieu);
     let i = 0, immobile = 0, cours = 0, va = false, px = 0, py = 0, dit = 0;
     eng.load({map:[" "], walls:{}, sprites:sp, sky:[3, .02, .3], stars:K.stars(700, 23), mirror:true, floor:"spark", floorC:2, dens:.04, lum:.5, far:26, speed:1.7, a0:0,
+      over:(ctx, c) => F.dessine(ctx, c, cols),
       tick:(dt, E) => { const P = E.P; P.x = Math.max(4, Math.min(62, P.x)); P.y = Math.max(36, Math.min(64, P.y)); const bouge = Math.hypot(P.x - px, P.y - py) > .002; px = P.x; py = P.y;
         if(bouge){ immobile = 0; cours += dt; } else { immobile += dt; cours = Math.max(0, cours - dt*3); }
         E.dim = Math.max(.42, 1 - Math.max(0, cours - 1.6)*.3); if(cours > 2.6 && dit < 1){ dit = 1; K.cap("Quand tu cours, le rêve pâlit. Arrête-toi.", 5000); }
         const d = Math.hypot(P.x - ser.x, P.y - ser.y); ser.alpha = d < 1.5 && bouge ? .35 : 1;
-        if(va){ const w = WP[i], vx = w[0] - ser.x, vy = w[1] - ser.y, l = Math.hypot(vx, vy); if(l < .15){ va = false; ser.x = w[0]; ser.y = w[1]; if(TAB[i]){ sp.push({x:w[0] + .8, y:w[1] - .9, h:.5, z:.5, tex:TAB[i][0], em:true, emL:.85, emMin:.5}); K.Snd.clair(); K.cap(TAB[i][1], 7000); } if(i === WP.length - 1){ dieu.off = false; ser.off = true; K.Snd.or(); K.cap("Au bout du chemin, quelqu'un t'attend.", 7000); } } else { ser.x += vx/l*3.2*dt; ser.y += vy/l*3.2*dt; } }
-        else if(i < WP.length - 1 && d < 5 && immobile > 1.1){ i++; va = true; K.Snd.clair(); if(dit < 2){ dit = 2; K.cap("Le serpent avance quand tu cesses de vouloir.", 5000); } }
-        else if(i < WP.length - 1 && d < 5 && bouge && dit < 3 && cours > 1){ } } }, [10, 50]);
+        if(va){ const w = WP[i], vx = w[0] - ser.x, vy = w[1] - ser.y, l = Math.hypot(vx, vy); if(l < .15){ va = false; ser.x = w[0]; ser.y = w[1]; const T = TAB[i]; if(T){ sp.push({x:w[0] + .8, y:w[1] - .9, h:.5, z:.5, tex:T[0], em:true, emL:.85, emMin:.5, ov:true, range:2, label:T[2], act:async () => { K.Snd.clair(); await K.Nr(TOUCHE[T[3]]); K.endDlg(); }}); K.Snd.clair(); K.cap(T[1], 7000); } if(i === WP.length - 1){ dieu.off = false; ser.off = true; K.Snd.or(); K.cap("Au bout du chemin, quelqu'un t'attend.", 7000); } } else { ser.x += vx/l*3.2*dt; ser.y += vy/l*3.2*dt; } }
+        else if(i < WP.length - 1 && d < 5 && immobile > 1.1){ i++; va = true; K.Snd.clair(); if(dit < 2){ dit = 2; K.cap("Le serpent avance quand tu cesses de vouloir.", 5000); } } } }, [10, 50]);
     K.setMode("3d"); K.fade(false, 1600); K.cap("Le sanctuaire flotte dans la nuit. Devant toi, un serpent d'or.", 8000);
   }
 
@@ -269,8 +278,13 @@ window.MiroirSaga = (() => {
   }
 
   /* ================================================================ III. BUZANCY */
+  /* Buzancy se joue de nuit, sous la lune : du bleu et de l'argent, l'or des lanternes dans l'orme. Rien du vert de Passy. */
+  const recol = (t, m) => Object.assign({}, t, {i:t.i.map(c => m[c] == null ? c : m[c])}), NUITBLEUE = {26:3, 27:4, 28:5, 14:2, 15:3, 16:4};
+  let lune = null, lanterne = null, lunePx = null;
+  function decorNuit(){ if(lune) return; lune = PX.mk(32, 32, x => { PX.disc(x, "#cfd9ea", 16, 16, 14, 14); PX.disc(x, "#f4efe2", 15, 15, 12, 12); for(const [a, b, r] of [[11, 12, 3], [19, 18, 2], [17, 9, 2], [10, 20, 1]]) PX.disc(x, "#cfd9ea", a, b, r, r); });
+    lune.em = true; lanterne = PX.mk(8, 14, x => { PX.R(x, "#45423c", 3, 0, 2, 3); PX.R(x, "#45423c", 1, 3, 6, 1); PX.R(x, "#e2bd5a", 1, 4, 6, 8); PX.R(x, "#ffe9a8", 2, 5, 4, 6); PX.R(x, "#45423c", 1, 12, 6, 2); }); lanterne.em = true; }
   function buzancy(){
-    const eng = K.eng; PX.setTheme("bougie"); K.setLieu("Buzancy, 1784"); K.Snd.ambiance({vent:.07}); let dort = false, etape = 0, intro = false;
+    decorNuit(); const eng = K.eng; PX.setTheme("nuit"); K.setLieu("Buzancy, 1784"); K.Snd.ambiance({vent:.07}); let dort = false, etape = 0, intro = false;
     const vic = {x:8.9, y:7.4, h:.95, tex:S.victor, range:1.9, label:() => dort ? "Victor (il dort)" : "Victor", act:async () => { if(!intro){ await K.Nr("Un garçon de ferme, la casquette à la main. Il attend qu'on lui parle."); K.endDlg(); return; }
       if(!dort && etape === 0){ await K.say("Victor", "Je ne sais pas, monsieur. Ça va. Ça ira."); await K.Nr("Il regarde ses sabots."); }
       else if(dort && etape === 0){ await K.Nr("Pas un cri, pas une convulsion. Il dort debout. Son visage a changé, sa voix aussi."); await K.say("Victor, endormi", "C'est ma sœur. Elle veut la maison que la mère m'a laissée. J'ai le papier, mais je n'ose pas le montrer."); await K.choose("", "", ["Lui demander où est le papier"]); await K.say("Victor, endormi", "Sous la pierre du seuil. Mais ne me le demandez pas quand je veillerai : je ne le saurai plus."); etape = 1; }
@@ -284,29 +298,22 @@ window.MiroirSaga = (() => {
       if(!intro){ intro = true; await K.say("Puységur", "Bienvenue à Buzancy. Je n'ai pas de baquet : j'ai cet orme, ces cordes, et la volonté de faire du bien."); await K.say("Puységur", "Voici Victor. Vingt-trois ans, la poitrine prise, et un chagrin qu'il ne dit pas. Éveillé, il n'ose rien. Trouvez ce qui le ronge."); await K.say("Puységur", "Revenez me voir : je l'endors et je le réveille d'un geste."); K.endDlg(); return; }
       if(etape === 2){ await K.say("Puységur", "Vous voyez. Deux mémoires dans un seul homme, et la seconde en sait plus long que la première."); await K.say("Puységur", "Je pense un air sans ouvrir la bouche, et il le chante. Ma volonté passe en lui."); await K.Nr("Ou bien le marquis fredonne sans s'en apercevoir. Ce soir-là, personne ne songe à vérifier."); await seuil("III"); return; }
       const c = await K.choose("Puységur", dort ? "Il dort. Parlez-lui, il vous entend." : "Il veille. Voulez-vous que je l'endorme ?", [dort ? "Le réveiller" : "L'endormir", "Pas maintenant"]); if(c === 0){ dort = !dort; vic.tex = dort ? S.victorDort : S.victor; K.Snd.clair(); await K.Nr(dort ? "Le marquis passe la main devant le front de Victor. Ses paupières tombent. Il reste debout." : "Le marquis lui touche les yeux. Victor sursaute, regarde autour de lui."); } K.endDlg(); }};
-    const sp = [{x:7.5, y:6.2, h:2.7, tex:S.orme}, vic, puy]; [[5.2, 5.2, 0], [9.8, 5.4, 1], [7.6, 4.2, 2], [4.6, 7.2, 1], [10.6, 7.6, 0]].forEach(p => sp.push({x:p[0], y:p[1], h:.72, tex:S.paysans[p[2]], range:1.5, label:"Un villageois", act:async () => { await K.Nr(["Elle dort assise, une corde autour du poignet. Elle sourit.", "Il tient la corde à deux mains, les yeux mi-clos. Il dit que ça chauffe.", "Elle dort. Elle a posé son panier."][p[2]]); K.endDlg(); }}));
-    eng.load({map:["CCCCCCCCCCCCCCC", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "HHHHHHHHHHHHHHH"], walls:{H:W.haie, C:W.chateau}, sprites:sp, sky:[29, .12, .8], stars:K.stars(120, 14), floor:"earth", floorC:26, floorC2:27, dens:.1, lum:.62, far:16, speed:1.8, a0:-Math.PI/2, lights:[[7.5, 6.6, 5, .35], [7.5, 1.2, 6, .4]] }, [7.5, 11.2]);
-    K.setMode("3d"); K.fade(false, 1100); K.cap("Buzancy, près de Soissons, un soir de mai 1784. Un château, un orme, des cordes, et des gens qui dorment assis.", 9000);
+    const sp = [{x:7.5, y:6.2, h:2.7, tex:recol(S.orme, NUITBLEUE)}, vic, puy];
+    [[6.6, 5.7, 1.45], [8.5, 5.9, 1.6], [7.3, 6.9, 1.25], [8.1, 6.6, 1.7], [6.9, 6.3, 1.85]].forEach(p => sp.push({x:p[0], y:p[1], h:.3, z:p[2], tex:lanterne, em:true, emL:.95, emMin:.7, emK:.1})); [[5.2, 5.2, 0], [9.8, 5.4, 1], [7.6, 4.2, 2], [4.6, 7.2, 1], [10.6, 7.6, 0]].forEach(p => sp.push({x:p[0], y:p[1], h:.72, tex:S.paysans[p[2]], range:1.5, label:"Un villageois", act:async () => { await K.Nr(["Elle dort assise, une corde autour du poignet. Elle sourit.", "Il tient la corde à deux mains, les yeux mi-clos. Il dit que ça chauffe.", "Elle dort. Elle a posé son panier."][p[2]]); K.endDlg(); }}));
+    eng.load({map:["CCCCCCCCCCCCCCC", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "H.............H", "HHHHHHHHHHHHHHH"], walls:{H:W.haieNuit, C:W.chateauNuit}, sprites:sp, sky:[4, .05, .62], stars:K.stars(420, 14), floor:"earth", floorC:4, floorC2:3, dens:.085, lum:.56, far:26, speed:1.8, a0:-Math.PI/2, lights:[[7.5, 6.4, 3.6, .3], [7.5, 1.2, 6, .3]],
+      /* la lune, haut au-dessus du château, peinte par-dessus pour que les murs ne la cachent pas */
+      over:(ctx, c) => { let da = -.98 - Math.atan2(c.dy, c.dx); da = Math.atan2(Math.sin(da), Math.cos(da)); if(Math.abs(da) > 1) return; const x = (c.W/2 + Math.tan(da)*c.proj)*c.kx, y = c.hz*.3*c.ky, r = 8*c.kx;
+        const g = ctx.createRadialGradient(x, y, r*.4, x, y, r*4.5); g.addColorStop(0, "rgba(220,228,244,.3)"); g.addColorStop(1, "rgba(207,217,234,0)"); ctx.fillStyle = g; ctx.fillRect(x - r*5, y - r*5, r*10, r*10);
+        ctx.imageSmoothingEnabled = false; ctx.drawImage(lunePx || (lunePx = PX.show(lune, 7)), x - r, y - r, r*2, r*2); } }, [7.5, 11.2]);
+    K.setMode("3d"); K.fade(false, 1100); K.cap("Buzancy, près de Soissons, une nuit de mai 1784. La lune, un château, un orme plein de lanternes, et des gens qui dorment assis.", 9000);
   }
 
   /* ================================================================ IV. FARIA, PUIS BRAID */
-  async function faria(){
-    PX.setTheme("bougie"); const SU = [{c:"#2e3a66", c2:"#17203a", perruque:true, tilt:1}, {c:"#4f6a52", c2:"#2f4a3a", croise:true, h:"#5c3f26"}, {c:"#8a3a30", c2:"#4f1c1c", robe:true, chignon:true, h:"#3d2a1c", tilt:-1}], o = {lieu:"faria", sujets:SU};
-    K.scene2(PX.etude, o); K.setLieu("Paris, 1813"); K.Snd.ambiance({foule:.03}); await K.fade(false, 1000);
-    await K.run(async () => {
-      await K.Nr("Paris, 1813. L'abbé Faria, prêtre né à Goa, donne des séances publiques rue de Clichy. Ni baquet, ni cordes, ni musique.");
-      await K.say("Faria", "Je ne mets rien en eux. Tout est dans celui qui s'endort. Regardez-les bien, tous les trois, et dites-moi lequel dormira.");
-      for(;;){ const c = await K.choose("", "Trois volontaires sur trois chaises.", ["Le premier : penché en avant, il ne quitte pas l'abbé des yeux", "Le deuxième : bras croisés, un sourire en coin", "La troisième : elle regarde par la fenêtre"]);
-        o.geste = "haut"; await K.say("Faria", "Dormez !"); if(c === 0){ Object.assign(SU[0], {ferme:true, tilt:2, dy:1}); K.Snd.grave(); await K.Nr("Il s'affaisse d'un coup, le menton sur la poitrine."); break; }
-        await K.Nr(c === 1 ? "Rien. Il hausse un sourcil et resserre les bras." : "Rien. Elle se retourne, étonnée qu'on lui parle."); o.geste = null; await K.say("Faria", "Pas celui-là. Regardez mieux : qui est déjà à moitié parti ?"); }
-      await K.say("Faria", "Le deuxième ne croit pas. La troisième n'écoute pas. Celui qui dort s'y attendait de tout son être. Je n'ai fait que dire le mot.");
-      K.endDlg(); await K.fade(true, 900); });
-    braid();
-  }
   async function braid(){
     PX.setTheme("gaz"); const o = {lieu:"braid", sujets:[]}; K.scene2(PX.etude, o); K.setLieu("Manchester, 1841"); K.Snd.ambiance({gaz:.03}); await K.fade(false, 1000);
     await K.run(async () => {
       await K.Nr("Manchester, 1841. Le chirurgien James Braid sort du spectacle d'un magnétiseur, décidé à démasquer le truc. Il n'en a pas trouvé. Alors il essaie chez lui, sur toi.");
+      await K.say("Braid", "Un abbé venu de Goa, Faria, le disait déjà à Paris il y a trente ans : tout est dans celui qui s'endort. On s'est moqué de lui. Voyons s'il avait raison.");
       await K.say("Braid", "Asseyez-vous. Fixez mon porte-lancette, un peu au-dessus des yeux. Ne le lâchez pas, quoi qu'il arrive.");
       let dit = 0; await tenir("", "Le métal brille sous le bec de gaz.", "Fixer le point (tiens appuyé)", 9, (p, on) => { o.paup = p*.92; const t = K.$(".mir-txt"); if(p > .25 && dit < 1){ dit = 1; t.textContent = "Une mouche contre la vitre. Tes yeux piquent."; } if(p > .55 && dit < 2){ dit = 2; t.textContent = "Un fiacre passe dans la rue. Le point brillant se dédouble."; } if(p > .8 && dit < 3){ dit = 3; t.textContent = "Tes paupières pèsent. Il n'y a plus que le point."; } });
       o.paup = 1; K.Snd.grave(); await K.Nr("Le noir. Tes paupières sont tombées toutes seules."); o.paup = .12; o.sujets = [];
@@ -396,7 +403,7 @@ window.MiroirSaga = (() => {
       await seuil("E"); });
   }
 
-  const LANCE = {I:() => sanctuaire(false), II:mesmer, III:buzancy, IV:faria, V:salpe, VI:havre, E:coue};
+  const LANCE = {I:() => sanctuaire(false), II:mesmer, III:buzancy, IV:braid, V:salpe, VI:havre, E:coue};
   function start(k){ K = k; const n = K.st.niv; K.$(".mir-fade").classList.add("on"); if(n && LANCE[n] && !fait(n)){ LANCE[n](); } else hub(K, {}); }
   return {start, hub, corpus, apresMiroir, N, ORDRE, LANCE, _:{sanctuaire, songe, passy, braid, nancy, vienne, seuil, fini}};
 })();

@@ -1,9 +1,11 @@
 /* ===== Arcanes · Psyché · Le Miroir : le moteur 3D =====
    Un lancer de rayons sur grille (murs de hauteur 1, vue à la première personne), rendu en basse définition
    et agrandi sans lissage : gros pixels, brouillard, sprites toujours face au joueur. Aucune bibliothèque.
-   Un niveau = {map:[lignes], walls:{car:texture}, sprites:[], fog:[r,g,b], dens, sky, floor, speed, tick, onCell}. */
-window.MiroirR3D = function(canvas){
-  const ctx = canvas.getContext("2d");
+   Un niveau = {map:[lignes], walls:{car:texture}, sprites:[], fog:[r,g,b], dens, sky, floor, speed, tick, onCell}.
+   Un niveau peut aussi peindre par-dessus, en pleine définition (lvl.over) : c'est là que vivent les objets qui doivent trancher
+   sur les gros pixels. Les sprites marqués ov ne sont alors pas peints par le moteur, mais restent à portée de main. */
+window.MiroirR3D = function(canvas, ov){
+  const ctx = canvas.getContext("2d"), octx = ov ? ov.getContext("2d") : null; let ovSale = false;
   let W = 160, H = 100, img, buf, zb, proj = 1, lvl = null, grid = [], raf = 0, last = 0, T = 0;
   let FOV = 1.05; const P = {x:1.5, y:1.5, a:0}, keys = {}, stick = {on:false, x:0, y:0, id:null, x0:0, y0:0, moved:false, t0:0};
   const E = {P, pause:false, dim:1, target:null, onTarget:null, onAct:null, auto:false, onStep:null};
@@ -14,6 +16,7 @@ window.MiroirR3D = function(canvas){
     H = Math.max(80, Math.min(300, Math.round(W*r.height/r.width)));
     canvas.width = W; canvas.height = H; img = ctx.createImageData(W, H); buf = new Uint32Array(img.data.buffer); zb = new Float32Array(W);
     proj = (W/2)/Math.tan(FOV/2);
+    if(ov){ const k = Math.min(1.5, window.devicePixelRatio || 1); ov.width = Math.round(r.width*k); ov.height = Math.round(r.height*k); ovSale = true; }
   }
   const cell = (x, y) => (y < 0 || y >= grid.length || x < 0 || x >= grid[y].length) ? " " : grid[y][x];
   const solid = (x, y) => { const c = cell(x | 0, y | 0); return !!(lvl.walls[c]); };
@@ -84,7 +87,9 @@ window.MiroirR3D = function(canvas){
       const ox = s.x - P.x, oy = s.y - P.y, tX = inv*(dy*ox - dx*oy), tY = inv*(-py*ox + px*oy); if(tY < .12) continue;
       const tex = typeof s.tex === "function" ? s.tex(E, s) : s.tex; if(!tex) continue;
       const scx = (W/2)*(1 + tX/tY), hh = proj/tY*(s.h || 1), ww = hh*(tex.w/tex.h)*(s.wf == null ? 1 : s.wf), bot = hz + proj/tY*(.5 - (s.z || 0)), top = bot - hh;
-      const xa = Math.max(0, (scx - ww/2) | 0), xb = Math.min(W, (scx + ww/2) | 0), ya = Math.max(0, top | 0), yb = Math.min(H, bot | 0); if(ww < .6) continue;
+      const xa = Math.max(0, (scx - ww/2) | 0), xb = Math.min(W, (scx + ww/2) | 0), ya = Math.max(0, top | 0), yb = Math.min(H, bot | 0);
+      if(s.ov){ if(s.act && !s.noAct){ const dist = Math.sqrt(s._d), ang = Math.abs(Math.atan2(tX, tY)); if(dist < (s.range || 1.9) && ang < .42 && (!best || dist < best.d)) best = {sprite:s, d:dist}; } continue; }
+      if(ww < .6) continue;
       const em = s.em || tex.em, L = em ? Math.max(s.emMin || 0, (s.emL || .78)*Math.exp(-tY*dens*(s.emK == null ? .35 : s.emK))) : lum*Math.exp(-tY*dens) + (hasL ? lit(s.x, s.y) : 0), al = s.alpha == null ? 1 : s.alpha;
       for(let x = xa; x < xb; x++){ if(tY >= zb[x]) continue; const tx = Math.min(tex.w - 1, ((x - (scx - ww/2))/ww*tex.w) | 0);
         for(let y = ya; y < yb; y++){ const ti = (Math.min(tex.h - 1, ((y - top)/hh*tex.h) | 0))*tex.w + tx;
@@ -96,6 +101,8 @@ window.MiroirR3D = function(canvas){
     if(best) tgt = best; else if(tgt && !(lvl.wallAct && lvl.wallAct[tgt.wall])) tgt = null;
     if(lvl.post) lvl.post(buf, W, H, T, E);
     ctx.putImageData(img, 0, 0);
+    /* par-dessus, en pleine définition */
+    if(octx){ if(lvl.over){ octx.clearRect(0, 0, ov.width, ov.height); lvl.over(octx, {x:P.x, y:P.y, z:.5, dx, dy, proj, hz, W, H, kx:ov.width/W, ky:ov.height/H, T, dim:E.dim == null ? 1 : E.dim, sprites:lvl.sprites}); ovSale = true; } else if(ovSale){ octx.clearRect(0, 0, ov.width, ov.height); ovSale = false; } }
     const lab = tgt ? (tgt.sprite ? (typeof tgt.sprite.label === "function" ? tgt.sprite.label() : tgt.sprite.label) : (typeof lvl.wallAct[tgt.wall].label === "function" ? lvl.wallAct[tgt.wall].label(tgt) : lvl.wallAct[tgt.wall].label)) : null;
     if(!lab) tgt = null;
     if((E.target && E.target.lab) !== lab){ E.target = tgt ? Object.assign(tgt, {lab}) : null; if(E.onTarget) E.onTarget(lab); } else if(tgt) E.target = Object.assign(tgt, {lab});
@@ -124,7 +131,7 @@ window.MiroirR3D = function(canvas){
   const pm = e => { if(!stick.on || e.pointerId !== stick.id) return; stick.x = e.clientX - stick.x0; stick.y = e.clientY - stick.y0; if(Math.abs(stick.x) + Math.abs(stick.y) > 10) stick.moved = true; if(E.onStick) E.onStick(true, stick.x0, stick.y0, stick.x, stick.y); };
   const pu = e => { if(!stick.on || e.pointerId !== stick.id) return; const tap = !stick.moved && performance.now() - stick.t0 < 400; stick.on = false; if(E.onStick) E.onStick(false); if(tap && E.target && E.onAct && !E.pause) E.onAct(E.target); };
   function start(){ resize(); addEventListener("keydown", kd); addEventListener("keyup", ku); canvas.addEventListener("pointerdown", pd); canvas.addEventListener("pointermove", pm); canvas.addEventListener("pointerup", pu); canvas.addEventListener("pointercancel", pu); addEventListener("resize", resize); last = performance.now(); raf = requestAnimationFrame(loop); }
-  function stop(){ cancelAnimationFrame(raf); removeEventListener("keydown", kd); removeEventListener("keyup", ku); removeEventListener("resize", resize); canvas.removeEventListener("pointerdown", pd); canvas.removeEventListener("pointermove", pm); canvas.removeEventListener("pointerup", pu); canvas.removeEventListener("pointercancel", pu); }
+  function stop(){ cancelAnimationFrame(raf); if(octx){ octx.clearRect(0, 0, ov.width, ov.height); ovSale = false; } removeEventListener("keydown", kd); removeEventListener("keyup", ku); removeEventListener("resize", resize); canvas.removeEventListener("pointerdown", pd); canvas.removeEventListener("pointermove", pm); canvas.removeEventListener("pointerup", pu); canvas.removeEventListener("pointercancel", pu); }
   const clearKeys = () => { for(const k in keys) keys[k] = false; stick.on = false; };
   return Object.assign(E, {load, start, stop, resize, setCell, cell, solid, clearKeys, time:() => T, level:() => lvl, hash, size:() => [W, H]});
 };
