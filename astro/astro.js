@@ -309,7 +309,7 @@
           <div class="a-toi-f"><button type="button" class="btn ghost small" data-thgo="temps">Mes rendez-vous</button><button type="button" class="btn ghost small" data-thgo="annee">Mon année</button></div></div></details>` : "";
     root.innerHTML = `<header class="a-hero a-jour"><p class="eyebrow">${cap(fmtD(now, tz, dayFmt))} · ${fmtD(now, tz, hm)} · ${h(L.nom)}</p><h1>${me ? "Ton ciel aujourd'hui" : "Le ciel aujourd'hui"}</h1>
         ${phrase}
-        <div class="a-jour-acts">${JOUR ? `<button type="button" class="btn" data-ashare>Partager mon ciel</button>` : ""}${me ? `<button type="button" class="btn ghost" data-thgo="guide">Lire mon thème</button>` : ""}</div>${trio}</header>
+        <div class="a-jour-acts">${JOUR ? `<button type="button" class="btn" data-ashare>Partager mon ciel</button>` : ""}${me ? `<button type="button" class="btn ghost" data-thgo="guide">Lire mon thème</button>` : ""}</div>${trio}</header>${window.ArcanesCielJeu ? window.ArcanesCielJeu.carte() : ""}
       ${autres}
       <div class="a-h2row a-h2why"><h2 class="lsub">Le ciel en ce moment</h2></div>
       <p class="a-lede a-lede-sky">C'est de cette carte que sort tout ce qui précède. ${resume} Touche une planète pour lire sa fiche.</p>
