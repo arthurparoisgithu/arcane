@@ -49,7 +49,7 @@ window.ArcanesMiroir = (() => {
   /* ================================================================ L'INTERFACE */
   function build(){
     root = document.createElement("div"); root.id = "mir"; root.className = "mir";
-    root.innerHTML = `<canvas class="mir-3d" aria-label="La scène du jeu"></canvas><div class="mir-2d"><canvas width="160" height="100" aria-hidden="true"></canvas></div><div class="mir-fade on"></div>
+    root.innerHTML = `<canvas class="mir-3d" aria-label="La scène du jeu"></canvas><canvas class="mir-ov" aria-hidden="true"></canvas><div class="mir-2d"><canvas width="160" height="100" aria-hidden="true"></canvas></div><div class="mir-fade on"></div>
       <div class="mir-top"><button type="button" class="mir-b" data-m="menu" aria-label="Menu">☰</button><span class="mir-lieu" aria-live="polite"></span><button type="button" class="mir-b" data-m="carnet" aria-label="Le corpus">✎</button></div>
       <p class="mir-cap" aria-live="polite"></p><div class="mir-stick" aria-hidden="true"><i></i></div>
       <div class="mir-ctl"><button type="button" class="mir-act" hidden></button><button type="button" class="mir-walk" aria-label="Avancer">▲</button></div>
@@ -57,7 +57,7 @@ window.ArcanesMiroir = (() => {
       <div class="mir-sheet" hidden></div>`;
     document.body.appendChild(root); document.documentElement.classList.add("mir-lock");
     c3 = $(".mir-3d"); c2 = $(".mir-2d canvas"); x2 = c2.getContext("2d");
-    eng = window.MiroirR3D(c3);
+    eng = window.MiroirR3D(c3, $(".mir-ov"));
     eng.onTarget = lab => { const b = $(".mir-act"); if(lab && !busy){ b.textContent = lab; b.hidden = false; } else b.hidden = true; };
     eng.onAct = t => { if(busy) return; const f = t.sprite ? t.sprite.act : (eng.level().wallAct[t.wall] || {}).act; if(f) run(() => f(t)); };
     eng.onStep = () => Snd.pas();
@@ -223,16 +223,16 @@ window.ArcanesMiroir = (() => {
 
   /* ---------- le couloir des mots : le complexe ---------- */
   function mots(){
-    PX.setTheme(themeMaison()); setLieu("Le couloir"); const POOL = ["tête", "eau", "argent", "enfant", "maison", "famille", "peur", "mentir", "porte", "dormir", "vieux", "aimer"], r = PX.rng(Date.now() & 65535), liste = []; while(liste.length < 5){ const m = POOL[(r()*POOL.length) | 0]; if(!liste.includes(m)) liste.push(m); }
+    PX.setTheme(themeMaison()); setLieu("Le couloir"); const POOL = ["tête", "eau", "argent", "enfant", "maison", "famille", "peur", "mentir", "porte", "dormir", "vieux", "aimer"], r = PX.rng(Date.now() & 65535), liste = []; while(liste.length < 3){ const m = POOL[(r()*POOL.length) | 0]; if(!liste.includes(m)) liste.push(m); }
     let k = 0, boucle = true, fait = false, asking = false, tours = 0; st.mots = [];
     const map = ["CKCCCKCCCKCCCKCCCKCCCKCCC", "C.......................E", "CCCKCCCKCCCKCCCKCCCKCCCKC"];
     const demande = async () => { asking = true; const m = liste[k]; const a = await ask("La voix de Jung", `« ${m.charAt(0).toUpperCase() + m.slice(1)}. »`, {ph:"Le premier mot qui vient", max:30, opt:false, ok:"Dire"}); st.mots.push({m, r:a.v, ms:a.v ? Math.round(a.ms) : 99999}); k++; endDlg();
-      if(k >= 5){ const lent = st.mots.slice().sort((p, q) => q.ms - p.ms)[0], autres = st.mots.filter(x => x !== lent), moy = autres.reduce((s, x) => s + Math.min(x.ms, 20000), 0)/autres.length; st.lent = lent; save();
+      if(k >= 3){ const lent = st.mots.slice().sort((p, q) => q.ms - p.ms)[0], autres = st.mots.filter(x => x !== lent), moy = autres.reduce((s, x) => s + Math.min(x.ms, 20000), 0)/autres.length; st.lent = lent; save();
         await say("La voix de Jung", `Assez. Sur « ${lent.m} », vous avez mis ${lent.ms > 90000 ? "si longtemps que vous n'avez rien dit" : (lent.ms/1000).toFixed(1).replace(".", ",") + " secondes"}. Sur les autres, ${(moy/1000).toFixed(1).replace(".", ",")} en moyenne.`); await say("La voix de Jung", "Je ne vous demande pas pourquoi. Avancez : le couloir a une fin, maintenant."); endDlg(); boucle = false; Snd.craque(); }
       asking = false; };
     eng.load({map, walls:{C:W.couloir, K:W.couloirPorte, E:W.porte}, sprites:[], ceil:13, floor:"planks", floorC:14, floorC2:13, dens:.34, lum:.6, far:11, speed:1.95, a0:0,
       wallAct:{E:{label:() => st.lent ? `Une porte. Dessus, un mot : « ${st.lent.m} »` : "Une porte", act:async () => { if(fait) return; fait = true; await Nr(`La porte s'ouvre sur une pièce minuscule. Sur tous les murs, de ta main, le même mot : « ${st.lent.m} ».`); await Nr(st.lent.r ? `Et dessous, ce que tu as répondu : « ${st.lent.r} ».` : "Et dessous, rien. Un blanc, là où tu n'as pas trouvé de mot."); await Nr("Rien d'effrayant. Seulement un endroit où quelque chose accroche."); endDlg(); await page("complexe"); await retour("mots"); }}},
-      tick:(dt, E) => { const P = E.P; if(boucle && P.x > 14){ P.x -= 8; tours++; if(!asking && !busy && k < 5) run(demande); } if(P.x < 1.4) P.x = 1.4; } }, [1.6, 1.5]);
+      tick:(dt, E) => { const P = E.P; if(boucle && P.x > 14){ P.x -= 8; tours++; if(!asking && !busy && k < 3) run(demande); } if(P.x < 1.4) P.x = 1.4; } }, [1.6, 1.5]);
     setMode("3d"); fade(false, 800);
     run(async () => { await say("La voix de Jung", "Marchez. Je vais dire un mot. Répondez par le premier qui vous vient, sans réfléchir."); await say("La voix de Jung", "Je compte les secondes."); endDlg(); await demande(); cap("Le couloir continue. Des portes de chaque côté, toutes pareilles.", 6000); });
   }

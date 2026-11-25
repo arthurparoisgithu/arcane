@@ -70,6 +70,9 @@
   S.franklin = mk(24, 22, x => { R(x, "#5c3f26", 3, 6, 4, 16); R(x, "#5c3f26", 3, 14, 16, 2); R(x, "#5c3f26", 17, 14, 2, 8); perso(x, 11, 19, {pose:"assis", c:"#5c3f26", c2:"#3d2a1c", h:"#a89c84", long:true, chauve:true, lunettes:true, p:"#45423c", gilet:"#86603a"}); R(x, "#45423c", 13, 16, 2, 5); R(x, "#86603a", 20, 4, 1, 18); });
   S.lavoisier = fig({c:"#17203a", c2:"#0a0a14", perruque:true, gilet:"#d9cfb8", p:"#d9cfb8", bras:"avant"});
   /* ---------- Buzancy, 1784 ---------- */
+  /* Buzancy la nuit : la haie bleue, le château sous la lune, ses fenêtres allumées */
+  W.haieNuit = mk(32, 32, x => { R(x, "#17203a", 0, 0, 32, 32); noise(x, 32, 32, ["#1f2444", "#0a0a14", "#2e3a66", "#4a5a8a"], 93, 230); R(x, "#4a5a8a", 0, 0, 32, 1); R(x, "#0a0a14", 0, 28, 32, 4); });
+  W.chateauNuit = mk(32, 32, x => { R(x, "#4a5a8a", 0, 0, 32, 32); for(let j = 0; j < 32; j += 4){ R(x, "#2e3a66", 0, j, 32, 1); for(let i = (j/4 % 2)*4; i < 32; i += 8) R(x, "#2e3a66", i, j, 1, 4); } R(x, "#8fa3c8", 0, 0, 3, 32); R(x, "#8fa3c8", 29, 0, 3, 32); R(x, "#1f2444", 0, 28, 32, 4); R(x, "#8fa3c8", 9, 5, 14, 20); R(x, "#ffe9a8", 11, 7, 10, 16); R(x, "#45423c", 15, 7, 2, 16); R(x, "#45423c", 11, 14, 10, 1); R(x, "#f08a24", 12, 16, 3, 6); R(x, "#e2bd5a", 17, 8, 3, 5); }, false);
   W.chateau = mk(32, 32, x => { R(x, "#8a3a30", 0, 0, 32, 32); for(let j = 0; j < 32; j += 4){ R(x, "#7a2c24", 0, j, 32, 1); for(let i = (j/4 % 2)*4; i < 32; i += 8) R(x, "#7a2c24", i, j, 1, 4); } R(x, "#d9cfb8", 0, 0, 3, 32); R(x, "#d9cfb8", 29, 0, 3, 32); R(x, "#a89c84", 0, 28, 32, 4); R(x, "#d9cfb8", 9, 5, 14, 20); R(x, "#ffe9a8", 11, 7, 10, 16); R(x, "#5c3f26", 15, 7, 2, 16); R(x, "#5c3f26", 11, 14, 10, 1); R(x, "#f08a24", 12, 16, 3, 6); }, false);
   S.puysegur = fig({c:"#2e3a66", c2:"#1f2444", gilet:"#7a2c24", perruque:true, p:"#f4efe2", bras:"tendu"});
   S.victor = fig({c:"#86603a", c2:"#5c3f26", h:"#3d2a1c", p:"#45423c", col:false});
