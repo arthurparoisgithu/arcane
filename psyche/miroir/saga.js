@@ -165,10 +165,13 @@ window.MiroirSaga = (() => {
         hint += dt; if(hint > 40 && pro && pro !== "VII" && Math.hypot(P.x - N[pro].pos[0], P.y - N[pro].pos[1]) > 12){ hint = 0; K.cap("La prochaine lueur est tout près du chemin. Le miroir, lui, est encore loin.", 6000); } } }, [sx, sy]);
     if(opt.neuf){ const f = FIG[opt.neuf]; eng.P.a = f.a; }
     K.setMode("3d"); K.fade(false, 1400);
-    if(opt.neuf){ K.Snd.or(); K.cap(opt.neuf === "E" ? "La dernière constellation s'allume : le Pendule. Le ciel est plein." : `Une constellation s'allume : ${N[opt.neuf].ciel}.${prochain() ? " Plus loin, une autre lueur paraît." : ""}`, 9000); if(opt.neuf === "E") setTimeout(() => { if(K.alive && !K.busy) K.run(finSaga); }, 6500); }
+    if(opt.neuf){ K.Snd.or(); K.cap(opt.neuf === "E" ? "La dernière constellation s'allume : le Pendule. Le ciel est plein." : `Une constellation s'allume : ${N[opt.neuf].ciel}.${prochain() ? " Plus loin, une autre lueur paraît." : ""}`, 9000); const nv = opt.neuf, j = jeton, ici = () => j === jeton && K.alive && !K.busy && K.st.niv === "hub";
+      if(nv === "E") setTimeout(() => { if(ici()) K.run(async () => { await finSaga(); versLivre(nv); }); }, 6500); else if(!window.__mirSansLivre) setTimeout(() => { if(ici()) versLivre(nv); }, 5200); }
     else if(!st.saga.agit.length && !st.saga.faits.VII) K.cap("Une lueur, tout près. Et très loin, droit devant, une lumière plus chaude.", 9000);
     else K.cap(pro ? `La nuit. La prochaine lueur : ${N[pro].nom.toLowerCase()}.` : "La nuit. Le ciel est plein.", 7000);
   }
+  /* un niveau traversé : on sort du jeu, sur le chapitre qu'il vient d'ouvrir dans le Livre */
+  async function versLivre(n){ const P = window.ArcanesPsyche; if(window.__mirSansLivre || !P || !P.active || !P.active() || !K.alive) return; await K.fade(true, 900); try{ window.ArcanesMiroir.close(); }catch(e){} try{ P.go("chap:" + n); }catch(e){} }
   async function finSaga(){ const sv = K.st.saga;
     const v = await K.sheet(`<p class="mir-eye">Le Miroir</p><h2>Le ciel est plein.</h2><p class="mir-page">Huit constellations, vingt-cinq siècles. Tu peux rester te promener dans la nuit : tout ce que tu as traversé y est encore.</p><ol class="mir-fil">${sv.agit.map((n, i) => `<li class="${i < sv.agit.length - 1 ? "barre" : ""}"><b>${K.esc(N[n].lieu)}</b> <span>${K.esc(N[n].agit)}</span></li>`).join("")}</ol><div class="mir-col"><button type="button" class="mir-btn" data-x="corpus">Ouvrir le corpus</button><button type="button" class="mir-btn ghost" data-x>Rester dans la nuit</button></div><p class="mir-note">Ce jeu raconte une histoire des idées. Il ne soigne rien et ne remplace personne.</p>`, "fin");
     if(v === "corpus") await corpus(); }
@@ -405,5 +408,5 @@ window.MiroirSaga = (() => {
 
   const LANCE = {I:() => sanctuaire(false), II:mesmer, III:buzancy, IV:braid, V:salpe, VI:havre, E:coue};
   function start(k){ K = k; const n = K.st.niv; K.$(".mir-fade").classList.add("on"); if(n && LANCE[n] && !fait(n)){ LANCE[n](); } else hub(K, {}); }
-  return {start, hub, corpus, apresMiroir, N, ORDRE, LANCE, _:{sanctuaire, songe, passy, braid, nancy, vienne, seuil, fini}};
+  return {start, hub, corpus, apresMiroir, N, ORDRE, LANCE, FIG, _:{sanctuaire, songe, passy, braid, nancy, vienne, seuil, fini}};
 })();

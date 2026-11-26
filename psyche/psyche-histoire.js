@@ -1,5 +1,5 @@
 /* ===== Arcanes · Psyché : l'histoire =====
-   Du temple d'Asclépios au laboratoire du sommeil : dix chapitres. st comme dans le cours. */
+   Du temple d'Asclépios au laboratoire du sommeil : onze textes, que le Livre regroupe en huit chapitres, un par niveau du jeu. st comme dans le cours. */
 window.PSY_HIST = [
  {id:"h1", n:"I", court:"Le temple", t:"Dormir pour guérir", per:"Ve siècle av. J.-C. – IIe siècle", img:"m:songes",
   p:[
@@ -20,7 +20,7 @@ window.PSY_HIST = [
    "La commission de l'Académie des sciences et de la Faculté réunit des noms illustres : <b>Benjamin Franklin</b>, ambassadeur des États-Unis, le chimiste <b>Lavoisier</b>, l'astronome <b>Bailly</b>, le médecin <b>Guillotin</b>. Ils ne cherchent pas à savoir si les patients guérissent, mais si le fluide existe.",
    "Pour cela, ils inventent une méthode nouvelle : l'<b>expérience à l'aveugle</b>. On bande les yeux des sujets ; on leur fait croire qu'on les magnétise quand on ne fait rien, et l'inverse. Dans le jardin de Franklin, à Passy, un jeune garçon embrasse des arbres dont un seul a été magnétisé : il s'évanouit devant un arbre qui ne l'était pas.",
    "La conclusion du rapport de Bailly est célèbre : l'imagination sans magnétisme produit des convulsions, le magnétisme sans imagination ne produit rien. Le fluide n'existe pas. Un rapport secret, remis au roi, s'inquiète en outre de l'emprise des magnétiseurs sur leurs patientes.",
-   "Ce verdict est un acte de naissance double. Il fonde les essais contrôlés à l'aveugle, l'outil de base de la médecine moderne. Et il découvre, sans le vouloir, la puissance de l'<b>imagination</b> sur le corps : ce qu'on appellera plus tard l'effet placebo. L'outil « L'expérience de 1784 » te fait rejouer les épreuves."],
+   "Ce verdict est un acte de naissance double. Il fonde les essais contrôlés à l'aveugle, l'outil de base de la médecine moderne. Et il découvre, sans le vouloir, la puissance de l'<b>imagination</b> sur le corps : ce qu'on appellera plus tard l'effet placebo. C'est l'épreuve que tu as refaite à Passy, dans la nuit."],
   cles:["Franklin, Lavoisier, Bailly, Guillotin.","La première expérience à l'aveugle.","L'imagination sans magnétisme produit des convulsions."]},
  {id:"h4", n:"IV", court:"Puységur", t:"Puységur et le sommeil magnétique", per:"1784 – 1820", img:"",
   p:[
@@ -69,7 +69,7 @@ window.PSY_HIST = [
    "<b>Émile Coué</b> est pharmacien à Troyes. Il a suivi à Nancy les leçons de Liébeault et remarque que les remèdes marchent mieux quand il les vante à ses clients. Il en conclut que c'est l'imagination du malade, plus que le pharmacien, qui agit.",
    "Il met au point une méthode d'<b>autosuggestion consciente</b>. Matin et soir, on répète vingt fois, à mi-voix, sans effort, en comptant sur une ficelle à vingt nœuds : « Tous les jours, à tous points de vue, je vais de mieux en mieux. » Sa règle : quand la volonté et l'imagination s'opposent, c'est toujours l'imagination qui l'emporte.",
    "Installé à Nancy, il reçoit gratuitement des foules de malades. Son livre de 1922, <i>La Maîtrise de soi-même par l'autosuggestion consciente</i>, est traduit partout ; ses tournées en Angleterre et aux États-Unis font de lui une célébrité. Il meurt en 1926.",
-   "On s'est beaucoup moqué de la « méthode Coué », devenue une expression pour un optimisme naïf. Elle anticipe pourtant des idées sérieuses : l'effet placebo, le rôle des attentes, les techniques de relaxation et d'autohypnose. L'outil « La ficelle de Coué » t'en fait faire l'exercice."],
+   "On s'est beaucoup moqué de la « méthode Coué », devenue une expression pour un optimisme naïf. Elle anticipe pourtant des idées sérieuses : l'effet placebo, le rôle des attentes, les techniques de relaxation et d'autohypnose. La ficelle de Coué t'attend dans le carnet."],
   cles:["Le pharmacien de Troyes.","La formule et la ficelle à vingt nœuds.","L'imagination l'emporte sur la volonté."]},
  {id:"h11", n:"XI", court:"Aujourd'hui", t:"Du divan au laboratoire", per:"1950 – aujourd'hui", img:"",
   p:[
