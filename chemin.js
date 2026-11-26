@@ -20,10 +20,12 @@
     {id:"astro", art:"L'astrologie", t:"La roue du zodiaque", x:"Les douze signes autour de la roue."},
     {id:"magie", art:"La magie", t:"Le carré de Saturne", x:"Neuf nombres, quinze partout."},
     {id:"alchimie", art:"L'alchimie", t:"Le Grand Œuvre", x:"Conduire le feu du noir au rouge."},
-    {id:"psyche", art:"Psyché", t:"La descente", x:"Quatre étages de la maison de Jung, et les ombres."}];
+    {id:"psyche", art:"Psyché", t:"Le Miroir", x:"Allumer une première constellation dans la nuit."}];
   function chelem(){
     const J = read("arcanes.chelem.v1"), C = read("arcanes.alchimie.v1"), P = read("arcanes.psyche.v1");
-    const won = {tarot:!!(J.tarot && J.tarot.n), astro:!!(J.astro && J.astro.n), magie:!!(J.magie && J.magie.n), alchimie:!!(C.grand && C.grand.n), psyche:!!(P.descente && P.descente.n)};
+    /* Psyché : le jeu est Le Miroir ; une constellation allumée suffit (une ancienne descente réussie compte toujours) */
+    const miroirFait = () => { try{ const f = ((JSON.parse(localStorage.getItem("arcanes.miroir.v1") || "{}") || {}).saga || {}).faits || {}; return Object.values(f).some(v => v === true); }catch(e){ return false; } };
+    const won = {tarot:!!(J.tarot && J.tarot.n), astro:!!(J.astro && J.astro.n), magie:!!(J.magie && J.magie.n), alchimie:!!(C.grand && C.grand.n), psyche:!!((P.descente && P.descente.n) || miroirFait())};
     const jeux = JEUX.filter(j => j.id !== "psyche" || window.ArcanesPsyche).map(j => ({...j, ok:won[j.id], best:(J[j.id] || {}).best}));
     return {jeux, n:jeux.filter(j => j.ok).length, tout:jeux.every(j => j.ok)};
   }
@@ -75,7 +77,7 @@
   function jouer(id){
     const AS = window.ArcanesAstro;
     if(id === "alchimie" || id === "psyche"){ if(typeof closeSheet === "function") closeSheet();
-      try{ AS.switchTo(id); setTimeout(() => { if(id === "alchimie") window.ArcanesAlchimie.go("labo:jeu"); else window.ArcanesPsyche.go("outil:descente"); }, 80); }catch(x){} return; }
+      try{ AS.switchTo(id); setTimeout(() => { if(id === "alchimie") window.ArcanesAlchimie.go("labo:jeu"); else window.ArcanesPsyche.miroir(); }, 80); }catch(x){} return; }
     const sh = document.getElementById("sheet"), body = sh && sh.querySelector(".sheet-body"); if(!body) return;
     const J = JEUX.find(j => j.id === id);
     body.innerHTML = `<div class="chg"><button type="button" class="chg-back" data-chemin>← Le chemin</button><p class="eyebrow">Le grand chelem · ${h(J.art)}</p><h2>${h(J.t)}</h2><div class="chg-host"><p class="help">Chargement…</p></div></div>`;
