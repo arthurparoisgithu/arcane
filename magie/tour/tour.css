@@ -1,0 +1,42 @@
+/* ===== Arcanes · Magie : La Tour (plan d'ambiance) ===== */
+.tq{position:fixed;inset:0;z-index:9000;background:#05040a;color:#efe6d2;overflow:hidden;font-family:var(--f-text,Georgia,serif);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;animation:tq-in .6s both}
+.tq.sort{animation:tq-out .45s both}
+@keyframes tq-in{from{opacity:0}}@keyframes tq-out{to{opacity:0}}
+html.tq-ouvert,html.tq-ouvert body{overflow:hidden}
+.tq-gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges}
+.tq-voile{position:absolute;inset:0;background:#000;pointer-events:none}
+.tq-haut{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;padding:max(14px,env(safe-area-inset-top)) 14px 0;pointer-events:none;opacity:.55}
+.tq-b{pointer-events:auto;width:44px;height:44px;border:2px solid rgba(239,230,210,.35);background:rgba(5,4,10,.5);color:#efe6d2;font:16px/1 Georgia,serif;cursor:pointer}
+.tq-titre{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;pointer-events:none;opacity:0;transition:opacity 1.6s}
+.tq-titre.on{opacity:1}.tq-titre.off{opacity:0}
+.tq-titre small{font:700 11px/1 var(--f-ui,sans-serif);letter-spacing:.34em;text-transform:uppercase;color:#b9976a}
+.tq-titre b{font:400 clamp(54px,15vw,120px)/1 var(--f-display,Georgia,serif);color:#efe6d2;letter-spacing:.04em;text-shadow:0 0 34px rgba(255,150,70,.35)}
+.tq-titre b span{display:inline-block;animation:tq-lettre 1.6s cubic-bezier(.2,.7,.2,1) both}
+@keyframes tq-lettre{from{opacity:0;filter:blur(12px);transform:translateY(18px)}}
+.tq-titre i{font:italic 15px/1 var(--f-text,Georgia,serif);color:#8f8798;margin-top:18px;animation:tq-bat 2.4s 2.4s infinite both}
+@keyframes tq-bat{0%{opacity:0}50%{opacity:1}100%{opacity:.25}}
+.tq-cap{position:absolute;left:50%;top:max(74px,calc(env(safe-area-inset-top) + 64px));width:min(520px,calc(100% - 40px));transform:translate(-50%,-6px);text-align:center;font:italic 18px/1.45 var(--f-text,Georgia,serif);color:#efe6d2;text-shadow:0 2px 0 #05040a,0 0 14px #05040a,0 0 14px #05040a;opacity:0;transition:opacity 1.4s,transform 1.6s;pointer-events:none}
+.tq-cap.on{opacity:1;transform:translate(-50%,0)}
+.tq-marche{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);width:104px;height:104px;border-radius:50%;border:2px solid rgba(239,230,210,.4);background:rgba(5,4,10,.38);color:#efe6d2;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;touch-action:none;cursor:pointer;opacity:0;transition:opacity 1.2s 3s,background .15s,transform .15s}
+.tq.joue .tq-marche{opacity:.9}
+.tq-marche span{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:14px solid #efe6d2}
+.tq-marche b{font:700 10px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase}
+.tq-marche.on{background:rgba(255,160,80,.28);border-color:#ffb878;transform:translateX(-50%) scale(.94)}
+@media (pointer:coarse){.tq-marche{display:flex}}
+.tq-panneau{position:absolute;left:50%;bottom:0;width:min(560px,100%);max-height:84%;overflow:auto;transform:translate(-50%,30px);opacity:0;transition:opacity .6s,transform .7s cubic-bezier(.2,.8,.2,1);padding:24px 22px calc(26px + env(safe-area-inset-bottom));background:rgba(8,6,14,.94);border:2px solid #6a5a48;border-bottom:0}
+.tq-panneau.on{opacity:1;transform:translate(-50%,0)}
+.tq-eye{font:700 11px/1 var(--f-ui,sans-serif);letter-spacing:.24em;text-transform:uppercase;color:#b9976a;margin:0 0 10px}
+.tq-panneau h2{font:400 28px/1.15 var(--f-display,Georgia,serif);margin:0 0 12px;color:#efe6d2}
+.tq-panneau p,.tq-panneau li{font-size:16.5px;line-height:1.55;color:#d6ccb8}
+.tq-panneau ul{padding-left:20px;margin:8px 0 18px}
+.tq-acts{display:flex;flex-wrap:wrap;gap:10px}
+.tq-go{font:700 12px/1 var(--f-ui,sans-serif);letter-spacing:.16em;text-transform:uppercase;color:#12090a;background:#e0a55a;border:0;padding:15px 20px;cursor:pointer}
+.tq-go.ghost{background:transparent;color:#efe6d2;box-shadow:inset 0 0 0 2px #6a5a48}
+
+/* la carte d'entrée, dans l'atelier de la magie */
+.m-tourjeu{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;width:100%;margin:6px 0 22px;padding:14px 16px;text-align:left;font:inherit;color:#efe6d2;cursor:pointer;border:2px solid #4a3f52;border-left:4px solid #e0a55a;background:linear-gradient(180deg,#191428,#0a0810)}
+.m-tourjeu:hover{border-color:#e0a55a}
+.m-tourjeu svg{display:block}
+.m-tourjeu small{display:block;font:700 10.5px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase;color:#e0a55a}
+.m-tourjeu b{display:block;font:400 26px/1.05 var(--f-display,Georgia,serif);margin:4px 0 5px}
+.m-tourjeu span{display:block;font-size:14px;line-height:1.45;color:#b9b0c2}
