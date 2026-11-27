@@ -25,7 +25,8 @@ function sol(x, z){ const d = Math.abs(x - chemin(z)), village = smooth(-80, -10
   const r = Math.hypot(x - TX, z - CZ); y = lerp(y, 25.5, smooth(58, 40, r)); return y; }
 
 /* ---------------------------------------------------------------- les textures, peintes en code */
-function tex(n, fn, rep){ const c = document.createElement("canvas"); c.width = c.height = n; const x = c.getContext("2d"); fn(x, n); const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestMipmapLinearFilter; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; if(rep) t.repeat.set(rep[0], rep[1]); return t; }
+let LISSE = false;
+function tex(n, fn, rep){ const c = document.createElement("canvas"); c.width = c.height = n; const x = c.getContext("2d"); fn(x, n); const t = new THREE.CanvasTexture(c); t.magFilter = LISSE ? THREE.LinearFilter : THREE.NearestFilter; t.minFilter = LISSE ? THREE.LinearMipmapLinearFilter : THREE.NearestMipmapLinearFilter; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; if(rep) t.repeat.set(rep[0], rep[1]); return t; }
 const grain = (x, n, cols, seed, dens = 1) => { const r = rng(seed); for(let i = 0; i < n*n*dens; i++){ x.fillStyle = cols[(r()*cols.length) | 0]; x.fillRect((r()*n) | 0, (r()*n) | 0, 1, 1); } };
 const T = {
   pierre:() => tex(64, (x, n) => { x.fillStyle = "#6d6a78"; x.fillRect(0, 0, n, n); grain(x, n, ["#7c7988", "#5c5968", "#8a8796", "#514e5c"], 3, .7); x.fillStyle = "#34313c"; for(let j = 0; j < n; j += 8){ x.fillRect(0, j, n, 1); for(let i = (j/8 % 2)*8; i < n; i += 16) x.fillRect(i, j, 1, 8); } }),
@@ -58,6 +59,7 @@ const Son = (() => { let ac = null, maitre = null, on = true, vent = null;
 /* ================================================================ le jeu */
 export function ouvrir(opt = {}){
   if(document.querySelector(".tq")) return;
+  const GRAV = (opt.rendu || window.__tourRendu) === "gravure"; LISSE = GRAV;   /* essai : le monde rendu comme une eau-forte */
   let son = true; try{ son = localStorage.getItem("arcanes.tour.son") !== "0"; }catch(e){} Son.on = son;
   const root = document.createElement("div"); root.className = "tq"; root.setAttribute("role", "dialog"); root.setAttribute("aria-label", "La Tour");
   root.innerHTML = `<canvas class="tq-gl"></canvas><div class="tq-voile"></div>
@@ -88,9 +90,52 @@ export function ouvrir(opt = {}){
         vec2 q = vUv - .5; c *= 1. - dot(q, q)*.75;                                    /* les bords s'assombrissent */
         float t = bayer(gl_FragCoord.xy) - .5; c = floor(c*uNiv + .5 + t)/uNiv;        /* peu de niveaux, fondus à la trame */
         gl_FragColor = vec4(c, 1.); }`});
-  const quadScene = new THREE.Scene(), quadCam = new THREE.Camera(); quadScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
+  /* ---- l'eau-forte : contours et hachures à l'encre sur papier, l'or pour les lumières.
+     Les hachures sont accrochées au monde (et non à l'écran) pour ne pas « nager » quand on marche ; leur pas double avec la distance. */
+  const postG = new THREE.ShaderMaterial({depthTest:false, depthWrite:false, uniforms:{tD:{value:null}, tZ:{value:null}, uRes:{value:new THREE.Vector2(2, 2)}, uPI:{value:cam.projectionMatrixInverse}, uCW:{value:cam.matrixWorld}, uCam:{value:cam.position}, uNF:{value:new THREE.Vector2(.1, 1500)}, uT:{value:0}, uLavis:{value:0}, uExpo:{value:1}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`,
+    fragmentShader:`precision highp sampler2D; uniform sampler2D tD, tZ; uniform vec2 uRes, uNF; uniform mat4 uPI, uCW; uniform vec3 uCam; uniform float uT, uLavis, uExpo; varying vec2 vUv;
+      float h21(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
+      float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3. - 2.*f); return mix(mix(h21(i), h21(i + vec2(1., 0.)), f.x), mix(h21(i + vec2(0., 1.)), h21(i + vec2(1., 1.)), f.x), f.y); }
+      float W(vec2 u){ return 1. - texture2D(tZ, u).x; }
+      vec3 ton(vec2 u){ vec3 c = texture2D(tD, u).rgb*uExpo; c = c/(c + .55)*1.55; return pow(max(c, 0.), vec3(1./2.2)); }
+      float lum(vec3 c){ return dot(c, vec3(.3, .59, .11)); }
+      /* une famille de traits parallèles : v = coordonnée en travers des traits, hw = demi-épaisseur (0 à .5), fr = fondu vers l'octave suivante */
+      float traits(float co, float sc, float hw, float fr){ float v = co*sc, fw = fwidth(co)*sc, k = floor(v + .5), impair = mod(k, 2.), dc = abs(v - k), h = hw*mix(1. + fr, 1. - fr, impair);
+        float net = 1. - smoothstep(h - fw*.7, h + fw*.7, dc); return mix(net, 2.*hw, smoothstep(.45, .9, fw))*step(.004, hw); }
+      void main(){ vec2 px = 1./uRes, fc = vUv*uRes; float d = texture2D(tZ, vUv).x, w = 1. - d, n = uNF.x, f = uNF.y, z = f*n/((f - n)*w + n); bool ciel = d > .999995;
+        vec4 v4 = uPI*vec4(vUv*2. - 1., d*2. - 1., 1.); v4 /= v4.w; vec3 P = (uCW*v4).xyz, dir = normalize(P - uCam);
+        vec3 c = ton(vUv); float l = lum(c), loin = ciel ? 0. : smoothstep(30., 340., z);
+        /* le ton : clair = papier nu, sombre = traits serrés ; le lointain s'éclaircit */
+        float t = smoothstep(.06, .56, l); t = t*t*(3. - 2.*t); t = mix(t, max(t, .82), loin*.85);
+        float dore = smoothstep(.1, .38, c.r - c.b)*smoothstep(.22, .6, l); t = max(t, dore*.9);
+        /* les contours : là où la profondeur casse (bords, arêtes), d'un trait un peu tremblé */
+        vec2 u = vUv + (vec2(vn(fc*.03), vn(fc*.03 + 9.)) - .5)*px*1.8; float e = mix(1.25, .8, loin);
+        float wc = W(u), wl = W(u - vec2(px.x*e, 0.)), wr = W(u + vec2(px.x*e, 0.)), wu = W(u + vec2(0., px.y*e)), wd = W(u - vec2(0., px.y*e));
+        float lap = abs(wl + wr + wu + wd - 4.*wc)/max(max(wc, max(max(wl, wr), max(wu, wd))), 1e-7), bord = smoothstep(.012, .05, lap);
+        float gl = abs(lum(ton(u + vec2(px.x*e, 0.))) - lum(ton(u - vec2(px.x*e, 0.)))) + abs(lum(ton(u + vec2(0., px.y*e))) - lum(ton(u - vec2(0., px.y*e)))); bord = max(bord, smoothstep(.09, .22, gl)*.75*(1. - dore));
+        /* les hachures */
+        float encre = 0.;
+        if(ciel){ float el = asin(clamp(dir.y, -1., 1.)), az = atan(dir.x, dir.z), K = uRes.y*.115, v = el*K + (vn(vec2(az*4., el*9.)) - .5)*2.4 + (vn(vec2(az*30., el*40.)) - .5)*.35;
+          encre = traits(v, 1., smoothstep(1., .2, t)*.3, 0.); encre = max(encre, traits(el*.8 + az*.6, K, smoothstep(.4, 0., t)*.28, 0.)); }
+        else { vec3 N = abs(normalize(cross(dFdx(P), dFdy(P)))); vec2 q = N.y > .62 ? P.xz : (N.x > N.z ? P.zy : P.xy);
+          float lod = log2(max(z, .3)), o = floor(lod), fr = lod - o, sc = uRes.y*.085*exp2(-o); q += mix((vn(q*sc*.11) - .5)*.5/sc, (vn(q*sc*.055) - .5)/sc, fr) + (vn(q*.6) - .5)*.04;
+          float d1 = smoothstep(.9, .3, t), d2 = smoothstep(.5, .1, t), d3 = smoothstep(.24, 0., t);
+          float sens = N.y > .62 ? 0. : 1.;
+          encre = traits(q.x + q.y*mix(.35, 1., sens), sc, d1*.3, fr); encre = max(encre, traits(q.x - q.y*mix(2.2, 1., sens), sc, d2*.31, fr)); encre = max(encre, traits(q.y*1.35, sc, d3*.36, fr)); }
+        encre = max(encre*(1. - loin*.45), bord*(1. - loin*.5));
+        /* le papier, l'or, le lavis de couleur (les encres gagnées), puis l'encre */
+        vec3 papier = vec3(.925, .885, .79)*(1. - vn(fc*.5)*.05 - h21(fc)*.035 - vn(fc*.012)*.06);
+        vec3 col = mix(papier, papier*vec3(1., .78, .34), dore*.95);
+        vec3 lav = mix(vec3(l), c, 1.9); lav = 1. - (1. - clamp(lav, 0., 1.))*.62; col = mix(col, col*mix(lav, vec3(1.), dore*.6)*1.08, uLavis);
+        col = mix(col, vec3(.085, .065, .055), clamp(encre, 0., 1.)*.93);
+        vec2 qv = vUv - .5; col *= 1. - dot(qv, qv)*.42; col *= 1. - smoothstep(.47, .5, max(abs(qv.x), abs(qv.y)))*.25;
+        gl_FragColor = vec4(col, 1.); }`});
+  const quadScene = new THREE.Scene(), quadCam = new THREE.Camera(); quadScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), GRAV ? postG : post));
   function taille(){ const W = root.clientWidth, H = root.clientHeight, px = Math.min(W, H) < 520 ? 3 : Math.min(W, H) < 800 ? 4 : 5; RW = Math.max(80, Math.round(W/px)); RH = Math.max(80, Math.round(H/px));
-    renderer.setSize(RW, RH, false); if(rt) rt.dispose(); rt = new THREE.WebGLRenderTarget(RW, RH, {minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter, depthBuffer:true}); post.uniforms.tD.value = rt.texture;
+    if(GRAV){ const k = Math.min(window.devicePixelRatio || 1, 2); RW = Math.round(W*k); RH = Math.round(H*k); canvas.style.imageRendering = "auto"; }
+    renderer.setSize(RW, RH, false); if(rt){ if(rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); } rt = new THREE.WebGLRenderTarget(RW, RH, {minFilter:GRAV ? THREE.LinearFilter : THREE.NearestFilter, magFilter:GRAV ? THREE.LinearFilter : THREE.NearestFilter, depthBuffer:true}); post.uniforms.tD.value = rt.texture;
+    if(GRAV){ rt.depthTexture = new THREE.DepthTexture(RW, RH); rt.depthTexture.type = THREE.FloatType; rt.depthTexture.minFilter = rt.depthTexture.magFilter = THREE.NearestFilter; postG.uniforms.tD.value = rt.texture; postG.uniforms.tZ.value = rt.depthTexture; postG.uniforms.uRes.value.set(RW, RH); }
     cam.aspect = W/H; cam.fov = W < H ? 82 : 64; cam.updateProjectionMatrix(); mainX = W < H ? .2 : .42; main.scale.setScalar(W < H ? .7 : 1); }
 
   /* ---- la lumière */
@@ -248,7 +293,8 @@ export function ouvrir(opt = {}){
   /* ---- une image */
   const cA = new THREE.Color(), cB = new THREE.Color(), v3 = new THREE.Vector3(), SOIR = {zen:0x2a2a5c, hor:0x6a4a6e, fog:0x4a3a5a, mont:0x2c2244}, NUIT = {zen:0x070a1c, hor:0x1a2040, fog:0x10142a, mont:0x0c0f22};
   const mel = (a, b, k) => cA.setHex(a).lerp(cB.setHex(b), k);
-  function image(now){ if(!vivant) return; raf = requestAnimationFrame(image); const dt = Math.min(.05, (now - last)/1000); last = now; temps += dt;
+  let manuel = false;   /* pour filmer image par image, à pas fixe */
+  function image(now, pas){ if(!vivant) return; if(pas == null){ raf = requestAnimationFrame(image); if(manuel) return; } const dt = pas != null ? pas : Math.min(.05, (now - last)/1000); last = now; temps += dt;
     /* marcher */
     const K = J.touches, av = (J.avance || K.ArrowUp || K.KeyW || K.KeyZ || K.Space ? 1 : 0) - (K.ArrowDown || K.KeyS ? 1 : 0), tr = (K.ArrowLeft || K.KeyA || K.KeyQ ? 1 : 0) - (K.ArrowRight || K.KeyD ? 1 : 0);
     J.yaw += tr*1.7*dt; J.v = lerp(J.v, G.fige ? 0 : av*(av < 0 ? 2.6 : 4.7), Math.min(1, dt*6));
@@ -284,6 +330,7 @@ export function ouvrir(opt = {}){
     for(const c of corbeaux){ c.a += c.v*dt; c.c.position.set(TX + Math.cos(c.a)*c.r, tour.position.y + c.h + Math.sin(c.a*3)*1.5, TZ + Math.sin(c.a)*c.r); c.c.rotation.y = -c.a; c.c.rotation.z = Math.sin(temps*9 + c.r)*.25; }
     /* les mots, la cloche, la fin */
     for(const f of G.maj) f(dt, temps, p);
+    if(GRAV){ scene.fog.near = 1e5; scene.fog.far = 2e5; for(const m of tourMats){ m.color.copy(m.userData.c); m.emissive.setScalar(0); } hemi.intensity *= 1.7; lune.intensity = lune.intensity*2.2 + .5; postG.uniforms.uT.value = temps; postG.uniforms.uNF.value.set(cam.near, cam.far); }
     cloche -= dt; if(cloche < 0){ cloche = 21 + Math.random()*9; Son.cloche(lerp(.35, 1, p)); }
     renderer.setRenderTarget(rt); renderer.render(scene, cam); renderer.setRenderTarget(null); renderer.render(quadScene, quadCam); }
 
@@ -297,7 +344,7 @@ export function ouvrir(opt = {}){
   const G = {THREE, scene, cam, J, M, T, tFen, halo, uvs, toit, pose, sol, chemin, rng, smooth, lerp, clamp, TX, TZ, CZ, MUR, FIN, tour, tourMats, maisons, lampes, obstacles, post, ciel, hemi, lune, lanterne, phare, phare2, Son, cap, root, fermer,
     maj:[], brasiers:[], cine:null, fige:false, regle:(x, z) => [x, z], vivant:() => vivant, temps:() => temps, regarde:() => { touche = temps; }};
   const hist = installer(G);
-  window.__tourDbg = {J, cam, scene, fermer, G, hist, va:(z, x) => { J.z = z; J.x = x != null ? x : chemin(z); J.pitch = 0; J.yaw = Math.atan2(-(chemin(z - 14) - J.x), 14); }};
+  window.__tourDbg = {J, cam, scene, fermer, G, hist, postG, pas:dt => { manuel = true; image(performance.now(), dt); }, va:(z, x) => { J.z = z; J.x = x != null ? x : chemin(z); J.pitch = 0; J.yaw = Math.atan2(-(chemin(z - 14) - J.x), 14); }};
 
   /* ---- l'ouverture : le noir, le titre, puis la colline */
   const voile = $(".tq-voile"), titre = $(".tq-titre"); voile.style.opacity = 1;
