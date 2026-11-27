@@ -126,7 +126,7 @@ window.PSY_COURS = (() => {
       "Au Burghölzli, à partir de 1904, Jung et Franz Riklin reprennent une expérience de laboratoire : on lit au sujet un mot, « tête », « vert », « eau », et il doit répondre le plus vite possible par le premier mot qui lui vient. Un chronomètre mesure le temps de réaction.",
       "Le plus souvent, la réponse vient en une à deux secondes. Mais parfois, le sujet hésite, rougit, rit, répète le mot, répond à côté, ou oublie ensuite ce qu'il a répondu. Jung appelle ces accidents des <b>indicateurs de complexe</b>.",
       "En regroupant les mots qui font trébucher, il voit apparaître des thèmes : l'argent, un mariage, une dispute avec un frère, un secret. Le sujet ne les avait pas mentionnés, mais ils pesaient sur lui. Le test a même servi, à l'époque, à confondre un voleur.",
-      "Ces travaux, publiés en 1906, rendent Jung célèbre et le rapprochent de Freud, qui y voit une preuve expérimentale du refoulement. L'outil « Le test d'associations » d'Arcanes te permet d'en faire l'expérience, à titre de curiosité."],
+      "Ces travaux, publiés en 1906, rendent Jung célèbre et le rapprochent de Freud, qui y voit une preuve expérimentale du refoulement. Le test d'associations, dans le carnet, te permet d'en faire l'expérience, à titre de curiosité."],
      source:{txt:"Tête. Vert. Eau. Chanter. Mort. Long. Bateau. Payer.", ref:"Les huit premiers mots de la liste de Jung, Études diagnostiques sur les associations, 1906", st:"doc"},
      ex:{t:"Faire le test", txt:"Fais le test d'associations, au calme, sans tricher. Regarde ensuite les mots marqués : ont-ils quelque chose en commun ?", outil:"outil:assoc"},
      carnet:"Les mots qui m'ont fait trébucher, et ce qu'ils ont en commun :"},

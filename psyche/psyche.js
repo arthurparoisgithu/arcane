@@ -1,11 +1,12 @@
 /* ===== Arcanes · Psyché : la porte =====
    Le cinquième univers ne pèse rien au démarrage : ce petit fichier déclare l'univers,
-   et charge le reste (données, cours, histoire, interface, style) la première fois qu'on y entre. */
+   et charge le reste (données, cours, histoire, dessins du jeu, interface, style) la première fois qu'on y entre. */
 (() => {
-  const FILES = ["psyche/psyche-data.js", "psyche/psyche-cours.js", "psyche/psyche-histoire.js", "psyche/psyche-app.js", "psyche/psyche-jeu.js"];
+  /* les dessins et les niveaux du jeu (pix, pix2, saga) sont chargés avec l'univers : le livre en reprend les images et les textes */
+  const FILES = ["psyche/psyche-data.js", "psyche/psyche-cours.js", "psyche/psyche-histoire.js", "psyche/miroir/pix.js", "psyche/miroir/pix2.js", "psyche/miroir/saga.js", "psyche/psyche-app.js"];
   let on = false, loading = null, want = null;
   const css = () => { if(document.querySelector('link[href="psyche/psyche.css"]')) return; const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "psyche/psyche.css"; document.head.appendChild(l); };
-  const one = src => new Promise((ok, ko) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => ko(new Error(src)); document.head.appendChild(s); });
+  const deja = {}, one = src => deja[src] || (deja[src] = new Promise((ok, ko) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => { delete deja[src]; ko(new Error(src)); }; document.head.appendChild(s); }));
   const load = () => loading || (loading = (async () => { css(); for(const f of FILES) await one(f); return window.PSY_APP; })().catch(e => { loading = null; throw e; }));
   const ready = () => window.PSY_APP || null;
   function enter(v){

@@ -353,7 +353,7 @@ window.ArcanesMiroir = (() => {
     if(!alive) return; if(v === "quit" || v == null) return close(); if(v === "aide") await aide(); if(v === "corpus") await window.MiroirSaga.corpus(kit); Snd.init(); Snd.resume(); start();
   }
   function close(){ if(!alive) return; alive = false; Snd.stop(); cancelAnimationFrame(raf2); removeEventListener("keydown", onKey); try{ eng.stop(); }catch(e){} clearTimeout(capT); if(root) root.remove(); root = null; document.documentElement.classList.remove("mir-lock"); PX.setTheme("nuit"); busy = false; paint = null;
-    try{ if(window.PSY_APP && window.PSY_APP.active()) window.PSY_APP.view("jour"); }catch(e){} }
+    try{ window.dispatchEvent(new Event("miroir:ferme")); }catch(e){} }
   /* la trousse que les niveaux de la saga utilisent */
   const kit = {PX, W, S, Snd, say, ask, choose, J, Nr, endDlg, scene2, visage, setMode, fade, flash, cap, setLieu, sheet, closeSheet, run, wait, stars, esc, nb, save, page, carnet, entrer, nuitMiroir:nuit, close,
     get eng(){ return eng; }, get st(){ return st; }, get alive(){ return alive; }, get busy(){ return busy; }, get lieu(){ return lieu; }, get popt(){ return popt; }, demarrer:() => start(), $:s => $(s), resetMiroir:() => { const g = DEF(); for(const k of ["etape", "reve", "motReve", "mots", "lent", "agace", "lame", "ailes", "fin", "lu1913", "mandala"]) st[k] = g[k]; st.carnet = st.carnet.filter(id => !PAGES[id]); save(); }, PAGES};

@@ -1,14 +1,14 @@
 /* ===== Arcanes · Psyché =====
-   Une seule ambiance : le papier mauve pâle des carnets de rêves, l'encre violette, l'or terni des cadres.
-   Signatures : le cercle (mandala), la maison en coupe, le filet violet. */
+   Une seule ambiance : la nuit du Miroir. Bleu de nuit, vélin, or, braise : les couleurs du jeu.
+   Le bas de ce fichier (« Le codex de la nuit ») pose les règles et les pièces neuves ; le haut habille les exercices et le cours. */
 
 :root.u-psy.u-psy:not(._){
-  --sky-1:#f1eef5; --sky-2:#e4deec; --glow:rgba(91,74,138,.12); --star:#bcb3cc; --tree:#5b4a8a;
-  --cloth:#f6f3f8; --cloth-2:#e6dfee; --ink:#1d1a26; --ink-soft:#5a5568; --line:rgba(52,40,90,.2); --line2:rgba(52,40,90,.1);
-  --vermillon:#a8371f; --acc:#5b4a8a; --or:#9a7a2c; --azur:#2f4f8f; --on-accent:#f8f5fb; --on-acc:#f8f5fb;
-  --panel:rgba(252,250,253,.9); --panel-solid:#fcfafd; --scrim:rgba(20,14,34,.5); --navbg:rgba(243,239,247,.93);
-  --ps:#5b4a8a; --ps-2:#7a68ad; --ps-soft:color-mix(in srgb,#5b4a8a 9%,var(--panel-solid));
-  --grain-op:.08; --grain-blend:multiply; color-scheme:light }
+  --sky-1:#0a0a14; --sky-2:#14162b; --glow:rgba(74,90,138,.2); --star:#4a5a8a; --tree:#4a5a8a;
+  --cloth:#14162b; --cloth-2:#1f2444; --ink:#f4efe2; --ink-soft:#a9b6d2; --line:rgba(143,163,200,.3); --line2:rgba(143,163,200,.16);
+  --vermillon:#f08a24; --acc:#e2bd5a; --or:#e2bd5a; --azur:#8fa3c8; --on-accent:#0a0a14; --on-acc:#0a0a14;
+  --panel:rgba(20,22,43,.92); --panel-solid:#14162b; --scrim:rgba(0,0,0,.66); --navbg:rgba(10,10,20,.94);
+  --ps:#e2bd5a; --ps-2:#ffe9a8; --ps-soft:#1f2444;
+  --grain-op:0; --grain-blend:normal; color-scheme:dark }
 
 .u-psy .btn{background:var(--ps);border-color:var(--ps);color:var(--on-accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 8px 18px -10px color-mix(in srgb,var(--ps) 80%,transparent)}
 .u-psy .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line);box-shadow:none}
@@ -253,3 +253,164 @@
 
 .ps-corpus{display:block;width:100%;margin:-8px 0 18px;padding:11px 16px;text-align:left;font:600 14.5px/1.3 var(--f-ui,sans-serif);color:#ffe9a8;cursor:pointer;border:1px solid #4a5a8a;border-radius:6px;background:#14162b}
 .ps-corpus:hover{border-color:#e2bd5a}
+
+/* =====================================================================
+   LE CODEX DE LA NUIT
+   Hors du jeu, Psyché reprend le monde du Miroir. Trois règles :
+   1. les trente et une couleurs du jeu, et aucune autre ;
+   2. des angles droits et des crans de pixel, jamais d'arrondi ni d'ombre floue ;
+   3. les images sont celles du jeu, en gros pixels.
+   ===================================================================== */
+.u-psy{--n0:#0a0a14;--n1:#14162b;--n2:#1f2444;--n3:#2e3a66;--n4:#4a5a8a;--n5:#8fa3c8;--n6:#cfd9ea;--velin:#f4efe2;--sable:#d9cfb8;--or1:#ffe9a8;--or2:#e2bd5a;--or3:#b08a3c;--feu:#f08a24;--braise:#c2501c;
+  --cran:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px));
+  --trame:repeating-conic-gradient(var(--n3) 0 25%,transparent 0 50%) 0 0/4px 4px;--trame-or:repeating-conic-gradient(var(--or3) 0 25%,transparent 0 50%) 0 0/4px 4px}
+.u-psy .ps-view,.u-psy .ps-view *{border-radius:0!important}
+.u-psy .ps-view canvas{image-rendering:pixelated;image-rendering:crisp-edges}
+.u-psy .ps-ico{fill:currentColor;stroke:none}
+.u-psy .psnav button[aria-current="page"]{color:var(--or1)}
+.u-psy .psnav button[aria-current="page"] .ps-ico{fill:var(--or2)}
+
+/* les boutons : une touche d'or, pleine, qui s'enfonce */
+.u-psy .ps-view .btn,.pn-go,.pl-jouer{font-family:var(--f-ui);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--n0);background:var(--or2);border:0;border-bottom:4px solid var(--or3);box-shadow:none;clip-path:var(--cran);cursor:pointer;transition:transform .08s,background .15s}
+.u-psy .ps-view .btn{font-size:13.5px;padding:13px 20px 10px;min-height:46px}
+.u-psy .ps-view .btn.small{font-size:12.5px;padding:10px 16px 8px;min-height:40px}
+.u-psy .ps-view .btn:hover,.pn-go:hover,.pl-jouer:hover{background:var(--or1)}
+.u-psy .ps-view .btn:active,.pn-go:active,.pl-jouer:active{transform:translateY(2px)}
+.u-psy .ps-view .btn.ghost{background:var(--n2);color:var(--or1);border-bottom-color:var(--n3)}
+.u-psy .ps-view .btn.ghost:hover{background:var(--n3);color:var(--or1);border-color:var(--n4)}
+.u-psy .ps-view .linkbtn,.u-psy .ps-back,.pn-lien{color:var(--or2);font-family:var(--f-ui);font-weight:600;background:none;border:0;cursor:pointer}
+.u-psy .ps-back{font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:10px 0}
+.u-psy .ps-view textarea,.u-psy .ps-view input[type="text"],.u-psy .ps-view input:not([type]),.u-psy .ps-view select{background:var(--n0);color:var(--velin);border:2px solid var(--n3);box-shadow:none}
+.u-psy .ps-view textarea:focus,.u-psy .ps-view input:focus{border-color:var(--or2);outline:0}
+.u-psy .ps-view ::placeholder{color:var(--n4)}
+
+/* les titres */
+.u-psy .ps-head{margin:22px 0 24px}
+.u-psy .ps-head .eyebrow,.u-psy .ps-view .eyebrow,.pn-eye{font:700 11.5px/1.3 var(--f-ui);letter-spacing:.2em;text-transform:uppercase;color:var(--or2)}
+.u-psy .ps-head h1{color:var(--or1);letter-spacing:.01em;text-shadow:3px 3px 0 var(--n0)}
+.u-psy .ps-head h1::after{width:64px;height:4px;margin-top:16px;background:var(--trame-or)}
+.u-psy .ps-lede{color:var(--n6);font-size:18px}
+.pl-part{margin:40px 0 16px;padding-top:18px;font:400 clamp(26px,5vw,36px)/1.05 var(--f-display);color:var(--or1);position:relative}
+.pl-part::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--trame)}
+.pl-part small{display:block;font:700 11px/1 var(--f-ui);letter-spacing:.22em;text-transform:uppercase;color:var(--or2);margin-bottom:9px}
+.pl-intro{max-width:62ch;color:var(--n6);font-size:17px;line-height:1.6}
+
+/* ---------- la nuit ---------- */
+.pn-ciel{position:relative;margin:0 calc(-1*var(--pn-bord,0px));min-height:min(880px,calc(100svh - 150px));display:flex;flex-direction:column;overflow:hidden;background:var(--n0);border-bottom:4px solid var(--n2)}
+.pn-cv{position:absolute;inset:0;width:100%;height:100%}
+.pn-tete{position:relative;padding:26px 22px 0;max-width:620px}
+.pn-tete h1{font:400 clamp(52px,13vw,96px)/.9 var(--f-display);color:var(--or1);margin:8px 0 14px;text-shadow:4px 4px 0 var(--n0)}
+.pn-lede{font-size:17px;line-height:1.5;color:var(--n6);margin:0;max-width:44ch;text-shadow:2px 2px 0 var(--n0)}
+.pn-zone{flex:1;min-height:400px;margin:26px 30px 50px}
+.pn-marks{position:absolute;inset:0;pointer-events:none}
+.pn-mark{position:absolute;transform:translate(-50%,calc(-1*var(--dy,36px)));padding:calc(2*var(--dy,36px) + 2px) 6px 4px;min-width:96px;background:none;border:0;font:inherit;color:var(--n4);text-align:center;pointer-events:auto;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
+.pn-mark b{font:400 15px/1 var(--f-display);color:var(--n4)}
+.pn-mark span{font:700 9.5px/1.2 var(--f-ui);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+.pn-mark.on b{color:var(--or1)}.pn-mark.on span{color:var(--or2)}
+.pn-mark.pro b{color:var(--velin)}.pn-mark.pro span{color:var(--n6);animation:pn-bat 1.6s steps(2) infinite}
+.pn-mark.off{pointer-events:none;cursor:default}.pn-mark.off b{color:var(--n3)}
+.pn-mark.neuf span::after{content:" ●";color:var(--feu)}
+.pn-mark:focus-visible{outline:2px solid var(--or2);outline-offset:-2px}
+@keyframes pn-bat{50%{opacity:.35}}
+.pn-pied{position:relative;padding:18px 22px 0;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.pn-go{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px 24px 11px;text-align:left}
+.pn-go b{font-size:15px}
+.pn-go small{font:600 11.5px/1.2 var(--f-ui);letter-spacing:.04em;text-transform:none;color:#45423c}
+.pn-compte{margin:0;font:600 12.5px/1.3 var(--f-ui);letter-spacing:.08em;color:var(--n5);text-shadow:2px 2px 0 var(--n0)}
+.pn-compte b{color:var(--or1)}
+.pn-lien{padding:0;font-size:12.5px;letter-spacing:.08em;text-decoration:underline;text-underline-offset:3px}
+.pn-bloc{margin:34px 0 0}
+.pn-h{font:400 clamp(24px,4.6vw,32px)/1.1 var(--f-display);color:var(--or1);margin:0 0 14px;padding-top:16px;position:relative}
+.pn-h::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--trame)}
+.pn-h small{display:block;font:700 11px/1 var(--f-ui);letter-spacing:.2em;text-transform:uppercase;color:var(--or2);margin-bottom:8px}
+.pn-vide{max-width:60ch;color:var(--n6);font-size:17px;line-height:1.6;margin:0}
+
+/* ---------- le livre : les lignes de chapitre ---------- */
+.pl-chs{display:grid;gap:10px}
+.pl-ch{position:relative;display:grid;grid-template-columns:112px auto minmax(0,1fr);gap:12px;align-items:center;width:100%;padding:8px 12px 8px 8px;text-align:left;font:inherit;color:var(--velin);background:var(--n1);border:2px solid var(--n3);clip-path:var(--cran)}
+button.pl-ch{cursor:pointer}
+.pl-ch.on{border-color:var(--or3)}
+button.pl-ch:hover{background:var(--n2);border-color:var(--or2)}
+.pl-th{display:block;width:112px;height:70px;border:2px solid var(--n0)}
+.pl-th.clos{position:relative;overflow:hidden;background:var(--n0)}
+.pl-th.clos canvas{display:block;width:100%;height:100%;filter:grayscale(1) brightness(.34) contrast(1.3)}
+.pl-th.clos::after{content:"";position:absolute;inset:0;background:repeating-conic-gradient(var(--n0) 0 25%,transparent 0 50%) 0 0/4px 4px;opacity:.75}
+.pl-n{font:400 26px/1 var(--f-display);color:var(--or2);min-width:1.5em;text-align:center}
+.pl-ch.off .pl-n{color:var(--n4)}
+.pl-t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pl-t b{font:400 21px/1.1 var(--f-display);color:var(--or1)}
+.pl-t small{font:600 11.5px/1.3 var(--f-ui);letter-spacing:.05em;color:var(--n5)}
+.pl-t em{font:italic 14.5px/1.3 var(--f-text);color:var(--sable)}
+.pl-ch.off .pl-t b{color:var(--n5)}.pl-ch.off .pl-t small{color:var(--n4)}.pl-ch.off .pl-t em{color:var(--n4)}
+.pl-ch.pro{border-color:var(--n4);grid-template-columns:112px auto minmax(0,1fr) auto}
+.pl-ch.pro .pl-t em{color:var(--n6)}
+.pl-new{position:absolute;right:8px;top:8px;font:700 9.5px/1 var(--f-ui);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--n0);background:var(--feu);padding:4px 6px 3px}
+.pl-jouer{font-size:12px;padding:10px 14px 7px}
+
+/* ---------- le chapitre ---------- */
+.pchap{max-width:680px}
+.pc-hero{position:relative;margin:6px 0 0;padding:4px;background:var(--or3);clip-path:var(--cran)}
+.pc-hero canvas{display:block;width:100%;height:auto;aspect-ratio:160/100;border:2px solid var(--n0);background:var(--n0)}
+.pc-hero b{position:absolute;left:14px;bottom:10px;font:400 44px/1 var(--f-display);color:var(--or1);text-shadow:3px 3px 0 var(--n0)}
+.pchap.neuf .pc-hero{animation:pc-ouvre 1.1s steps(9) both}
+.pchap.neuf .pc-tete,.pchap.neuf .pc-agit{animation:pc-monte .7s .5s steps(6) both}
+@keyframes pc-ouvre{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+@keyframes pc-monte{from{opacity:0;transform:translateY(12px)}}
+.u-psy .pc-tete{margin:22px 0 16px}
+.pc-agit{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;margin:0 0 26px;padding:12px 16px;background:var(--n1);border:2px solid var(--or3);clip-path:var(--cran)}
+.pc-const{width:112px;height:80px;display:block}
+.pc-agit p{margin:0;display:flex;flex-direction:column;gap:3px}
+.pc-agit small{font:700 10.5px/1 var(--f-ui);letter-spacing:.2em;text-transform:uppercase;color:var(--or2)}
+.pc-agit b{font:400 22px/1.15 var(--f-display);color:var(--or1)}
+.pc-agit span{font:600 12px/1.3 var(--f-ui);letter-spacing:.05em;color:var(--n5)}
+.pc-h{font:400 clamp(24px,4.6vw,30px)/1.12 var(--f-display);color:var(--or1);margin:34px 0 14px;padding-top:16px;position:relative}
+.pc-h::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--trame)}
+.pc-h small{display:block;font:700 11px/1.3 var(--f-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--n5);margin-top:6px}
+.pc-txt p{font-size:18px;line-height:1.68;color:var(--velin);margin:0 0 15px}
+.pc-txt p b{color:var(--or1);font-weight:600}.pc-txt p i{color:var(--n6)}
+.pc-txt.lettrine>p:first-of-type::first-letter{float:left;font:400 68px/.82 var(--f-display);color:var(--n0);background:var(--or2);padding:8px 8px 4px;margin:4px 10px 0 0;box-shadow:4px 4px 0 var(--or3)}
+.u-psy .ps-fig{margin:22px 0;padding:4px;background:var(--n3)}
+.u-psy .ps-fig img{display:block;width:100%;border:2px solid var(--n0);filter:sepia(.25) contrast(1.05)}
+.u-psy .ps-fig figcaption{font:600 11.5px/1.4 var(--f-ui);color:var(--n6);padding:7px 6px 4px;background:none}
+.pc-volets{display:grid;gap:12px}
+.pc-volets .pc-h{margin-bottom:4px}
+.pc-vol{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:start;padding:10px;background:var(--n1);border:2px solid var(--n3);clip-path:var(--cran)}
+.pc-vol canvas{display:block;width:100%;height:auto;aspect-ratio:160/100;border:2px solid var(--n0)}
+.pc-vol h3{font:400 21px/1.15 var(--f-display);color:var(--or1);margin:4px 0 6px}
+.pc-vol p{font-size:16px;line-height:1.58;color:var(--sable);margin:0}
+.pc-cles ul{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+.pc-cles li{position:relative;padding-left:22px;font-size:17px;line-height:1.5;color:var(--velin)}
+.pc-cles li::before{content:"";position:absolute;left:2px;top:.5em;width:8px;height:8px;background:var(--or2);box-shadow:4px 4px 0 var(--or3)}
+.pc-frise{display:grid;grid-template-columns:repeat(8,1fr);margin:44px 0 0;padding-top:14px;position:relative}
+.pc-frise::before{content:"";position:absolute;left:0;right:0;top:22px;height:4px;background:var(--trame)}
+.pc-frise>*{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 0 6px;background:none;border:0;font:inherit;color:var(--n4);min-width:0}
+.pc-frise button{cursor:pointer;color:var(--or2)}
+.pc-frise b{display:grid;place-items:center;width:20px;height:20px;font:700 10px/1 var(--f-ui);background:var(--n2);color:var(--n4);border:2px solid var(--n3)}
+.pc-frise button b{background:var(--n1);color:var(--or1);border-color:var(--or3)}
+.pc-frise .ici b{background:var(--or2);color:var(--n0);border-color:var(--or1);transform:scale(1.3)}
+.pc-frise small{font:600 9.5px/1.15 var(--f-ui);letter-spacing:.02em;text-align:center;color:inherit;max-width:100%;overflow:hidden}
+.pc-frise :not(.ici) small{color:var(--n4)}
+.pc-fin{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:30px 0 0}
+.pc-fin .help{flex-basis:100%;margin:0;color:var(--n5)}
+
+/* ---------- le carnet ---------- */
+.pk-exos{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.pk-exo{display:grid;grid-template-columns:56px minmax(0,1fr);gap:14px;align-items:center;padding:12px 14px;text-align:left;font:inherit;color:var(--velin);background:var(--n1);border:2px solid var(--n3);clip-path:var(--cran);cursor:pointer}
+.pk-exo:hover{background:var(--n2);border-color:var(--or2)}
+.pk-exo canvas{width:56px;height:56px;background:var(--n0);border:2px solid var(--n3)}
+.pk-exo span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pk-exo b{font:400 20px/1.12 var(--f-display);color:var(--or1)}
+.pk-exo small{font-size:14.5px;line-height:1.4;color:var(--sable)}
+.pk-exo em{font:700 10px/1.3 var(--f-ui);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--or2)}
+
+@media (max-width:560px){
+  .pl-ch{grid-template-columns:84px auto minmax(0,1fr);gap:9px;padding:6px 8px 6px 6px}
+  .pl-ch.pro{grid-template-columns:84px auto minmax(0,1fr)}
+  .pl-th{width:84px;height:53px}.pl-n{font-size:21px;min-width:1.2em}.pl-t b{font-size:18px}.pl-t em{font-size:13.5px}
+  .pl-jouer{grid-column:1/-1;justify-self:start;margin:2px 0 2px}
+  .pc-vol{grid-template-columns:1fr}.pc-txt p{font-size:17.5px}
+  .pc-frise small{font-size:8.5px}.pc-const{width:84px;height:60px}
+  .pn-tete{padding-inline:18px}.pn-pied{padding-inline:18px}.pn-zone{margin-inline:18px}
+}
+@media (min-width:900px){ .pn-zone{min-height:340px;margin:40px 60px 60px} .pn-ciel{min-height:min(780px,calc(100svh - 110px))} .pn-tete{padding:34px 40px 0} .pn-pied{padding:20px 40px 0} }
+@media (prefers-reduced-motion:reduce){ .pchap.neuf .pc-hero,.pchap.neuf .pc-tete,.pchap.neuf .pc-agit,.pn-mark.pro span{animation:none} }
