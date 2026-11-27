@@ -1,7 +1,7 @@
 /* ===== Arcanes · Magie : La Tour, l'histoire =====
    Ce que le monde contient et ce qu'on y fait : le château autour de la tour, huit lieux, huit énigmes, huit visions.
-   Chaque énigme résolue fait basculer l'image dans une seule teinte, le temps d'une vision, puis écrit une page du grimoire.
-   L'image change aussi le long du chemin : braise du soir, nuit du village, brume verte du cimetière, lune sur le château, aube au sommet.
+   Le monde est une gravure à l'encre noire. Chaque énigme résolue ouvre une vision dans un autre style (théâtre d'ombres, enluminure, vitrail,
+   manière noire, cuivre), écrit une page du grimoire, puis rend au monde une encre de couleur, celle d'un astre. À l'aube, tout est rehaussé.
    Les textes des pages sont dans magie/magie-tour.js (window.TOUR_DATA), pour être relus sans lancer le jeu. */
 import * as THREE from "three";
 const TAU = Math.PI*2;
@@ -17,20 +17,27 @@ export function installer(G){
   const anims = [], doux = t => t*t*(3 - 2*t), tw = (ms, fn, e = doux) => new Promise(res => anims.push({t:0, ms:etat.vite ? Math.min(ms, 40) : ms, fn, e, res})), attends = ms => tw(ms, () => {});
   G.maj.push(dt => { for(let i = anims.length - 1; i >= 0; i--){ const a = anims[i]; a.t += dt*1000; const k = clamp(a.t/a.ms, 0, 1); a.fn(a.e(k), k); if(k >= 1){ anims.splice(i, 1); a.res(); } } });
 
-  /* ---------------------------------------------------------------- l'image : une teinte par vision, une couleur par lieu */
-  const style = {mono:0, t:new THREE.Color(1, 1, 1), niv:8}, U = post.uniforms, cT = new THREE.Color(), cZ = new THREE.Color(), CU = ciel.material.uniforms;
-  const teinte = (mono, hex, niv = 8, ms = 1500) => { const m0 = style.mono, c0 = style.t.clone(), c1 = new THREE.Color(hex), n0 = style.niv; return tw(ms, k => { style.mono = lerp(m0, mono, k); style.t.lerpColors(c0, c1, k); style.niv = lerp(n0, niv, k); }); };
-  G.maj.push(() => { const z = J.z, tombes = smooth(-180, -196, z)*smooth(-236, -218, z), cour = smooth(MUR + 6, MUR - 6, z), a = etat.aube;
-    /* le cimetière : une brume verte, qui mange tout */
-    if(tombes > 0){ scene.fog.color.lerp(cT.setHex(0x1d2b28), tombes*.9); scene.fog.near = lerp(scene.fog.near, 4, tombes); scene.fog.far = lerp(scene.fog.far, 78, tombes); }
-    /* la cour : la lune, presque sans couleur */
-    if(cour > 0){ lune.intensity += cour*.9; scene.fog.far = lerp(scene.fog.far, 120, cour); }
-    /* l'aube : l'image se lave */
-    if(a > 0){ CU.uZen.value.lerp(cT.setHex(0x5f8fd0), a); CU.uHor.value.lerp(cT.setHex(0xffc79a), a); CU.uNuit.value *= 1 - a; CU.uTour.value.set(0, 0, 1); CU.uEmb.value.setHex(0xff8a3a);
-      scene.fog.color.lerp(cT.setHex(0xc9a9a8), a); scene.fog.near = lerp(scene.fog.near, 40, a); scene.fog.far = lerp(scene.fog.far, 420, a); hemi.intensity = lerp(hemi.intensity, 2.1, a); hemi.color.lerp(cT.setHex(0xffd9c0), a); lune.intensity *= 1 - a*.8; G.lanterne.intensity *= 1 - a; }
-    const zm = Math.max(tombes*.38, cour*.34)*(1 - a); cZ.setHex(tombes > cour ? 0x9fd8b8 : 0xb4c2ff);
-    if(style.mono > .02) hemi.intensity *= 1 + style.mono*1.5; if(etat.haut){ scene.fog.near = Math.max(scene.fog.near, 80); scene.fog.far = Math.max(scene.fog.far, 620); }
-    U.uMono.value = Math.max(style.mono, zm*(1 - style.mono)); U.uTeinte.value.copy(style.mono > .02 ? style.t : cZ); U.uNiv.value = lerp(style.niv, 16, a*(1 - style.mono)); });
+  /* ---------------------------------------------------------------- l'image : une gravure, des encres qu'on gagne, un autre style pour chaque vision */
+  const U = post.uniforms, CU = ciel.material.uniforms, cT = new THREE.Color(), cZ = new THREE.Color(), copie = o => JSON.parse(JSON.stringify(o));
+  const BASE = {ombre:0, vitrail:0, claire:0, inv:0, hach:1, papier:[.925, .885, .79], encre:[.085, .065, .055], o1:[.1, .12, .3], o2:[.5, .6, .9]};
+  const VISIONS = {ombreBleu:{ombre:1, o1:[.04, .06, .2], o2:[.36, .5, .88]}, ombreViolet:{ombre:1, o1:[.09, .05, .2], o2:[.62, .5, .86]}, enluminure:{claire:1}, vitrail:{vitrail:1},
+    nuitBleue:{inv:1, papier:[.045, .065, .16], encre:[.78, .87, 1]}, orNoir:{inv:1, papier:[.07, .05, .035], encre:[1, .8, .42]}, cuivre:{papier:[.8, .5, .28], encre:[.17, .07, .03]}};
+  const ST = copie(BASE); let enVision = 0;
+  /* entrer dans une vision (ou en sortir, sans nom) : le style glisse, et le temps de ce qui flotte se suspend */
+  const vision = (nom, ms = 1500) => { const a = copie(ST), b = Object.assign({}, BASE, nom ? VISIONS[nom] : null), t0 = G.tempo, t1 = nom ? .04 : 1, v0 = enVision, v1 = nom ? 1 : 0;
+    return tw(ms, k => { for(const c in BASE) ST[c] = Array.isArray(b[c]) ? b[c].map((x, i) => lerp(a[c][i], x, k)) : lerp(a[c], b[c], k); G.tempo = lerp(t0, t1, k); enVision = lerp(v0, v1, k); }); };
+  /* les encres de couleur, une par famille de matière : 0 le ciel, 1 le végétal, 2 la pierre, 3 le bois et les toits, 4 le torchis.
+     Le monde commence au noir (Saturne) et à l'or (le Soleil) ; chaque énigme lui rend la couleur d'un astre. */
+  const ENCRES = {tombes:[0, "le bleu de Jupiter"], herbe:[1, "le vert de Vénus"], seuils:[2, "l'argent de la Lune"], forge:[3, "le rouge de Mars"], atelier:[4, "l'orangé de Mercure"]}, E = [0, 0, 0, 0, 0];
+  for(const id in ENCRES) if(fait(id) || fait("fin")) E[ENCRES[id][0]] = 1;
+  const gagne = id => { const [k, nom] = ENCRES[id]; if(E[k] > 0) return; cap(`Une encre entre dans le monde : ${nom}.`, 7500); Son.note(392, .05); Son.note(587.3, .04); tw(5200, q => E[k] = q); };
+  G.maj.push(() => { const z = J.z, lib = 1 - enVision, tombes = smooth(-180, -196, z)*smooth(-236, -218, z)*lib, cour = smooth(MUR + 6, MUR - 6, z), a = etat.aube, clair = Math.max(a, etat.haut ? 1 : 0);
+    U.uOmbre.value = ST.ombre; U.uVitrail.value = ST.vitrail; U.uClaire.value = ST.claire; U.uInv.value = ST.inv; U.uHach.value = ST.hach;
+    /* le cimetière : le papier verdit et la brume mange tout ; la cour : la lune ; l'aube : le lointain se dégage */
+    U.uPapier.value.set(ST.papier[0] - tombes*.075, ST.papier[1] - tombes*.012, ST.papier[2] - tombes*.04); U.uEncre.value.set(ST.encre[0], ST.encre[1], ST.encre[2]); U.uO1.value.set(ST.o1[0], ST.o1[1], ST.o1[2]); U.uO2.value.set(ST.o2[0], ST.o2[1], ST.o2[2]);
+    U.uLoin.value.set(lerp(lerp(30, 7, tombes), 90, clair), lerp(lerp(340, 120, tombes), 800, clair)); U.uExpo.value = (1 + cour*.3*(1 - a))*lerp(1, .34, a); U.uAube.value = a; for(let i = 0; i < 5; i++) U.uE.value[i] = E[i];
+    if(cour > 0) lune.intensity += cour*.9;
+    if(a > 0){ CU.uZen.value.lerp(cT.setHex(0x5f8fd0), a); CU.uHor.value.lerp(cT.setHex(0xffc79a), a); CU.uNuit.value *= 1 - a; CU.uTour.value.set(0, 0, 1); CU.uEmb.value.setHex(0xff8a3a); hemi.intensity = lerp(hemi.intensity, 2.1, a); hemi.color.lerp(cT.setHex(0xffd9c0), a); lune.intensity *= 1 - a*.8; G.lanterne.intensity *= 1 - a; } G.lanterne.intensity *= lib; });
 
   /* ---------------------------------------------------------------- la caméra de cinéma */
   const up = V(0, 1, 0), mL = new THREE.Matrix4(), vise = (pos, cible) => new THREE.Quaternion().setFromRotationMatrix(mL.lookAt(pos, cible, up));
@@ -43,7 +50,8 @@ export function installer(G){
   const ui = document.createElement("div"); ui.className = "tq-ui"; root.appendChild(ui);
   const agir = document.createElement("button"); agir.type = "button"; agir.className = "tq-agir"; agir.hidden = true; root.appendChild(agir);
   const pts = document.createElement("div"); pts.className = "tq-pts"; root.appendChild(pts);
-  const points = () => { pts.innerHTML = D.PAGES.map(p => `<i class="${S.pages.includes(p.id) ? "on" : ""}"></i>`).join(""); }; points();
+  const TEINTES = {croisee:"#c9a24a", herbe:"#6f9e58", seuils:"#93a2c6", forge:"#b8503c", tombes:"#5a78b8", carre:"#1b1512", atelier:"#d08a3c", sommet:"#d98a8a"};
+  const points = () => { pts.innerHTML = D.PAGES.map(p => `<i class="${S.pages.includes(p.id) ? "on" : ""}" style="--c:${TEINTES[p.id]}"></i>`).join(""); }; points();
   { const b = document.createElement("button"); b.type = "button"; b.className = "tq-b tq-grim"; b.setAttribute("aria-label", "Le grimoire"); b.textContent = "❖"; b.onclick = e => { e.stopPropagation(); window.ArcanesTourJeu && window.ArcanesTourJeu.grimoire(); }; root.querySelector(".tq-haut").appendChild(b); }
   const montre = html => { ui.innerHTML = html; ui.onclick = null; requestAnimationFrame(() => ui.classList.add("on")); }, fermeUI = async () => { ui.classList.remove("on"); await attends(330); ui.innerHTML = ""; ui.onclick = null; };
   const dit = (qui, txt) => new Promise(res => { montre(`<div class="tq-dit">${qui ? `<i>${qui}</i>` : ""}<p>${txt}</p><small>toucher pour continuer</small></div>`); if(etat.vite) return fermeUI().then(res); const t0 = Date.now(); ui.onclick = () => { if(Date.now() - t0 < 380) return; fermeUI().then(res); }; });
@@ -60,19 +68,24 @@ export function installer(G){
     montre(`<div class="tq-page"><p class="tq-eye">Une page s'écrit dans le grimoire · ${p.n} sur ${D.PAGES.length}</p><h2>${p.t}</h2>${p.txt.map(t => `<p>${t}</p>`).join("")}<dl>${p.mots.map(([m, d]) => `<dt>${m}</dt><dd>${d}</dd>`).join("")}</dl><button type="button" class="tq-go" data-ok>Refermer le grimoire</button></div>`);
     Son.note(330, .06); Son.note(495, .04); ui.querySelector("[data-ok]").onclick = e => { e.stopPropagation(); fermeUI().then(res); }; });
 
-  /* ---------------------------------------------------------------- les images peintes : habitants, marques, chiffres */
-  const peint = (w, h, fn, em) => { const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); fn(x, w, h); const t = new THREE.CanvasTexture(c); t.magFilter = t.minFilter = THREE.NearestFilter; t.colorSpace = THREE.SRGBColorSpace; return t; };
-  const plaque = (tex, w, h, o = {}) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthWrite:false, fog:o.fog !== false, opacity:o.op == null ? 1 : o.op, blending:o.add ? THREE.AdditiveBlending : THREE.NormalBlending})); s.scale.set(w, h, 1); return s; };
-  const tPerso = peint(24, 48, x => { x.fillStyle = "#0b0910"; x.fillRect(7, 8, 10, 10); x.fillRect(5, 16, 14, 30); x.fillRect(3, 22, 18, 24); x.fillRect(8, 5, 8, 4); x.fillStyle = "#1c1626"; x.fillRect(9, 10, 6, 6); x.fillStyle = "#ffb656"; x.fillRect(10, 12, 1, 1); x.fillRect(13, 12, 1, 1); });
-  const tSpectre = peint(24, 48, x => { x.fillStyle = "#eef1ff"; x.fillRect(7, 8, 10, 10); x.fillRect(5, 16, 14, 24); x.fillRect(3, 22, 18, 18); for(let i = 3; i < 21; i += 4) x.fillRect(i, 40, 2, i % 8 ? 6 : 3); x.fillRect(8, 5, 8, 4); x.fillStyle = "#1c1626"; x.fillRect(10, 12, 1, 2); x.fillRect(13, 12, 1, 2); });
-  const tChiffre = n => peint(16, 16, x => { x.font = "bold 14px Georgia, serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#ffd27a"; x.fillText(n, 8, 9); });
-  const MARQUES = [x => { x.strokeStyle = "#dfe6ff"; x.lineWidth = 3; x.beginPath(); x.arc(16, 14, 9, Math.PI*.15, Math.PI*.85, true); x.stroke(); x.fillStyle = "#dfe6ff"; x.fillRect(5, 17, 4, 4); x.fillRect(23, 17, 4, 4); },
-    x => { x.strokeStyle = "#dfe6ff"; x.lineWidth = 1.5; x.beginPath(); x.arc(16, 16, 11, 0, TAU); x.stroke(); for(let i = 0; i < 6; i++){ const a = i/6*TAU; x.beginPath(); x.arc(16 + Math.cos(a)*11, 16 + Math.sin(a)*11, 11, a + Math.PI*2/3, a + Math.PI*4/3); x.stroke(); } },
-    x => { x.fillStyle = "#dfe6ff"; for(let i = 0; i < 30; i += 3) x.fillRect(1 + i, 24 + (i % 2), 2, 2); x.fillRect(13, 8, 6, 12); x.fillRect(14, 4, 4, 5); x.fillStyle = "#0b0910"; x.fillRect(15, 10, 1, 8); x.fillRect(17, 11, 1, 6); }].map(f => peint(32, 32, f));
-  const perso = (pos, h = 1.9) => { const s = plaque(tPerso, h/2, h); s.position.copy(pos); s.position.y += h/2 - 1.2; s.material.opacity = 0; scene.add(s); return s; };
+  /* ---------------------------------------------------------------- les images peintes (marques, chiffres) et les personnages, en volume pour que l'encre les dessine */
+  const peint = (w, h, fn) => { const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); fn(x, w, h); const t = new THREE.CanvasTexture(c); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const plaque = (tex, w, h, o = {}) => { const s = new THREE.Sprite(G.melange(new THREE.SpriteMaterial({map:tex, transparent:true, depthWrite:false, fog:false, opacity:o.op == null ? 1 : o.op}), !!o.add)); s.scale.set(w, h, 1); return s; };
+  const tChiffre = n => peint(64, 64, x => { x.font = "bold 56px Georgia, serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#ffd27a"; x.fillText(n, 32, 36); });
+  const MARQUES = [x => { x.strokeStyle = "#f4f6ff"; x.lineWidth = 3.4; x.lineCap = "round"; x.beginPath(); x.arc(16, 14, 9, Math.PI*.12, Math.PI*.88, true); x.stroke(); x.fillStyle = "#f4f6ff"; for(const [a, b] of [[8, 9], [6.6, 14], [25.4, 14], [24, 9], [16, 5]]){ x.beginPath(); x.arc(a, b, .9, 0, TAU); x.fill(); } },
+    x => { x.strokeStyle = "#f4f6ff"; x.lineWidth = 1.5; x.beginPath(); x.arc(16, 16, 11, 0, TAU); x.stroke(); for(let i = 0; i < 6; i++){ const a = i/6*TAU; x.beginPath(); x.arc(16 + Math.cos(a)*11, 16 + Math.sin(a)*11, 11, a + Math.PI*2/3, a + Math.PI*4/3); x.stroke(); } },
+    x => { x.fillStyle = "#f4f6ff"; for(let i = 0; i < 30; i += 2.4){ x.beginPath(); x.arc(2 + i, 25 + Math.sin(i*2.1)*.9, .95, 0, TAU); x.fill(); } x.beginPath(); x.moveTo(13, 21); x.lineTo(13, 11); x.quadraticCurveTo(13, 8.5, 14.4, 8); x.lineTo(14.4, 4); x.lineTo(17.6, 4); x.lineTo(17.6, 8); x.quadraticCurveTo(19, 8.5, 19, 11); x.lineTo(19, 21); x.closePath(); x.fill(); }].map(f => peint(128, 128, x => { x.scale(4, 4); f(x); }));
+  const mFig = new THREE.MeshLambertMaterial({color:0x3c363c}), mSpectre = new THREE.MeshBasicMaterial({color:0xffffff, fog:false});
+  /* une silhouette encapuchonnée : une robe, des épaules, une tête, un capuchon ; o.l = carrure, o.h = taille, o.spectre = blanche et sans ombre */
+  const figure = (pos, o = {}) => { const g = new THREE.Group(), m = o.spectre ? mSpectre : mFig, l = o.l || 1, add = (geo, x, y, z) => { const q = new THREE.Mesh(geo, m); q.position.set(x, y, z); g.add(q); return q; };
+    add(new THREE.ConeGeometry(.5*l, 1.62, 10), 0, .81, 0); add(new THREE.SphereGeometry(.3, 10, 7), 0, 1.36, 0).scale.set(1.28*l, .62, .95); add(new THREE.SphereGeometry(.165, 10, 7), 0, 1.62, .04); add(new THREE.ConeGeometry(.27, .52, 9), 0, 1.79, -.06).rotation.x = -.38;
+    if(o.baton){ add(new THREE.CylinderGeometry(.025, .03, 1.9, 5), .5*l, .95, .18); } g.position.copy(pos); g.scale.setScalar(o.h || 1); g.userData.h = o.h || 1; if(o.face) g.rotation.y = Math.atan2(o.face.x, o.face.z); scene.add(g); return g; };
+  /* un trait de lumière en volume, qui se tire d'un point à l'autre (les lignes d'un pixel sont trop fines en pleine définition) */
+  const ruban = (a, b, r, mat) => { const d = b.clone().sub(a), L = d.length(), g = new THREE.CylinderGeometry(r, r, 1, 5, 1, true); g.translate(0, .5, 0); const m = new THREE.Mesh(g, mat); m.position.copy(a); m.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); m.scale.set(1, .001, 1); m.userData.L = L; m.frustumCulled = false; scene.add(m); return m; };
+  const paraitre = (g, ms = 900) => tw(ms, k => g.scale.setScalar(Math.max(.001, k)*g.userData.h)), sort = (g, ms = 800) => tw(ms, k => g.scale.setScalar(Math.max(.001, 1 - k)*g.userData.h)).then(() => scene.remove(g));
 
   /* ---------------------------------------------------------------- le château : une enceinte, une porte à herse, une cour, un établi */
-  const tm = (k, hex = 0xffffff) => { const m = new THREE.MeshLambertMaterial({map:M[k].map, fog:false}); m.userData.c = new THREE.Color(hex); tourMats.push(m); return m; }, P = tm("pierre"), A = tm("ardoise", 0x8a88a0), NOIR = new THREE.MeshBasicMaterial({color:0x050408, fog:false});
+  const tm = (k, hex = 0xffffff) => { const m = G.classe(new THREE.MeshLambertMaterial({map:M[k].map, fog:false}), 2); m.userData.c = new THREE.Color(hex); tourMats.push(m); return m; }, P = tm("pierre"), A = tm("ardoise", 0x8a88a0), NOIR = new THREE.MeshBasicMaterial({color:0x050408, fog:false});
   const bloc = (w, h, d, x, y, z, m = P) => { const o = new THREE.Mesh(uvs(new THREE.BoxGeometry(w, h, d), Math.max(1, Math.round(Math.max(w, d)/3)), Math.max(1, Math.round(h/3))), m); o.position.set(x, y, z); scene.add(o); return o; };
   const rond = (r, h, x, y, z, toitH) => { const o = new THREE.Mesh(uvs(new THREE.CylinderGeometry(r, r*1.08, h, 10), 5, Math.round(h/3)), P); o.position.set(x, y + h/2, z); scene.add(o); if(toitH){ const c = new THREE.Mesh(uvs(new THREE.ConeGeometry(r*1.25, toitH, 10), 4, 2), A); c.position.set(x, y + h + toitH/2, z); scene.add(c); } obstacles.push([x, z, r + .7]); };
   const HM = 9, X0 = TX - 27, X1 = TX + 27, Z1 = -313, yb = PLAT - 3;
@@ -90,7 +103,7 @@ export function installer(G){
   const brasier = V(TX + 10, PLAT + 1.5, -271); { const b = new THREE.Mesh(new THREE.CylinderGeometry(.8, .5, .7, 8), NOIR); b.position.set(brasier.x, PLAT + .9, brasier.z); scene.add(b); const p = new THREE.Mesh(new THREE.CylinderGeometry(.12, .2, .9, 5), NOIR); p.position.set(brasier.x, PLAT + .3, brasier.z); scene.add(p); const f = halo(2.6, .8); f.position.copy(brasier); scene.add(f); G.brasiers.push(brasier); obstacles.push([brasier.x, brasier.z, 1.1]); G.maj.push((dt, t) => { f.scale.setScalar(2.3 + Math.sin(t*9)*.25 + Math.sin(t*14.3)*.15); }); }
   /* la roue des sept astres, gravée au milieu de la cour : on y marche la semaine, de la Lune au Soleil (une découverte, sans page) */
   const SIGNES = [["Lundi", "la Lune", 0xdfe6ff, "de la Lune"], ["Mardi", "Mars", 0xff5a4a, "de Mars"], ["Mercredi", "Mercure", 0xffa24a, "de Mercure"], ["Jeudi", "Jupiter", 0x6a9cff, "de Jupiter"], ["Vendredi", "Vénus", 0x6adf8a, "de Vénus"], ["Samedi", "Saturne", 0xb0a8c8, "de Saturne"], ["Dimanche", "le Soleil", 0xffd24a, "du Soleil"]];
-  const tSigne = i => peint(64, 64, x => { x.lineWidth = 4; x.strokeStyle = x.fillStyle = "#fff"; x.lineCap = x.lineJoin = "round"; const L = (...q) => { x.beginPath(); x.moveTo(q[0], q[1]); for(let k = 2; k < q.length; k += 2) x.lineTo(q[k], q[k + 1]); x.stroke(); }, C = (cx, cy, r, a0 = 0, a1 = TAU) => { x.beginPath(); x.arc(cx, cy, r, a0, a1); x.stroke(); }, PI = Math.PI;
+  const tSigne = i => peint(128, 128, x => { x.scale(2, 2); x.lineWidth = 4; x.strokeStyle = x.fillStyle = "#fff"; x.lineCap = x.lineJoin = "round"; const L = (...q) => { x.beginPath(); x.moveTo(q[0], q[1]); for(let k = 2; k < q.length; k += 2) x.lineTo(q[k], q[k + 1]); x.stroke(); }, C = (cx, cy, r, a0 = 0, a1 = TAU) => { x.beginPath(); x.arc(cx, cy, r, a0, a1); x.stroke(); }, PI = Math.PI;
     [() => { C(30, 32, 18, PI/3, 5*PI/3); C(48, 32, 18, 2*PI/3, 4*PI/3); }, () => { C(26, 38, 13); L(35, 29, 50, 14); L(38, 14, 50, 14, 50, 26); }, () => { C(32, 32, 10); L(32, 42, 32, 58); L(24, 51, 40, 51); C(32, 13, 9, .1, PI - .1); },
       () => { C(22, 22, 10, -2.6, 1); L(27, 30, 14, 44, 52, 44); L(42, 14, 42, 58); }, () => { C(32, 24, 13); L(32, 37, 32, 58); L(22, 48, 42, 48); }, () => { L(24, 8, 24, 44); L(15, 17, 33, 17); C(34, 36, 10, PI, TAU); L(44, 36, 44, 48, 50, 54); }, () => { C(32, 32, 18); x.beginPath(); x.arc(32, 32, 3.5, 0, TAU); x.fill(); }][i](); });
   const ROUE = V(TX, PLAT + .05, -270.5), signes = SIGNES.map((sg, i) => { const a = -Math.PI/2 + i/7*TAU, m = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), new THREE.MeshBasicMaterial({map:tSigne(i), transparent:true, depthWrite:false, fog:false, color:0x54546e})); m.rotation.x = -Math.PI/2; m.position.set(ROUE.x + Math.cos(a)*5.2, ROUE.y + .02, ROUE.z + Math.sin(a)*5.2); scene.add(m); return m; });
@@ -121,13 +134,14 @@ export function installer(G){
   G.maj.push(() => { if(etat.occupe || etat.haut) return; let best = null, bd = 1e9; for(const l of lieux){ if(fait(l.id) || (l.avant && !l.avant())) continue; const d = Math.hypot(l.x - J.x, l.z - J.z); if(d < l.r && d < bd){ bd = d; best = l; } }
     if(best !== agir._l){ agir._l = best; agir.hidden = !best; if(best) agir.textContent = best.label; } });
   /* un habitant ouvre : la caméra se pose devant lui */
-  async function rencontre(pos, face){ const p = perso(pos), devant = pos.clone().add(face.clone().multiplyScalar(3.4)); devant.y = sol(devant.x, devant.z) + 1.6; await Promise.all([plan(1500, devant, V(pos.x, devant.y - .1, pos.z)), tw(900, k => p.material.opacity = k)]); return p; }
-  const sort = p => tw(700, k => p.material.opacity = 1 - k).then(() => scene.remove(p));
+  async function rencontre(pos, face, o){ const pied = V(pos.x, pos.y - 1.2, pos.z), p = figure(pied, Object.assign({face}, o)), devant = pos.clone().add(face.clone().multiplyScalar(3.6)); p.scale.setScalar(.001); devant.y = sol(devant.x, devant.z) + 1.55; await Promise.all([plan(1500, devant, V(pos.x, pied.y + 1.25, pos.z)), paraitre(p)]); return p; }
   const faceDe = m => V(Math.sin(m.rot), 0, Math.cos(m.rot));
+  /* trois marches devant chaque porte */
+  maisons.forEach(m => { const f = faceDe(m), haut = m.porte.y - 1.2; for(let i = 0; i < 3; i++){ const q = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2, .44), M.pierre); q.position.set(m.porte.x + f.x*(.3 + i*.42), haut - .3*(i + 1) - 1, m.porte.z + f.z*(.3 + i*.42)); q.rotation.y = m.rot; scene.add(q); } });
 
   /* ================================================================ 1. LA CROISÉE : qu'est-ce que la magie ? */
   const PIERRES = [[-4.5, -9], [4.8, -11], [5.6, -7]].map(([dx, dz]) => V(chemin(dz) + dx, sol(chemin(dz) + dx, dz) + 2.6, dz)), VIEILLE = V(chemin(-8) + 2.2, sol(chemin(-8) + 2.2, -8) + 1.2, -8);
-  const vieille = perso(VIEILLE); vieille.material.opacity = fait("croisee") ? 0 : 1;
+  const vieille = figure(V(VIEILLE.x, VIEILLE.y - 1.2, VIEILLE.z), {h:.92, baton:true, face:V(-.4, 0, 1)}); vieille.visible = !fait("croisee");
   lieu("croisee", VIEILLE, 6.5, "Parler à la vieille femme", async () => {
     const d = V(VIEILLE.x - 2.4, VIEILLE.y + .45, VIEILLE.z + 2.6); await plan(1500, d, V(VIEILLE.x, VIEILLE.y + .4, VIEILLE.z));
     await dit("La vieille femme", "Tu montes au château ? Alors dis-moi d'abord ce que tu vas y chercher.");
@@ -135,12 +149,12 @@ export function installer(G){
     await dit("La vieille femme", ["Demander, c'est prier : c'est la religion. Le mage, lui, ne demande pas. Il opère.", "Mesurer, ce sera la science. Elle naît dans les mêmes ateliers, puis elle cesse de croire aux signes.", "Oui. Le mage pense que tout se tient, et qu'en touchant une chose on en remue une autre."][c]);
     await dit("La vieille femme", "Descends. Frappe chez l'herboriste et chez le forgeron. Regarde ce qui garde les portes. Le château ne s'ouvre qu'à ceux qui savent lire.");
     /* la vision : les trois pierres s'allument, la femme n'est plus là */
-    const hs = PIERRES.map(p => { const h = halo(.1, 0, 0xbfd0ff); h.position.copy(p); scene.add(h); return h; }); teinte(1, 0xb9c8ff, 6, 1200);
+    const hs = PIERRES.map(p => { const h = halo(.1, 0, 0xffb450); h.position.copy(p); scene.add(h); return h; }); vision("ombreBleu", 1200);
     await plan(2600, V(chemin(2), sol(chemin(2), 2) + 2.4, 2), V(chemin(-9), sol(chemin(-9), -9) + 2.4, -9));
     for(let i = 0; i < 3; i++){ Son.note([220, 277.2, 329.6][i], .07); tw(1400, k => { hs[i].scale.setScalar(.1 + k*7); hs[i].material.opacity = k*.8; }); await attends(650); }
-    tw(1200, k => vieille.material.opacity = 1 - k); cap("Trois pierres, trois chemins. Elle n'est plus là.", 5000); await attends(3200);
-    await teinte(0, 0xffffff, 8, 1400); tw(2500, k => hs.forEach(h => h.material.opacity = .8 - k*.55));
-    await ouvrePage("croisee"); await rends(); });
+    sort(vieille, 1200); cap("Trois pierres, trois chemins. Elle n'est plus là.", 5000); await attends(3200);
+    await vision(null, 1400); tw(2500, k => hs.forEach(h => h.material.opacity = .8 - k*.55));
+    await ouvrePage("croisee"); await rends(); cap("Le monde est encore à l'encre noire. Seul ce qui éclaire a sa couleur.", 6500); });
 
   /* ================================================================ 2. L'HERBORISTE : la sympathie, les signatures */
   const HERBO = maisons[0], FORGE = maisons[5];
@@ -151,7 +165,7 @@ export function installer(G){
     pulmonaire:`<svg viewBox="0 0 48 48" shape-rendering="crispEdges"><path d="M22 4h4v8h-4z" fill="#3c5a2e"/><path d="M14 12h20v6h4v14h-4v8h-6v4h-8v-4h-6v-8h-4V18h4z" fill="#4f7a3a"/><rect x="23" y="12" width="2" height="30" fill="#2e4a22"/><path d="M15 18h4v3h-4zM29 20h4v3h-4zM17 28h3v3h-3zM28 30h4v3h-4zM20 36h3v2h-3zM30 15h2v2h-2z" fill="#d8e8c0"/></svg>`,
     euphraise:`<svg viewBox="0 0 48 48" shape-rendering="crispEdges"><rect x="23" y="30" width="2" height="16" fill="#3c5a2e"/><path d="M10 14h10v-6h8v6h10v10h-6v8H16v-8h-6z" fill="#efe9f4"/><path d="M13 16h2v6h-2zM33 16h2v6h-2zM19 26h2v4h-2zM27 26h2v4h-2z" fill="#8a5ab0"/><rect x="20" y="14" width="8" height="8" fill="#f2c94c"/><rect x="22" y="16" width="4" height="4" fill="#20141c"/></svg>`};
   lieu("herbe", HERBO.porte, 5, "Frapper chez l'herboriste", async () => {
-    const p = await rencontre(HERBO.porte, faceDe(HERBO));
+    const p = await rencontre(HERBO.porte, faceDe(HERBO), {h:.94});
     await dit("L'herboriste", "Tu veux apprendre ? Regarde mes simples. Chaque plante porte sa signature : sa forme te dit ce qu'elle soigne.");
     const O = ["La tête", "Les poumons", "Les yeux", "Le cœur"];
     await question({eye:"Les signatures · 1 sur 3", dessin:DESSINS.noix, q:"Une noix, ouverte en deux. Que soigne-t-elle ?", opts:O, ok:0, non:"Regarde sa forme : une coque dure, et dedans deux moitiés toutes plissées."});
@@ -161,45 +175,59 @@ export function installer(G){
     sort(p);
     /* la vision : devant la maison, le jardin pousse d'un coup ; chaque tige se penche vers son astre et s'y relie */
     const f = faceDe(HERBO), lat = V(f.z, 0, -f.x), c = HERBO.porte.clone().add(f.clone().multiplyScalar(6.5)); c.y = sol(c.x, c.z);
-    const N = 96, r = rng(4), g = new THREE.CylinderGeometry(.035, .075, 1, 4); g.translate(0, .5, 0); const im = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({color:0xe6ffec, fog:false}), N), o = new THREE.Object3D(), tiges = [], fl = new Float32Array(N*3), ry = new Float32Array(N*6);
+    const N = 96, r = rng(4), g = new THREE.CylinderGeometry(.022, .05, 1, 5); g.translate(0, .5, 0); const im = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({color:0x46c46e, fog:false}), N), o = new THREE.Object3D(), tiges = [], fl = new Float32Array(N*3), ry = new Float32Array(N*6);
     for(let i = 0; i < N; i++){ const a = r()*TAU, d = .8 + r()*7.6, x = c.x + Math.cos(a)*d, z = c.z + Math.sin(a)*d; tiges.push([x, sol(x, z), z, 1.1 + r()*3.3, r(), i % 3]); }
-    const fleurs = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({color:0xffffff, size:2, sizeAttenuation:false, fog:false, transparent:true, opacity:0})); fleurs.geometry.setAttribute("position", new THREE.BufferAttribute(fl, 3));
+    const fc = new Float32Array(N*3); for(let i = 0; i < N; i++) fc.set([[1, .25, .2], [.3, .5, 1], [1, .85, .25], [1, 1, 1]][i % 4], i*3);
+    const fleurs = new THREE.Points(new THREE.BufferGeometry(), G.melange(new THREE.PointsMaterial({vertexColors:true, size:5*Math.min(window.devicePixelRatio || 1, 2), sizeAttenuation:false, fog:false, transparent:true, opacity:0, depthTest:false}))); fleurs.geometry.setAttribute("color", new THREE.BufferAttribute(fc, 3)); fleurs.geometry.setAttribute("position", new THREE.BufferAttribute(fl, 3));
     const rayons = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0xffffff, fog:false, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false})); rayons.geometry.setAttribute("position", new THREE.BufferAttribute(ry, 3));
     fleurs.frustumCulled = rayons.frustumCulled = im.frustumCulled = false; scene.add(im, fleurs, rayons);
-    const astres = [[-4.6, 8.6], [0, 10.6], [4.6, 8]].map(([dl, dy], i) => { const h = halo(3.4 + i*.5, 0, 0xffffff); h.position.copy(c).add(lat.clone().multiplyScalar(dl)).add(f.clone().multiplyScalar(-1.5)); h.position.y = c.y + dy; scene.add(h); return h; });
+    const astres = [[-4.6, 8.6], [0, 10.6], [4.6, 8]].map(([dl, dy], i) => { const h = halo(3.4 + i*.5, 0, 0xffb648); h.position.copy(c).add(lat.clone().multiplyScalar(dl)).add(f.clone().multiplyScalar(-1.5)); h.position.y = c.y + dy; scene.add(h); return h; });
     let pousse = 0, penche = 0; const maj = (dt, t) => { for(let i = 0; i < N; i++){ const [x, y, z, hh, ph, a] = tiges[i], k = clamp(pousse*1.6 - ph*.6, 0, 1), A = astres[a].position, h = hh*k, rx = (A.z - z)*.035*penche + Math.sin(t*1.1 + ph*9)*.05, rz = -(A.x - x)*.035*penche + Math.cos(t*.9 + ph*7)*.04;
         o.position.set(x, y, z); o.scale.set(1, .01 + h, 1); o.rotation.set(rx, 0, rz); o.updateMatrix(); im.setMatrixAt(i, o.matrix); const tx = x - rz*h, ty = y + h, tz = z + rx*h; fl.set([tx, ty, tz], i*3); ry.set([tx, ty, tz, A.x, A.y, A.z], i*6); }
       im.instanceMatrix.needsUpdate = true; fleurs.geometry.attributes.position.needsUpdate = true; rayons.geometry.attributes.position.needsUpdate = true; }; G.maj.push(maj);
     const pA = c.clone().add(f.clone().multiplyScalar(7.5)), pB = c.clone().add(f.clone().multiplyScalar(8.4)), pC = c.clone().add(f.clone().multiplyScalar(9.4)); pA.y = c.y + 1.2; pB.y = c.y + 3; pC.y = c.y + 6.2;
-    await Promise.all([teinte(1, 0x8dffb0, 6), plan(1900, pA, V(c.x, c.y + 1.6, c.z))]);
+    await Promise.all([vision("enluminure"), plan(1900, pA, V(c.x, c.y + 1.6, c.z))]);
     Son.note(196, .07); tw(5200, k => { pousse = k; fleurs.material.opacity = k; }); cap("Le jardin, comme le voit l'herboriste.", 5000);
     await plan(5200, pB, V(c.x, c.y + 2.2, c.z));
     astres.forEach((h, i) => { setTimeout(() => Son.note([329.6, 392, 493.9][i], .06), i*700); tw(2200 + i*500, k => h.material.opacity = k*.9); }); tw(4200, k => { penche = k; rayons.material.opacity = k*.26; }); cap("Chaque tige se penche vers son astre. Tout se tient.", 6500);
     await plan(5600, pC, V(c.x, c.y + 4.4, c.z)); await attends(2200);
-    await Promise.all([teinte(0, 0xffffff, 8, 1600), tw(1600, k => { rayons.material.opacity = .26*(1 - k); fleurs.material.opacity = 1 - k; astres.forEach(h => h.material.opacity = .9*(1 - k)); pousse = 1 - k; })]);
+    await Promise.all([vision(null, 1600), tw(1600, k => { rayons.material.opacity = .26*(1 - k); fleurs.material.opacity = 1 - k; astres.forEach(h => h.material.opacity = .9*(1 - k)); pousse = 1 - k; })]);
     G.maj.splice(G.maj.indexOf(maj), 1); scene.remove(im, fleurs, rayons); astres.forEach(h => scene.remove(h)); tw(1500, k => fanalH.material.opacity = .8*(1 - k));
-    await ouvrePage("herbe"); await rends(); });
+    await ouvrePage("herbe"); await rends(); gagne("herbe"); });
 
   /* ================================================================ 3. LES SEUILS : trois marques à trouver sur les portes */
   const SEUILS = [[2, "Un fer à cheval, cloué au-dessus de la porte, les pointes vers le haut. Le fer passe pour repousser ce qui rôde."], [4, "Une rosace à six pétales, tracée au compas dans la poutre. On en trouve dans toute l'Europe : elle barre l'entrée."], [7, "Une ligne de sel en travers du seuil, et le goulot d'une bouteille enterrée. Dedans, des épingles."]];
-  const marques = SEUILS.map(([i, txt], k) => { const m = maisons[i], s = plaque(MARQUES[k], .9, .9, {fog:false, add:true, op:fait("m" + k) ? .95 : .4}); s.position.copy(m.porte).add(V(0, k === 2 ? -2.2 : 1.35, 0)).add(faceDe(m).multiplyScalar(.25)); scene.add(s);
+  const marques = SEUILS.map(([i, txt], k) => { const m = maisons[i], s = plaque(MARQUES[k], .9, .9, {fog:false, add:true, op:fait("m" + k) ? .95 : .4}); s.position.copy(m.porte).add(V(0, k === 2 ? -1.95 : 1.35, 0)).add(faceDe(m).multiplyScalar(k === 2 ? 1.75 : .25)); scene.add(s);
     lieu("m" + k, m.porte, 4.6, "Regarder la porte de près", async () => { const f = faceDe(m), d = s.position.clone().add(f.multiplyScalar(2.2)); await plan(1400, d, s.position); tw(800, q => s.material.opacity = .4 + q*.55); Son.note(261.6 + k*40, .05); await dit("", txt); S.faits["m" + k] = true;
       if(SEUILS.every((_, j) => fait("m" + j))) await filet(); else { cap(`Une marque sur trois${SEUILS.filter((_, j) => fait("m" + j)).length === 2 ? ". Encore une" : ""}.`, 4000); await rends(); } }); return s; });
   G.maj.push((dt, t) => marques.forEach((s, k) => { if(!fait("m" + k)) s.material.opacity = .28 + .2*Math.sin(t*2.2 + k*2); }));
   async function filet(){ /* la vision : vues d'en haut, les marques se relient en un filet au-dessus du village */
     const pts = []; maisons.forEach((m, i) => { const a = m.porte.clone(); a.y += 1.6; maisons.forEach((n, j) => { if(j > i && j - i <= 2){ const b = n.porte.clone(); b.y += 1.6; pts.push(a, b); } }); });
-    const g = new THREE.BufferGeometry().setFromPoints(pts), ln = new THREE.LineSegments(g, new THREE.LineBasicMaterial({color:0xe6ecff, fog:false, transparent:true})); ln.frustumCulled = false; g.setDrawRange(0, 0); scene.add(ln);
-    const noeuds = maisons.map(m => { const h = halo(.1, 0, 0xcfd8ff); h.position.copy(m.porte); h.position.y += 1.6; scene.add(h); return h; }), zc = -134, cx = chemin(zc), y0 = sol(cx, zc);
-    await Promise.all([teinte(1, 0x9db0ff, 5), plan(4200, V(cx, y0 + 46, zc + 26), V(cx, y0, zc - 6))]); cap("Chaque porte gardée tient les autres.", 6000);
+    const mR = new THREE.MeshBasicMaterial({color:0xffffff, fog:false}), rb = []; for(let i = 0; i < pts.length; i += 2) rb.push(ruban(pts[i], pts[i + 1], .14, mR));
+    const noeuds = maisons.map(m => { const h = halo(.1, 0, 0xffb450); h.position.copy(m.porte); h.position.y += 1.6; scene.add(h); return h; }), zc = -134, cx = chemin(zc), y0 = sol(cx, zc);
+    await Promise.all([vision("ombreBleu"), plan(4200, V(cx, y0 + 46, zc + 26), V(cx, y0, zc - 6))]); cap("Chaque porte gardée tient les autres.", 6000);
     for(let i = 0; i < noeuds.length; i++){ Son.note(196*Math.pow(1.122, i), .05); tw(900, k => { noeuds[i].scale.setScalar(.1 + k*4.5); noeuds[i].material.opacity = k*.9; }); await attends(260); }
-    await tw(4200, k => g.setDrawRange(0, Math.floor(pts.length*k/2)*2)); cap("Un filet, jeté sur le village pour la nuit.", 5000); await attends(3000);
-    await teinte(0, 0xffffff, 8, 1500); scene.remove(ln); noeuds.forEach(h => scene.remove(h)); await ouvrePage("seuils"); await rends(); }
+    await tw(4600, k => rb.forEach((m, i) => m.scale.y = Math.max(.001, clamp(k*rb.length - i, 0, 1)*m.userData.L)), k => k); cap("Un filet, jeté sur le village pour la nuit.", 5000); await attends(3000);
+    await vision(null, 1500); rb.forEach(m => scene.remove(m)); noeuds.forEach(h => scene.remove(h)); await ouvrePage("seuils"); await rends(); gagne("seuils"); }
+
+  /* ================================================================ LE PUITS : au fond, le ciel (une découverte, sans page) */
+  { const pz = -136, pxx = chemin(pz) + 1.2, py = sol(pxx, pz), N = 150, r = rng(21), a = new Float32Array(N*3); for(let i = 0; i < N; i++){ const an = r()*TAU, d = Math.sqrt(r())*1.05; a[i*3] = pxx + Math.cos(an)*d; a[i*3 + 1] = py + .55 - r()*r()*28; a[i*3 + 2] = pz + Math.sin(an)*d; }
+    const et = new THREE.Points(new THREE.BufferGeometry(), G.melange(new THREE.PointsMaterial({color:0xffffff, size:2.6, sizeAttenuation:false, transparent:true, opacity:0, depthTest:false, depthWrite:false, fog:false}), true)); et.geometry.setAttribute("position", new THREE.BufferAttribute(a, 3)); et.frustumCulled = false; et.renderOrder = 9; scene.add(et);
+    const lu = halo(1, 0, 0xffffff); lu.material.depthTest = false; lu.renderOrder = 9; lu.position.set(pxx + .22, py - 10, pz - .18); scene.add(lu);
+    lieu("puits", V(pxx, 0, pz), 4.4, "Se pencher sur le puits", async () => {
+      await plan(2200, V(pxx, py + 2.5, pz + .5), V(pxx, py - 4, pz)); await dit("", "Tu te penches sur la margelle. Ni seau, ni corde. L'eau est si noire qu'on dirait un trou dans la nuit.");
+      vision("nuitBleue", 2600); Son.note(110, .08); Son.note(164.8, .05); tw(3200, k => { et.material.opacity = k; lu.material.opacity = k*.9; }); cap("Au fond du puits, des étoiles.", 6000);
+      await plan(7500, V(pxx, py + 1.3, pz + .12), V(pxx, py - 8, pz), k => k); cap("« Ce qui est en bas est comme ce qui est en haut. »", 8000); Son.note(220, .06); Son.note(330, .04);
+      /* on relève la tête : le même ciel, au-dessus */
+      const q0 = cam.quaternion.clone(), p0 = cam.position.clone(), p1 = V(pxx - 2.7, py + 4.8, pz + 2.5), q1 = vise(p1, V(pxx - 6, py + 46, pz - 26));
+      await tw(7500, k => { cam.position.lerpVectors(p0, p1, k); cam.quaternion.slerpQuaternions(q0, q1, k); et.material.opacity = 1 - k; lu.material.opacity = .9*(1 - k); }); await attends(3200);
+      await vision(null, 2000); S.faits.puits = true; cap("Une phrase très ancienne. Les alchimistes en feront leur devise.", 6500); await rends(); }); }
 
   /* ================================================================ 4. LE FORGERON : sept planètes, sept métaux, sept jours */
   const SEPT = [["Lundi", "de la Lune", "L'argent", 0xdfe6ff, "Blanc et froid, comme elle."], ["Mardi", "de Mars", "Le fer", 0xff4a3a, "Le métal des armes."], ["Mercredi", "de Mercure", "Le vif-argent", 0xffa24a, "Le seul métal qui coule, vif comme le messager des dieux."], ["Jeudi", "de Jupiter", "L'étain", 0x5a8cff, "Clair et sonore : celui du roi des dieux."],
     ["Vendredi", "de Vénus", "Le cuivre", 0x6adf8a, "Rouge et doux, le métal des miroirs. Il tire son nom de Chypre, l'île de Vénus."], ["Samedi", "de Saturne", "Le plomb", 0x8a8698, "Le plus lourd, le plus sombre, pour la plus lente."], ["Dimanche", "du Soleil", "L'or", 0xffd24a, "Il ne ternit jamais."]];
   lieu("forge", FORGE.porte, 5, "Frapper chez le forgeron", async () => {
-    const p = await rencontre(FORGE.porte, faceDe(FORGE));
+    const p = await rencontre(FORGE.porte, faceDe(FORGE), {l:1.3, h:1.08});
     await dit("Le forgeron", "Sept métaux sur mon établi, et sept astres qui errent là-haut. À chacun le sien. Les jours de la semaine te souffleront les astres. À toi de trouver les métaux.");
     let reste = [5, 2, 6, 0, 4, 1, 3];
     for(let i = 0; i < 7; i++){ const [jour, astre, , , indice] = SEPT[i]; await question({eye:`La forge · ${i + 1} sur 7`, q:`${jour} est le jour ${astre}. Quel métal lui revient ?`, opts:reste.map(k => SEPT[k][2]), ok:reste.indexOf(i), non:indice}); reste = reste.filter(k => k !== i); }
@@ -209,11 +237,11 @@ export function installer(G){
     /* la vision : sept colonnes de couleur montent de la forge et deviennent les sept planètes */
     const c = FORGE.G.position.clone(), cols = SEPT.map((s, i) => { const a = i/7*TAU, m = new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, 1, 6, 1, true), new THREE.MeshBasicMaterial({color:s[3], fog:false, transparent:true, opacity:.85, blending:THREE.AdditiveBlending, depthWrite:false})); m.geometry.translate(0, .5, 0); m.position.set(c.x + Math.cos(a)*4, c.y, c.z + Math.sin(a)*4); m.rotation.set(Math.sin(a)*.2, 0, -Math.cos(a)*.2); m.scale.y = .01; scene.add(m); const h = halo(8, 0, s[3]); h.position.set(m.position.x + Math.cos(a)*13.5, c.y + 66, m.position.z + Math.sin(a)*13.5); scene.add(h); return {m, h}; });
     const recul = FORGE.porte.clone().add(faceDe(FORGE).multiplyScalar(13)); recul.y = sol(recul.x, recul.z) + 1.5;
-    await Promise.all([teinte(.55, 0x30283a, 5), plan(2400, recul, V(c.x, c.y + 14, c.z))]); cap("Sept métaux, sept feux.", 5000);
+    await Promise.all([vision("vitrail"), plan(2400, recul, V(c.x, c.y + 14, c.z))]); cap("Sept métaux, sept feux.", 5000);
     for(let i = 0; i < 7; i++){ Son.note([220, 247.5, 277.2, 293.7, 329.6, 370, 415.3][i], .07); tw(1700, k => { cols[i].m.scale.y = .01 + k*68; }); tw(2400, k => cols[i].h.material.opacity = k*.9); await attends(520); }
     await plan(4600, recul.clone().add(V(0, 1.5, 0)), V(c.x, c.y + 62, c.z)); cap("Sept jours, sept astres errants. Le ciel entier tient dans une semaine.", 6500); await attends(3600);
-    await Promise.all([teinte(0, 0xffffff, 8, 1700), tw(1700, k => cols.forEach(o => { o.m.material.opacity = .85*(1 - k); o.h.material.opacity = .9*(1 - k); }))]); cols.forEach(o => scene.remove(o.m, o.h)); tw(1500, k => fanalF.material.opacity = .8*(1 - k));
-    await ouvrePage("forge"); await rends(); });
+    await Promise.all([vision(null, 1700), tw(1700, k => cols.forEach(o => { o.m.material.opacity = .85*(1 - k); o.h.material.opacity = .9*(1 - k); }))]); cols.forEach(o => scene.remove(o.m, o.h)); tw(1500, k => fanalF.material.opacity = .8*(1 - k));
+    await ouvrePage("forge"); await rends(); gagne("forge"); });
 
   /* ================================================================ 5. LE CIMETIÈRE : vingt siècles de grimoires */
   const TOMBES = V(chemin(-200) + 9, 0, -200); { const b = halo(.8, .7, 0xbfffe0); b.position.set(TOMBES.x - 2.5, sol(TOMBES.x - 2.5, -200) + 1.5, -200); scene.add(b); G.maj.push((dt, t) => { b.material.opacity = fait("tombes") ? 0 : .5 + .25*Math.sin(t*5); }); }
@@ -223,14 +251,14 @@ export function installer(G){
     await ordre({eye:"Le cimetière des mages", q:"Remets-les dans l'ordre, de la plus ancienne à la plus récente.", non:"Pas encore celle-là. Cherche ce qui vient avant : la langue, le support, le pays.",
       items:["<b>Les papyrus magiques</b> Des rouleaux en grec, écrits en Égypte", "<b>Le Picatrix</b> Un livre arabe, traduit pour un roi de Castille", "<b>La Clavicule de Salomon</b> Copiée à la main, à la fin du Moyen Âge", "<b>Agrippa</b> Trois livres imprimés à Cologne par un humaniste", "<b>John Dee</b> Le mathématicien de la reine Élisabeth", "<b>Éliphas Lévi</b> Un Parisien du siècle de la vapeur"]});
     /* la vision : les mages se lèvent de leurs tombes et montent en file vers le château ; on les suit */
-    const fant = []; for(let i = 0; i < 6; i++){ const h = plaque(tSpectre, 1.6, 3.2, {fog:false, op:0}), x = TOMBES.x - 1 + (i % 3)*2.7, z = -197 - Math.floor(i/3)*5.5; h.position.set(x, sol(x, z) + 1.3, z); scene.add(h); const l = halo(3, 0, 0xcfd8ff); scene.add(l); fant.push({h, l, x, z}); }
+    const fant = []; for(let i = 0; i < 6; i++){ const x = TOMBES.x - 1 + (i % 3)*2.7, z = -197 - Math.floor(i/3)*5.5, h = figure(V(x, sol(x, z) - 3.4, z), {spectre:true, h:1.8, face:V(0, 0, -1)}), l = halo(3, 0, 0xcfd8ff); scene.add(l); fant.push({h, l, x, z}); }
     const zc = k => lerp(-186, -228, k), pos = k => V(chemin(zc(k)) - .4, sol(chemin(zc(k)) - .4, zc(k)) + 1.45 + k*.5, zc(k)), cTombes = V(TOMBES.x + 1.5, sol(TOMBES.x, -200) + 1.4, -200), cPorte = V(TX, PLAT + 9, MUR);
-    await Promise.all([teinte(1, 0xc6d0ff, 5), plan(2600, pos(0), cTombes)]); cap("Ils se lèvent, du plus ancien au plus jeune.", 5500);
-    for(let i = 0; i < 6; i++){ Son.note([146.8, 164.8, 196, 220, 246.9, 293.7][i], .08); tw(1500, k => { fant[i].h.material.opacity = k*.92; fant[i].l.material.opacity = k*.4; fant[i].h.position.y = sol(fant[i].x, fant[i].z) + .3 + k*1.4; }); await attends(700); }
-    await attends(900); cap("Vingt siècles de livres, et le même chemin.", 8000); const cible = cTombes.clone(), flotte = (dt, t) => fant.forEach((f, i) => { f.l.position.copy(f.h.position); f.h.position.y = sol(f.h.position.x, f.h.position.z) + 1.7 + Math.sin(t*1.6 + i)*.12; }); G.maj.push(flotte);
+    await Promise.all([vision("ombreViolet"), plan(2600, pos(0), cTombes)]); cap("Ils se lèvent, du plus ancien au plus jeune.", 5500);
+    for(let i = 0; i < 6; i++){ Son.note([146.8, 164.8, 196, 220, 246.9, 293.7][i], .08); tw(1700, k => { fant[i].l.material.opacity = k*.3; fant[i].h.position.y = sol(fant[i].x, fant[i].z) - 3.4 + k*3.7; fant[i].l.position.copy(fant[i].h.position).y += 1.6; }); await attends(700); }
+    await attends(900); cap("Vingt siècles de livres, et le même chemin.", 8000); const cible = cTombes.clone(), flotte = (dt, t) => fant.forEach((f, i) => { f.h.position.y = sol(f.h.position.x, f.h.position.z) + .3 + Math.sin(t*1.6 + i)*.12; f.l.position.copy(f.h.position).y += 1.6; }); G.maj.push(flotte);
     await tw(12500, k => { cam.position.copy(pos(k)); cible.lerpVectors(cTombes, cPorte, doux(clamp(k*2.4, 0, 1))); cam.quaternion.copy(vise(cam.position, cible));
-      fant.forEach((f, i) => { const kk = clamp(k*1.3 - i*.05, 0, 1), z = lerp(f.z, MUR + 2, kk), x = lerp(f.x, chemin(z) + (i % 2 ? .9 : -.9), doux(Math.min(1, kk*5))), o = 1 - smooth(.86, 1, kk); f.h.position.x = x; f.h.position.z = z; f.h.material.opacity = .92*o; f.l.material.opacity = .4*o; }); }, k => k);
-    G.maj.splice(G.maj.indexOf(flotte), 1); fant.forEach(f => scene.remove(f.h, f.l)); await teinte(0, 0xffffff, 8, 1500); await ouvrePage("tombes"); await rends(); });
+      fant.forEach((f, i) => { const kk = clamp(k*1.3 - i*.05, 0, 1), z = lerp(f.z, MUR + 2, kk), x = lerp(f.x, chemin(z) + (i % 2 ? .9 : -.9), doux(Math.min(1, kk*5))), o = 1 - smooth(.86, 1, kk); f.h.position.x = x; f.h.position.z = z; f.h.scale.setScalar(1.8*Math.max(.001, o)); f.l.material.opacity = .3*o; }); }, k => k);
+    G.maj.splice(G.maj.indexOf(flotte), 1); fant.forEach(f => scene.remove(f.h, f.l)); await vision(null, 1500); await ouvrePage("tombes"); await rends(); gagne("tombes"); });
 
   /* ================================================================ 6. LE PARVIS : le carré de Saturne, qu'on trace en marchant */
   const KA = [[4, 9, 2], [3, 5, 7], [8, 1, 6]], CAR = V(TX, 0, -247), PAS = 2.1, dalles = [], gD = new THREE.BoxGeometry(1.6, .14, 1.6);
@@ -252,11 +280,11 @@ export function installer(G){
     if(n && n !== dessus){ dessus = n; if(n === rang + 1){ rang = n; relie(n); Son.note(196*Math.pow(1.122, n), .07); if(rang === 9) lance({run:sceau}); }
       else if(n > rang + 1 || (n < rang && rang > 0)){ if(n !== rang){ rang = 0; efface(); Son.note(110, .08); cap("Le tracé s'efface. Reprends à la dalle 1.", 4000); } } } if(!n) dessus = 0; });
   async function sceau(){ /* la vision : vu d'en haut, le tracé est le sceau de Saturne ; la herse se lève */
-    const y = dalles[5].y; await Promise.all([teinte(1, 0xffd27a, 5), plan(3000, V(CAR.x, y + 11, CAR.z + .01), V(CAR.x, y, CAR.z))]); cap("Vu d'en haut, tes pas ont écrit un signe sur le carré de Saturne.", 7000);
+    const y = dalles[5].y; await Promise.all([vision("orNoir"), plan(3000, V(CAR.x, y + 11, CAR.z + .01), V(CAR.x, y, CAR.z))]); cap("Vu d'en haut, tes pas ont écrit un signe sur le carré de Saturne.", 7000);
     const h = halo(.1, 0, 0xffd27a); h.position.set(CAR.x, y + .4, CAR.z); scene.add(h); Son.note(110, .1); Son.note(165, .07); await tw(3000, k => { h.scale.setScalar(.1 + k*13); h.material.opacity = k*.5; }); await attends(1800);
     plan(3600, V(CAR.x, y + 2.4, CAR.z + 5), V(TX, PLAT + 3.5, MUR)); await attends(1200); S.faits.carre = true; Son.cloche(.8);
     await tw(4200, k => { herse.position.y = PLAT + 6.4*k + Math.sin(k*60)*.03*(1 - k); h.material.opacity = .5*(1 - k); }, k => k); cap("La herse se lève.", 4000); scene.remove(h);
-    await teinte(0, 0xffffff, 8, 1400); await ouvrePage("carre"); tourneVers(TX, MUR - 10); await rends(); }
+    await vision(null, 1400); await ouvrePage("carre"); tourneVers(TX, MUR - 10); await rends(); cap("Le noir de l'encre, c'est Saturne. Il était là depuis le début.", 6500); }
 
   /* ================================================================ 7. L'ÉTABLI : le talisman */
   { const d = new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, .05, 12), new THREE.MeshBasicMaterial({color:0x9a8660, fog:false})); d.position.set(ETABLI.x, PLAT + 1.03, ETABLI.z); scene.add(d);
@@ -269,15 +297,15 @@ export function installer(G){
     await question({eye:"Le talisman · 2 sur 3", q:"Quel jour faut-il le graver ?", opts:["Mardi", "Mercredi", "Samedi", "Dimanche"], ok:1, non:"Le forgeron te l'a appris : le nom du jour contient celui de l'astre."});
     await question({eye:"Le talisman · 3 sur 3", q:"Et à quelle heure de ce jour ?", opts:["À minuit, quand tout dort", "À midi, quand le soleil est au plus haut", "À la première heure après le lever du soleil"], ok:2, non:"Chaque heure a son astre. Celle qui ouvre le jour appartient à l'astre du jour : c'est elle qui lui donne son nom."});
     /* la vision : le talisman se grave tout seul, trait par trait */
-    const cv = document.createElement("canvas"); cv.width = cv.height = 96; const x = cv.getContext("2d"), tx = new THREE.CanvasTexture(cv); tx.magFilter = tx.minFilter = THREE.NearestFilter; tx.colorSpace = THREE.SRGBColorSpace;
+    const cv = document.createElement("canvas"); cv.width = cv.height = 288; const x = cv.getContext("2d"), tx = new THREE.CanvasTexture(cv); x.scale(3, 3); tx.magFilter = tx.minFilter = THREE.LinearFilter; tx.colorSpace = THREE.SRGBColorSpace;
     const disque = plaque(tx, 2.6, 2.6, {fog:false}); disque.position.set(ETABLI.x, PLAT + 2.7, ETABLI.z); scene.add(disque); x.strokeStyle = "#ffe2a8"; x.fillStyle = "#ffe2a8"; x.lineWidth = 2;
     const TR = [() => { x.fillStyle = "#3a2c18"; x.beginPath(); x.arc(48, 48, 46, 0, TAU); x.fill(); x.fillStyle = "#ffe2a8"; }, () => { x.beginPath(); x.arc(48, 48, 44, 0, TAU); x.stroke(); }, () => { x.beginPath(); x.arc(48, 48, 34, 0, TAU); x.stroke(); },
       () => { x.beginPath(); x.arc(48, 44, 9, 0, TAU); x.stroke(); }, () => { x.beginPath(); x.arc(48, 30, 8, Math.PI*.1, Math.PI*.9); x.stroke(); }, () => { x.beginPath(); x.moveTo(48, 53); x.lineTo(48, 72); x.stroke(); }, () => { x.beginPath(); x.moveTo(40, 64); x.lineTo(56, 64); x.stroke(); },
       ...Array.from({length:8}, (_, i) => () => { const a = i/8*TAU; x.fillRect(48 + Math.cos(a)*39 - 1.5, 48 + Math.sin(a)*39 - 1.5, 3, 3); })];
-    await Promise.all([teinte(1, 0xffc98a, 6), plan(2200, V(ETABLI.x + 2.6, PLAT + 2.9, ETABLI.z + 2.2), disque.position)]); cap("Mercure, un mercredi, à la première heure.", 6000);
+    await Promise.all([vision("cuivre"), plan(2200, V(ETABLI.x + 2.6, PLAT + 2.9, ETABLI.z + 2.2), disque.position)]); cap("Mercure, un mercredi, à la première heure.", 6000);
     for(let i = 0; i < TR.length; i++){ TR[i](); tx.needsUpdate = true; Son.note(i < 7 ? 293.7 + i*24 : 587, i < 7 ? .05 : .025); await attends(i < 7 ? 520 : 170); }
     cap("Le métal, le jour, l'heure, le signe : tout s'accorde, ou rien n'agit.", 6000); await tw(3600, k => { disque.position.y = PLAT + 2.7 + Math.sin(k*Math.PI)*.4; disque.material.rotation = k*TAU; });
-    await teinte(0, 0xffffff, 8, 1400); tw(900, k => disque.material.opacity = 1 - k).then(() => scene.remove(disque)); await ouvrePage("atelier"); await rends(); cap("La porte de la tour est ouverte.", 5000); });
+    await vision(null, 1400); tw(900, k => disque.material.opacity = 1 - k).then(() => scene.remove(disque)); await ouvrePage("atelier"); await rends(); gagne("atelier"); setTimeout(() => { if(!etat.occupe) cap("La porte de la tour est ouverte.", 5000); }, 8200); });
 
   /* ================================================================ 8. LE SOMMET : le sigil, la lampe, l'aube */
   for(let i = 0; i < 7; i++) bloc(3.2, .7*(i + 1), .72, TX, PLAT + .35*(i + 1), TZ + 12.5 - i*.7);
@@ -305,11 +333,11 @@ export function installer(G){
       const inp = ui.querySelector("input"); inp.onclick = e => e.stopPropagation(); ui.querySelector("[data-ok]").onclick = e => { e.stopPropagation(); const s = sigil(inp.value); if(!s){ const p = ui.querySelector(".tq-non"); p.hidden = false; p.textContent = "Il faut au moins quelques mots."; return; } fermeUI().then(() => res(s)); }; });
     await new Promise(res => { if(etat.vite) return res(); montre(`<div class="tq-q"><p class="tq-eye">Le sigil</p><p class="tq-note">Les voyelles et les lettres répétées tombent. Il reste : <b>${S2.lettres}</b></p><div class="tq-dessin grand">${svgSigil(S2)}</div><h2>Regarde-le une dernière fois. Puis oublie-le.</h2><button type="button" class="tq-go" data-ok>Le brûler à la lampe</button></div>`); Son.note(220, .06); ui.querySelector("[data-ok]").onclick = e => { e.stopPropagation(); fermeUI().then(res); }; });
     /* la vision : le signe monte dans le ciel, la lampe s'allume, le jour se lève */
-    J.yaw = Math.PI; J.pitch = -.4; const P3 = S2.pts.map(([x, y]) => V(TX + x*15, FEN.y - 22 - y*15, TZ + 70)), lg = new THREE.BufferGeometry().setFromPoints(P3), ln = new THREE.Line(lg, new THREE.LineBasicMaterial({color:0xffe2a8, fog:false, transparent:true})); ln.frustumCulled = false; lg.setDrawRange(0, 0); scene.add(ln);
-    await teinte(1, 0xffd9a0, 5, 1200); cap("Ton signe, écrit sur la nuit.", 5000); for(let i = 2; i <= P3.length; i++){ lg.setDrawRange(0, i); Son.note(196*Math.pow(1.122, i), .06); await attends(420); } await attends(1600);
-    Son.cloche(1); Son.note(110, .1); Son.note(220, .08); Son.note(330, .06); tw(2600, k => { ln.material.opacity = 1 - k; phare.scale.setScalar(9 + k*60); phare2.scale.setScalar(46 + k*120); });
+    J.yaw = Math.PI; J.pitch = -.4; const P3 = S2.pts.map(([x, y]) => V(TX + x*15, FEN.y - 22 - y*15, TZ + 70)), mS = new THREE.MeshBasicMaterial({color:0xffdc90, fog:false}), rs = []; for(let i = 1; i < P3.length; i++) rs.push(ruban(P3[i - 1], P3[i], .3, mS));
+    await vision("ombreBleu", 1600); cap("Ton signe, écrit sur la nuit.", 5000); for(let i = 0; i < rs.length; i++){ Son.note(196*Math.pow(1.122, i + 2), .06); await tw(420, k => rs[i].scale.y = Math.max(.001, k)*rs[i].userData.L, k => k); } await attends(1800);
+    Son.cloche(1); Son.note(110, .1); Son.note(220, .08); Son.note(330, .06); tw(2600, k => { rs.forEach(m => m.scale.x = m.scale.z = Math.max(.001, 1 - k)); phare.scale.setScalar(9 + k*60); phare2.scale.setScalar(46 + k*120); });
     S.faits.fin = true; maisons.forEach(m => m.v = Math.max(m.v, .01)); cap("La lampe prend. En bas, toutes les fenêtres s'allument.", 6000);
-    await Promise.all([teinte(0, 0xffffff, 8, 5000), tw(11000, k => { etat.aube = k; maisons.forEach(m => m.v = Math.max(m.v, k)); lampes.forEach(l => l.v = Math.max(l.v, k)); J.yaw = Math.PI + Math.sin(k*Math.PI)*.45; J.pitch = -.4 + Math.sin(k*Math.PI)*.12; })]); scene.remove(ln);
+    await Promise.all([vision(null, 5000), tw(11000, k => { etat.aube = k; for(let i = 0; i < 5; i++) E[i] = Math.max(E[i], k); maisons.forEach(m => m.v = Math.max(m.v, k)); lampes.forEach(l => l.v = Math.max(l.v, k)); J.yaw = Math.PI + Math.sin(k*Math.PI)*.45; J.pitch = -.4 + Math.sin(k*Math.PI)*.12; })]); rs.forEach(m => scene.remove(m));
     cap("L'aube.", 5000); await attends(2500); await ouvrePage("sommet"); carteFin(); }, () => fait("atelier"));
   G.maj.push(() => { if(fait("fin")){ phare.scale.setScalar(Math.max(phare.scale.x, 40)); } });
 
@@ -318,6 +346,7 @@ export function installer(G){
   const MOTS = [[-48, "Le chemin descend vers un village."], [-88, "Une lueur verte, une lueur rouge : deux portes où frapper. Et des marques pâles sur d'autres."], [-186, "Le cimetière. Une lumière y veille."], [-232, "Le château. Sa herse est baissée."], [-259.6, "La cour du château."]].filter(m => !(S.z != null && S.z < m[0])); let mot = 0;
   G.maj.push(() => { if(mot < MOTS.length && J.z < MOTS[mot][0]){ if(!etat.occupe && !(MOTS[mot][0] === -232 && fait("carre"))) cap(MOTS[mot][1], MOTS[mot][0] < -259 ? 3000 : 7000); mot++; } });
   let dernier = 0; G.maj.push((dt, t) => { if(t - dernier > 4 && !etat.occupe){ dernier = t; garde(); } });
-  return {S, etat, lieux, lance, garde, debut:() => { if(S.z == null || S.z >= 0) setTimeout(() => { if(!etat.occupe) cap("Au loin, un château et sa tour. Une seule fenêtre est allumée.", 7000); }, 900); },
+  const neuf = S.z == null || S.z >= 0; if(neuf) U.uTrace.value = 0;
+  return {S, etat, lieux, lance, garde, vision, E, neuf, debut:() => { if(!neuf) return; setTimeout(() => tw(8200, k => U.uTrace.value = k*1.2, k => k), 700); setTimeout(() => { if(!etat.occupe) cap("Au loin, un château et sa tour. Une seule fenêtre est allumée.", 7000); }, 7600); },
     fin:() => document.removeEventListener("keydown", touche)};
 }
