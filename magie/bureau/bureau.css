@@ -1,0 +1,129 @@
+/* ===== Arcanes · Magie : Sans suite =====
+   L'interface est celle d'un immeuble Art déco la nuit : laque noire, double filet de laiton, coins à gradins, texte ivoire. */
+.bq{--n:#08080d;--n2:#12121a;--or:#d9b46a;--or2:#8e6f35;--iv:#efe6d0;--iv2:#b9b09c;--rg:#c2452f;position:fixed;inset:0;z-index:9000;background:#000;color:var(--iv);overflow:hidden;font-family:var(--f-text,Georgia,serif);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;animation:bq-in .5s both}
+.bq.sort{animation:bq-out .45s both}
+@keyframes bq-in{from{opacity:0}}@keyframes bq-out{to{opacity:0}}
+html.bq-ouvert,html.bq-ouvert body{overflow:hidden}
+.bq-gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.bq button{font-family:inherit}
+
+/* ---- le noir : un vœu griffonné, puis le tampon */
+.bq-noir{position:absolute;inset:0;z-index:6;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;cursor:pointer;transition:opacity 1.5s}
+.bq-noir.off{opacity:0;pointer-events:none}
+.bq-voeu{width:min(300px,70vw);overflow:visible}
+.bq-voeu path{fill:none;stroke:var(--iv);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.bq-noir.ecrit .bq-voeu path{animation:bq-ecrit 1.9s ease-in-out forwards}
+.bq-noir.ecrit .bq-voeu path+path{animation-duration:.7s;animation-delay:1.9s}
+@keyframes bq-ecrit{to{stroke-dashoffset:0}}
+.bq-recu{position:absolute;left:50%;top:50%;padding:12px 24px 11px;border:3px double var(--rg);color:var(--rg);text-align:center;transform:translate(-50%,-50%) rotate(-7deg) scale(2.4);opacity:0}
+.bq-recu b{display:block;font:700 38px/1 var(--f-ui,sans-serif);letter-spacing:.3em;text-indent:.3em;text-transform:uppercase}
+.bq-recu small{display:block;white-space:nowrap;margin-top:8px;font:700 9.5px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase}
+.bq-noir.tampon .bq-recu{animation:bq-tampon .28s cubic-bezier(.3,1.5,.5,1) forwards}
+@keyframes bq-tampon{to{opacity:.95;transform:translate(-50%,-50%) rotate(-7deg) scale(1)}}
+.bq-titre{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;transition:opacity .5s}
+.bq-titre small{font:700 10.5px/1 var(--f-ui,sans-serif);letter-spacing:.38em;text-indent:.38em;text-transform:uppercase;color:var(--or)}
+.bq-titre b{position:relative;padding:18px 0 20px;font:400 clamp(46px,13vw,96px)/1 var(--f-display,Georgia,serif);letter-spacing:.08em;text-indent:.08em;color:var(--iv);border-top:1px solid var(--or);border-bottom:1px solid var(--or);box-shadow:0 -5px 0 -4px var(--or),0 5px 0 -4px var(--or)}
+.bq-titre b::before,.bq-titre b::after{content:"";position:absolute;left:50%;width:34%;height:1px;background:var(--or);transform:translateX(-50%)}
+.bq-titre b::before{top:-7px}.bq-titre b::after{bottom:-7px}
+.bq-titre i{font:italic 16px/1 var(--f-text,Georgia,serif);color:var(--iv2)}
+.bq-noir.ecrit .bq-titre{opacity:0}
+.bq-voeu{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.bq-toucher{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));margin:0;text-align:center;font:700 11px/1 var(--f-ui,sans-serif);letter-spacing:.34em;text-transform:uppercase;color:var(--or);animation:bq-bat 2.4s infinite both}
+.bq-noir.ecrit .bq-toucher{display:none}
+@keyframes bq-bat{0%{opacity:.15}50%{opacity:1}100%{opacity:.15}}
+
+/* ---- la barre du haut */
+.bq-haut{position:absolute;left:0;right:0;top:0;z-index:10;display:flex;align-items:center;gap:8px;padding:max(14px,env(safe-area-inset-top)) 14px 0;pointer-events:none}
+.bq-b{pointer-events:auto;width:42px;height:42px;border:1px solid var(--or);background:rgba(8,8,13,.82);color:var(--or);font:16px/1 Georgia,serif;cursor:pointer;box-shadow:inset 0 0 0 3px rgba(8,8,13,.82),inset 0 0 0 4px rgba(217,180,106,.4)}
+.bq-b.off{opacity:.45;text-decoration:line-through}
+.bq-b[hidden]{display:none}
+.bq-heure{flex:1;min-width:0;text-align:center;font:700 10px/1.3 var(--f-ui,sans-serif);letter-spacing:.22em;text-transform:uppercase;color:var(--or);opacity:0;transition:opacity 1.6s;text-shadow:0 1px 6px #000}
+.bq-heure.on{opacity:.9}
+
+/* ---- la légende */
+.bq-cap{position:absolute;left:50%;top:max(72px,calc(env(safe-area-inset-top) + 64px));z-index:3;max-width:min(480px,calc(100% - 36px));width:max-content;margin:0;transform:translate(-50%,-6px);padding:9px 18px 10px;text-align:center;font:italic 16px/1.4 var(--f-text,Georgia,serif);color:var(--iv);background:rgba(8,8,13,.8);border-top:1px solid var(--or);border-bottom:1px solid var(--or);opacity:0;transition:opacity .7s,transform .7s;pointer-events:none}
+.bq-cap.on{opacity:1;transform:translate(-50%,0)}
+.bq-cap:empty{display:none}
+
+/* ---- une réplique : un cartouche en bas, le nom dans un onglet */
+.bq-sous{position:absolute;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));z-index:5;width:min(620px,calc(100% - 24px));transform:translateX(-50%);padding:20px 20px 22px;background:linear-gradient(180deg,rgba(18,18,26,.95),rgba(8,8,13,.95));border:1px solid var(--or);box-shadow:inset 0 0 0 4px rgba(8,8,13,.95),inset 0 0 0 5px rgba(217,180,106,.38),0 14px 40px rgba(0,0,0,.6);pointer-events:none;animation:bq-monte .25s both}
+.bq-sous[hidden]{display:none}
+.bq-sous.haut{bottom:auto;top:max(66px,calc(env(safe-area-inset-top) + 58px));z-index:9}
+@keyframes bq-monte{from{opacity:0;transform:translate(-50%,10px)}}
+.bq-sous i{position:absolute;left:16px;top:-11px;padding:4px 11px 4px;font:700 10px/1.2 var(--f-ui,sans-serif);font-style:normal;letter-spacing:.22em;text-transform:uppercase;color:var(--n);background:var(--or)}
+.bq-sous[data-qui="ang"] i{background:#e9f7f6}.bq-sous[data-qui="aud"] i{background:#b9bcc4}.bq-sous[data-qui="mar"] i{background:#d9b46a}.bq-sous[data-qui="dir"] i{background:var(--rg);color:var(--iv)}
+.bq-sous p{margin:0;min-height:2.9em;font:19px/1.45 var(--f-text,Georgia,serif);color:var(--iv)}
+.bq-sous[data-qui="aud"] p{font-family:var(--f-ui,sans-serif);font-size:16.5px;letter-spacing:.02em;color:#d6d8de}
+.bq-sous[data-qui="dir"] p{font-style:italic}
+.bq-sous::after{content:"";position:absolute;right:16px;bottom:11px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--or);opacity:0}
+.bq-sous.fin::after{opacity:1;animation:bq-bat 1.3s infinite}
+
+/* ---- les gestes : le héros ne parle pas */
+.bq-gestes{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));z-index:5;width:min(460px,calc(100% - 32px));transform:translateX(-50%);display:grid;gap:9px;animation:bq-monte .3s both}
+.bq-gestes[hidden]{display:none}
+.bq-gestes::before{content:"Tu ne dis rien. Tu peux…";display:block;margin-bottom:2px;text-align:center;font:700 10px/1 var(--f-ui,sans-serif);letter-spacing:.24em;text-transform:uppercase;color:var(--or);text-shadow:0 1px 6px #000}
+.bq-gestes button{padding:15px 18px;text-align:center;font:italic 18px/1.2 var(--f-text,Georgia,serif);color:var(--iv);background:rgba(8,8,13,.9);border:1px solid var(--or);box-shadow:inset 0 0 0 3px rgba(8,8,13,.9),inset 0 0 0 4px rgba(217,180,106,.35);cursor:pointer}
+.bq-gestes button:hover,.bq-gestes button:active{background:var(--or);color:var(--n)}
+
+/* ---- agir, avancer */
+.bq-agir{position:absolute;left:50%;bottom:calc(148px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:3;max-width:calc(100% - 40px);padding:14px 24px;font:700 12px/1.2 var(--f-ui,sans-serif);letter-spacing:.18em;text-transform:uppercase;color:var(--n);background:var(--or);border:1px solid var(--or);box-shadow:0 0 0 3px rgba(8,8,13,.85),0 0 0 4px var(--or),0 10px 30px rgba(0,0,0,.6);cursor:pointer;animation:bq-monte .3s both}
+.bq-agir[hidden]{display:none}
+.bq-marche{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:3;width:100px;height:100px;border-radius:50%;border:1px solid var(--or);background:rgba(8,8,13,.72);box-shadow:inset 0 0 0 5px rgba(8,8,13,.72),inset 0 0 0 6px rgba(217,180,106,.4);color:var(--or);display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;opacity:0;transition:opacity .6s;touch-action:none}
+.bq.joue .bq-marche{opacity:.95}
+.bq-marche span{width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:13px solid var(--or)}
+.bq-marche b{font:700 10px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase}
+.bq-marche.on{background:var(--or);color:var(--n);transform:translateX(-50%) scale(.95)}
+.bq-marche.on span{border-bottom-color:var(--n)}
+@media (pointer:coarse){.bq-marche{display:flex}}
+.bq.scene .bq-marche,.bq.scene .bq-agir{opacity:0!important;pointer-events:none}
+@media (pointer:fine){.bq-agir{bottom:calc(44px + env(safe-area-inset-bottom))}}
+
+/* ---- le contrat, dans le jeu : une feuille ivoire sur fond noir */
+.bq-ui{position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom));background:rgba(4,4,8,.74);opacity:0;pointer-events:none;transition:opacity .3s}
+.bq-ui.on{opacity:1;pointer-events:auto}
+.bq-ui:empty{display:none}
+.bq-contrat{width:min(520px,100%);max-height:100%;overflow:auto;padding:22px 20px 20px;background:#efe6d0;color:#17130f;border:1px solid #17130f;box-shadow:inset 0 0 0 4px #efe6d0,inset 0 0 0 5px rgba(23,19,15,.4),0 20px 60px rgba(0,0,0,.7);-webkit-overflow-scrolling:touch}
+.bq-contrat.chasse{margin-top:112px;max-height:calc(100% - 112px)}
+.bq-eye{margin:0 0 8px;font:700 10.5px/1.2 var(--f-ui,sans-serif);letter-spacing:.24em;text-transform:uppercase;color:#9c3a2a}
+.bq-contrat h2{margin:0 0 12px;font:400 30px/1.05 var(--f-display,Georgia,serif);letter-spacing:.02em}
+.bq-consigne{margin:0 0 12px;font:italic 16px/1.45 var(--f-text,Georgia,serif);color:#4a3f36}
+.bq-art{display:block;width:100%;margin:0;padding:11px 10px 12px;text-align:left;color:inherit;background:none;border:0;border-top:1px solid rgba(23,19,15,.35);cursor:pointer}
+.bq-art small{display:block;margin-bottom:4px;font:700 10px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase;color:#9c3a2a}
+.bq-art span{display:flex;align-items:flex-end;gap:6px;font:18px/1.35 var(--f-text,Georgia,serif)}
+.bq-art u{flex:1;min-width:60px;height:1.1em;border-bottom:1px dotted #17130f;text-decoration:none}
+.bq-art.on{background:rgba(23,19,15,.07)}
+.bq-art.faille{background:#17130f;color:#efe6d0}.bq-art.faille small{color:#e9a08f}.bq-art.faille u{border-bottom:2px solid #c2452f;animation:bq-bat .5s infinite}
+.bq-note{margin:12px 0 0;padding:12px 14px;font:15.5px/1.5 var(--f-text,Georgia,serif);background:rgba(23,19,15,.07);border-left:3px solid #9c3a2a}
+.bq-note[hidden]{display:none}
+.bq-note b{font-weight:700}
+.bq-go{display:block;width:100%;margin-top:14px;padding:14px 19px;font:700 12px/1 var(--f-ui,sans-serif);letter-spacing:.16em;text-transform:uppercase;color:#efe6d0;background:#17130f;border:1px solid #17130f;cursor:pointer}
+.bq-go.ghost{margin-top:8px;background:transparent;color:#17130f}
+.bq-fin{background:var(--n);color:var(--iv);border-color:var(--or);box-shadow:inset 0 0 0 4px var(--n),inset 0 0 0 5px rgba(217,180,106,.4),0 20px 60px rgba(0,0,0,.7);text-align:center}
+.bq-fin .bq-eye{color:var(--or)}.bq-fin .bq-consigne{color:var(--iv2)}
+.bq-fin .bq-note{background:rgba(217,180,106,.1);border-left:0;border-top:1px solid var(--or2);border-bottom:1px solid var(--or2);color:var(--iv)}
+.bq-fin .bq-go{background:var(--or);color:var(--n);border-color:var(--or)}.bq-fin .bq-go.ghost{background:transparent;color:var(--or)}
+
+/* ---- le contrat, relu hors du jeu */
+.bqc{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom));background:rgba(4,4,8,.8);opacity:0;transition:opacity .3s}
+.bqc.on{opacity:1}
+.bqc-in{position:relative;width:min(560px,100%);max-height:100%;overflow:auto;padding:24px 22px;background:#efe6d0;color:#17130f;border:1px solid #17130f;box-shadow:inset 0 0 0 4px #efe6d0,inset 0 0 0 5px rgba(23,19,15,.4),0 20px 60px rgba(0,0,0,.7);font-family:var(--f-text,Georgia,serif);-webkit-overflow-scrolling:touch}
+.bqc-x{position:absolute;right:12px;top:12px;width:40px;height:40px;font:16px/1 Georgia,serif;color:#17130f;background:none;border:1px solid #17130f;cursor:pointer}
+.bqc-eye{margin:0 50px 8px 0;font:700 10.5px/1.2 var(--f-ui,sans-serif);letter-spacing:.24em;text-transform:uppercase;color:#9c3a2a}
+.bqc-in h1{margin:0 0 14px;font:400 32px/1.05 var(--f-display,Georgia,serif)}
+.bqc-in section{padding:14px 0 6px;border-top:1px solid rgba(23,19,15,.35)}
+.bqc-in h2{margin:0 0 6px;font:400 21px/1.2 var(--f-display,Georgia,serif)}
+.bqc-in h2 small{display:block;margin-bottom:4px;font:700 10px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase;color:#9c3a2a}
+.bqc-txt{display:flex;align-items:flex-end;gap:6px;margin:0 0 8px;font:italic 18px/1.35 var(--f-text,Georgia,serif)}
+.bqc-txt u{flex:1;min-width:60px;height:1.1em;border-bottom:1px dotted #17130f;text-decoration:none}
+.bqc-note{margin:0 0 8px;font:15.5px/1.55 var(--f-text,Georgia,serif);color:#2c251f}
+.bqc-in section.clos h2{color:rgba(23,19,15,.45);font-style:italic}
+
+/* ---- la carte, dans l'atelier de la magie */
+.m-bureau{position:relative;margin:6px 0 22px;border:1px solid #d9b46a;background:linear-gradient(160deg,#16161f,#08080d 70%);color:#efe6d0;box-shadow:inset 0 0 0 4px #0b0b11,inset 0 0 0 5px rgba(217,180,106,.45)}
+.m-bureau-go{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;width:100%;padding:16px 18px;text-align:left;font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.m-bureau-go svg{display:block}
+.m-bureau-go small{display:block;font:700 10.5px/1 var(--f-ui,sans-serif);letter-spacing:.2em;text-transform:uppercase;color:#d9b46a}
+.m-bureau-go b{display:block;font:400 27px/1.05 var(--f-display,Georgia,serif);margin:4px 0 5px;color:#efe6d0}
+.m-bureau-go i{display:block;font-style:normal;font-size:14px;line-height:1.45;color:#b9b09c}
+.m-bureau-g{display:block;width:calc(100% - 10px);margin:0 5px 5px;padding:12px 14px;text-align:left;font:700 11px/1 var(--f-ui,sans-serif);letter-spacing:.18em;text-transform:uppercase;color:#d9b46a;background:none;border:0;border-top:1px solid rgba(217,180,106,.4);cursor:pointer}
+.m-bureau-g:hover{background:rgba(217,180,106,.08)}

@@ -64,6 +64,7 @@
     const card = (k, big) => { const t = by[k]; if(!t) return ""; return `<button type="button" class="mr-tool${big ? " big" : ""}" data-mtool="${t[0]}"><span class="mr-vig">${icon(t[3])}</span><span class="mr-tool-t"><b>${t[1]}</b><small>${t[2]}</small>${big ? `<i class="mr-go">Ouvrir</i>` : ""}</span></button>`; };
     const rest = tools.filter(t => !used.has(t[0]));
     return `<header class="m-hero"><p class="eyebrow">Les instruments</p><h1>L'atelier</h1><p class="m-lede">${tools.length} instruments de la magie savante, rangés par usage. Rien ne s'envoie nulle part : tout est calculé sur ton appareil.</p></header>
+      ${window.ArcanesBureauJeu ? window.ArcanesBureauJeu.carte() : ""}
       ${window.ArcanesTourJeu ? window.ArcanesTourJeu.carte() : ""}
       <div class="mr-heroes">${VEDETTES.map(k => card(k, true)).join("")}</div>
       ${FAM.map(([t, x, ks]) => `<section class="mr-fam"><header><h2>${t}</h2><p>${x}</p></header><div class="mr-grid">${ks.map(k => card(k)).join("")}</div></section>`).join("")}
