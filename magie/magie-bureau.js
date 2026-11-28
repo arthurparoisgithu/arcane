@@ -5,7 +5,8 @@
   "use strict";
   const CLE = "arcanes.bureau.v1";
   /* les voix : [qui, texte]. Le héros ne parle jamais. Pour doubler une réplique, déposer magie/bureau/voix/<id>.mp3 et ajouter l'id à VOIX. */
-  const QUI = {asc:"L'Ascensoriste", ang:"L'ange de l'accueil", mar:"Le Marquis", aud:"L'Auditeur", gui:"Le guichetier", dir:"La Direction"};
+  const QUI = {asc:"L'Ascensoriste", ang:"L'ange de l'accueil", mar:"Le Marquis", aud:"L'Auditeur", gui:"Le guichetier", dir:"La Direction",
+    dam:"Les Trois Dames", cop:"Le copiste", fur:"Le comte Furfur", agr:"Agrippa", chi:"Monsieur, le chien", gds:"Le Garde des Sceaux", ins:"L'Instructeur", dee:"John Dee", kel:"Edward Kelley"};
   const REPLIQUES = {
     asc1:"Quel étage ?",
     asc2:"Rez-de-chaussée, donc. Ils disent tous ça.",
@@ -55,7 +56,150 @@
     mar18:"Après vous. Je vous suis. C'est mon métier.",
     asc6:"Je savais. Premier étage : la Lune. Service des songes et des réclamations.",
     mar19:"Elles sont trois, là-haut. Ne les laissez pas finir vos phrases.",
-    mar20:"… Aucun risque."};
+    mar20:"… Aucun risque.",
+    /* ---- l'ascenseur, d'étage en étage */
+    asc7:"Deuxième : Mercure. Écritures, copies, faux et usage de faux.",
+    mar21:"Un conseil : au deuxième, tout le monde ment. Moi aussi, mais avec tact.",
+    asc8:"Troisième : Vénus. Service des sympathies. On vous offrira des fleurs. Refusez le pot.",
+    mar22:"… Vous ne me regardez plus pareil. J'ai un monocle, pas un bandeau.",
+    asc9:"Quatrième : le Soleil. Les sceaux. Ne touchez à rien qui brille. Tout brille.",
+    mar23:"Au quatrième, je vous devrai une vérité. C'est dans le règlement. Je vous préviens : il ne m'en reste plus beaucoup.",
+    asc10:"Cinquième : Mars. Contentieux. … Je ne fais pas de plaisanterie sur le cinquième.",
+    mar24:"Là-haut, ne donnez aucun nom. Même le mien. Surtout le mien.",
+    asc11:"Sixième : Jupiter. Communications célestes. Ça capte mal, alors ils crient.",
+    mar25:"Vous avez tenu, au cinquième. J'ai connu des rois qui tenaient moins longtemps.",
+    asc12:"Septième. La Direction. Terminus. Je ne suis jamais monté si haut avec quelqu'un dedans.",
+    mar26:"Quoi qu'il arrive là-haut : ce fut un plaisir de ne pas vous entendre.",
+    /* ---- 1. la Lune : le standard, la tablette, le puits */
+    dam1:"Service des songes…",
+    dam2:"… et des réclamations…",
+    dam3:"… ne quittez pas.",
+    dam4:"Vous voulez joindre la Direction.",
+    dam5:"Ils veulent tous joindre la Direction.",
+    dam6:"La Direction ne prend que les demandes écrites. Depuis deux mille ans.",
+    dam7:"À peu près.",
+    dam8:"Il ne dit rien.",
+    dam9:"Enfin un usager reposant.",
+    dam10:"Voici la marche à suivre. On écrit sa demande sur une feuille de plomb.",
+    dam11:"On la plie. On la cloue. On la jette au puits.",
+    dam12:"Dans cet ordre. Ceux d'en bas lisent tout. Ils ne répondent jamais, mais ils lisent tout.",
+    mar27:"Une tablette de défixion. Le recommandé avec accusé de réception de l'Antiquité.",
+    dam13:"Et sans le visa de la Lune, l'ascenseur ne monte pas. C'est le règlement.",
+    dam14a:"Un manteau volé. Un classique. À Bath, on ne nous écrivait que pour ça.",
+    dam14b:"Annuler un contrat. Ambitieux. Ça se tente.",
+    dam14c:"S'en prendre à l'Audit. Nous n'avons rien lu. Nous n'avons rien vu.",
+    dam15:"Ça sonne.",
+    dam16:"Ça n'avait pas sonné depuis…",
+    dam17:"Ne dis pas le chiffre.",
+    dam18:"« Demande reçue. » C'est tout. Ils ne disent jamais rien d'autre.",
+    dam19:"Votre visa. La Lune.",
+    dam20:"Un mot, avant que vous montiez. Votre conseiller a appelé la Direction, ce matin.",
+    dam21:"Il a raccroché avant de parler.",
+    dam22:"Deux fois.",
+    mar28:"Mesdames. Le secret des correspondances.",
+    dam23:"Nous sommes le standard. Nous n'avons pas de secrets, nous avons des fiches.",
+    /* ---- 2. Mercure : le scriptorium, le comte qui ment, le triangle */
+    cop1:"Chut.",
+    cop2:"Je recopie le même grimoire depuis l'an 1300. Chaque copie ajoute une faute. On appelle ça la tradition.",
+    cop3:"Ces livres-là, ce sont des clercs qui les écrivent. Il faut savoir le latin, connaître la messe, et s'ennuyer beaucoup.",
+    cop4:"Pour le visa, il faut la signature du comte Furfur. Il signe volontiers. Il ment volontiers aussi.",
+    cop5:"Règle de la maison : le cercle protège celui qui appelle. Le triangle tient celui qui est appelé. Ne confondez pas. Mon prédécesseur a confondu.",
+    cop6:"Le triangle est tracé. Il lui manque ses trois cierges. Allumez-les, et le comte dira vrai.",
+    fur1:"Un usager ! Je suis le Directeur. Signez ici et vous êtes libre.",
+    fur2:"Je plaisante. Je suis le pape.",
+    fur3:"Votre conseiller ? Un ami très cher. Il ne vous veut que du bien.",
+    mar29:"Comte. Toujours aussi fiable.",
+    fur4:"Marquis ! Toujours aussi bien peigné.",
+    fur5:"… Ah. Le triangle. Dedans, je dis vrai. C'est extrêmement désagréable.",
+    fur6a:"La case vide ? Ce n'est pas un oubli. Quelqu'un la laisse vide.",
+    fur6b:"Lui ? Demandez-lui donc pourquoi il n'écrit pas votre nom. Ah, pardon. Vous ne demandez rien.",
+    fur6c:"Vous ne demandez rien. Alors je réponds à ce que vous taisez.",
+    fur7:"Votre nom, il le connaît. Depuis l'ascenseur. Il ne l'écrit pas.",
+    mar30:"… Il est dans le triangle. Il dit vrai.",
+    mar31:"Nous en reparlerons. Plus haut.",
+    fur8:"Voilà ma signature. Et soufflez les cierges en sortant, que je puisse recommencer à mentir.",
+    /* ---- 3. Vénus : Agrippa, son chien, le bouquet */
+    agr1:"Trois mondes ! L'élémentaire, le céleste, l'intellectuel. Tout se tient. Tirez un fil ici-bas, une étoile remue là-haut.",
+    chi1:"Il a écrit trois livres là-dessus. Et un autre pour dire que toutes les sciences sont vaines, la sienne comprise. Je l'aime beaucoup.",
+    agr2:"Monsieur, on ne parle pas aux usagers.",
+    chi2:"Je suis un chien. Je fais ce que je veux.",
+    agr3:"Ici, ni démon ni pacte. La magie naturelle : chaque astre a ses métaux, ses plantes, ses bêtes. Qui se ressemble s'attire.",
+    agr4:"Pour le visa de Vénus, composez-moi un bouquet de Vénus. Trois choses qui lui répondent. Trois, pas quatre.",
+    agr5:"Cuivre, rose, colombe. Vénus est contente. Disons : bien disposée.",
+    chi3:"Vous, le grand. Vous sentez le soufre et le regret.",
+    mar32:"C'est mon eau de toilette.",
+    chi4:"Les chiens savent ces choses. Il ne vous mène pas où il a dit.",
+    agr6:"Monsieur ! Le visa, et qu'on n'en parle plus.",
+    chi5:"On a dit que j'étais un démon, vous savez. J'étais seulement bien élevé.",
+    /* ---- 4. le Soleil : les soixante-douze sceaux, le vase */
+    gds1:"Soixante-douze sceaux. Soixante-douze esprits. Un roi les a enfermés dans un vase d'airain, et il a jeté le vase au fond d'un lac.",
+    gds2:"Ça, c'est la légende. Ici, on dit : le dossier fondateur.",
+    gds3:"Je suis le Garde des Sceaux. Le vrai. Les autres ont pris le titre.",
+    gds4:"Pour le visa du Soleil : retrouvez le sceau de votre conseiller et posez la main dessus. Il vous devra une vérité.",
+    mar33:"C'est une vieille clause. Personne ne l'invoque jamais.",
+    gds5:"Personne ne monte jamais jusqu'ici.",
+    mar34:"Une vérité. Soit.",
+    mar35:"Regardez les murs. C'est de l'airain. Le plafond aussi. Le hall, les guichets, l'ascenseur : de l'airain.",
+    mar36:"Nous ne sommes pas dans un immeuble. Nous sommes dans le vase. Nous n'en sommes jamais sortis.",
+    mar37:"Le Directeur l'a scellé de l'intérieur, puis il est monté au septième. Rien n'entre, rien ne sort. Votre signature est la première ouverture depuis… je préfère ne pas compter.",
+    gds6:"Il a dit vrai. Visa.",
+    aud7:"Soixante-douze dossiers. Soixante et onze. Pardon : soixante-dix.",
+    gds7:"Il en classe un par jour. Plus personne ne les appelle, alors plus rien ne les retient.",
+    aud8:"Je ne détruis rien. Je constate.",
+    /* ---- 5. Mars : le contentieux */
+    ins1:"Asseyez-vous. Non : restez debout. Ce sera plus court.",
+    ins2:"Ici, on ne pratique pas la magie. On la poursuit. De 1430 à 1780, à peu près.",
+    ins3:"Quarante à soixante mille exécutions. Des femmes, trois fois sur quatre.",
+    ins4:"On croit que c'est le Moyen Âge. C'est après. C'est le temps de l'imprimerie, des juges et des formulaires.",
+    ins5:"La procédure est simple. Une question, un nom. Chaque nom ouvre un dossier. Chaque dossier donne d'autres noms.",
+    ins6:"Nommez vos complices.",
+    ins7:"Un démon. Irrecevable : il est déjà condamné. Un autre nom.",
+    mar38:"Je ne vous en veux pas. À votre place, j'aurais hésité moins longtemps.",
+    ins8:"Il ne nomme personne.",
+    ins9:"D'ordinaire, à ce stade, on insiste. Les aveux rangés ici ont été obtenus comme ça. C'est pourquoi ils se ressemblent tous : ce sont nos questions, avec leurs voix.",
+    ins10:"Mais on ne tire rien d'un muet. C'est la première fois que le silence sert à quelque chose, dans cette maison.",
+    mar39:"En bas, qui ne dit mot consent. Ici, qui ne dit mot ne livre personne. Retenez la différence.",
+    ins11:"Visa. Mars. Sortez avant que je change de formulaire.",
+    /* ---- 6. Jupiter : Dee, Kelley, le mot dicté à l'envers */
+    dee1:"Docteur John Dee, mathématicien de la reine. Je parle aux anges depuis 1582. Pour être exact : ils parlent, je note.",
+    kel1:"Edward Kelley. C'est moi qui les vois. Lui ne voit rien. Il a les cahiers, j'ai les yeux.",
+    dee2:"Ils dictent lettre par lettre. Et certains mots, ils les donnent à l'envers. Par prudence : dit à l'endroit, un mot agit tout de suite.",
+    kel2:"On a failli ouvrir quelque chose, une fois. Depuis, on épelle à reculons.",
+    dee3:"Ils ont un message pour vous. Regardez dans la pierre.",
+    ang10:"N'ayez pas peur. C'est le mot du vase. Il ne sert qu'une fois, et seulement dit à voix haute.",
+    dee4:"Dit à voix haute. Par quelqu'un de vivant, qui n'a encore rien dit ici. … Oh.",
+    kel3:"Voilà pourquoi ils ont fait monter un muet.",
+    mar40:"Tout ce qui se dit ici engage. Vous n'avez rien dit depuis l'ascenseur. Votre voix est la seule chose neuve de tout l'immeuble.",
+    dee5:"Votre visa. Jupiter.",
+    kel4:"Dites. Si vous l'ouvrez… nous pourrons sortir, nous aussi ?",
+    dee6:"Edward.",
+    kel5:"Je demande.",
+    /* ---- 7. Saturne : la Direction, l'aube, le mot */
+    aud9:"Vous voilà. Sept étages, six visas, aucune parole. C'est très régulier.",
+    aud10:"Je n'ai rien contre vous. Je n'ai rien contre personne.",
+    aud11:"Quand plus personne n'y croit, je tamponne. Le monde s'est désenchanté tout seul. J'ai seulement classé.",
+    aud12:"La Direction ? Voyez vous-même.",
+    dir2:"« Je suis sorti. Le dernier entré refermera, ou ouvrira. Je n'ai pas su choisir. »",
+    mar41:"Il est parti. Depuis le début.",
+    mar42:"La note, en bas, « Montez » : c'était moi. J'imite très bien son écriture. Douze siècles de pratique.",
+    mar43:"J'aurais pu écrire votre nom à l'accueil. J'encaissais, je remontais au ciel, dossier clos. Je ne l'ai pas fait.",
+    mar44:"Ne me demandez pas pourquoi. … C'est vrai. Vous ne demandez jamais.",
+    aud13:"Septième visa. Le dossier est complet. C'est le plus beau dossier que j'aie eu à classer.",
+    aud14:"L'aube. Le contrat arrive à échéance. Case du nom : vide. Sans nom, pas d'âme à livrer. Sans âme, pas de dossier.",
+    aud15:"Je vais devoir vous classer sans suite. Rien de personnel.",
+    mar45:"Vous avez un mot. Un seul. Tout ce qui se dit ici engage, alors choisissez-le bien.",
+    aud16:"… Une objection. Formulée à voix haute. Dans les délais.",
+    aud17:"C'est recevable. Le contrat est nul. C'est lui que je classe.",
+    mar46:"Qui dit non ne consent pas. Douze siècles, et aucun de mes clients n'y avait pensé.",
+    aud18:"Ah.",
+    aud19:"Plus rien à classer. … Je crois que je vais m'asseoir.",
+    mar47:"Mille deux cents ans d'avance. Je… merci. C'est un mot que je n'avais pas dit depuis la chute.",
+    mar48:"… Mon nom. À voix haute. Vous me tenez, maintenant. C'est la règle : nommer, c'est tenir.",
+    mar49:"Qu'ordonnez-vous ? … Rien. Évidemment.",
+    aud20:"Un nom figure au dossier. Ce n'est pas le bon, mais ce n'est plus mon service.",
+    mar50:"Alors je reste à votre disposition. C'est la première fois que ça ne me dérange pas.",
+    aud21:"Pas d'objection.",
+    mar51:"… Je passerai le mardi et le jeudi."};
   const VOIX = [];
   /* le contrat : chaque article a sa note, qui est la leçon */
   const CLAUSES = [
@@ -64,19 +208,26 @@
     {id:"grade", n:"Article 3", t:"Le conseiller", txt:"Marchosias, marquis, trente légions.", mot:"Les soixante-douze", note:"Un grimoire du XVIIe siècle, la Goetia, dresse la liste de 72 esprits. Chacun y a un grade (roi, duc, prince, marquis, comte, président) et un nombre de légions, comme dans une armée ou une administration. Marchosias y est marquis, à la tête de trente légions, et dit espérer remonter au ciel après 1 200 ans."},
     {id:"sceau", n:"Article 4", t:"Le sceau", txt:"", mot:"Le sceau", note:"Chaque esprit des grimoires a son sceau : un dessin qu'on trace pour l'appeler et pour le reconnaître. Le sceau vaut signature. Celui-ci est inventé pour le jeu."},
     {id:"nom", n:"Article 5", t:"Le contractant", txt:"Nom : ", vide:true, mot:"Le nom", note:"Connaître le vrai nom d'un être, c'est avoir prise sur lui. L'idée est très ancienne : dans un récit égyptien, Isis devient la plus grande des magiciennes en arrachant au dieu Rê son nom secret. Dans les grimoires, on n'appelle un esprit que par son nom exact."},
-    {id:"audit", n:"Note en marge", t:"1682", txt:"« Classé sans suite. »", mot:"L'édit de 1682", note:"En 1682, après l'affaire des Poisons, un édit de Louis XIV cesse de traiter la sorcellerie comme un crime réel : les « soi-disant magiciens » ne sont plus que des escrocs. Le monde commence à ranger la magie."}];
-  const etat = () => { try{ const s = JSON.parse(localStorage.getItem(CLE) || "{}"); return {lus:s.lus || [], etape:s.etape || 0, fin:!!s.fin}; }catch(e){ return {lus:[], etape:0, fin:false}; } };
+    {id:"audit", n:"Note en marge", t:"1682", txt:"« Classé sans suite. »", mot:"L'édit de 1682", note:"En 1682, après l'affaire des Poisons, un édit de Louis XIV cesse de traiter la sorcellerie comme un crime réel : les « soi-disant magiciens » ne sont plus que des escrocs. Le monde commence à ranger la magie."},
+    {id:"av1", etage:1, n:"Avenant I", t:"La tablette", txt:"Toute réclamation se fait par écrit, sur plomb, et se dépose au puits.", mot:"La défixion", note:"Dans l'Antiquité grecque et romaine, on grave un vœu ou une plainte sur une mince feuille de plomb, on la plie, on la perce d'un clou et on la dépose dans une tombe, un puits ou une source, au plus près des dieux d'en bas. On en a retrouvé plus de mille six cents. À Bath, en Angleterre, environ cent trente dormaient dans la source de la déesse Sulis : la plupart réclament un objet volé."},
+    {id:"av2", etage:2, n:"Avenant II", t:"Le cercle et le triangle", txt:"L'opérateur se tient dans le cercle. L'esprit comparaît dans le triangle.", mot:"Le grimoire", note:"Les grimoires du Moyen Âge sont des livres de clercs : il faut savoir le latin et connaître la liturgie pour s'en servir. Leur règle de sécurité tient en deux figures tracées au sol. Le cercle protège celui qui appelle. Le triangle, tracé à l'extérieur, est le lieu où l'esprit doit apparaître et obéir. Dans la Goetia, le comte Furfur ment à tout propos, sauf quand on le fait entrer dans le triangle."},
+    {id:"av3", etage:3, n:"Avenant III", t:"Les correspondances", txt:"Chaque astre répond de ses métaux, de ses plantes et de ses bêtes.", mot:"La magie naturelle", note:"À la Renaissance, Marsile Ficin puis Cornelius Agrippa (La Philosophie occulte, 1533) décrivent une magie sans démons : le monde est tissé de sympathies, et l'on agit sur une chose par ce qui lui ressemble. À Vénus répondent le cuivre, la rose, la colombe ; à Saturne le plomb ; à Mars le fer. Agrippa avait vraiment un chien noir appelé Monsieur, dont la rumeur a fait un démon."},
+    {id:"av4", etage:4, n:"Avenant IV", t:"Le vase d'airain", txt:"Les soixante-douze sont consignés. Le sceau du roi fait foi.", mot:"Salomon", note:"Un texte des premiers siècles, le Testament de Salomon, raconte que le roi commandait aux démons grâce à un anneau et les fit travailler au Temple. Les grimoires ajoutent une suite : Salomon aurait enfermé soixante-douze esprits dans un vase d'airain scellé de son sceau et jeté dans un lac de Babylone. Les Babyloniens, croyant y trouver un trésor, l'auraient brisé."},
+    {id:"av5", etage:5, n:"Avenant V", t:"La chasse", txt:"Nul n'est tenu de nommer.", mot:"Les procès", note:"La grande chasse aux sorcières n'est pas médiévale : elle culmine entre 1560 et 1630, au temps de l'imprimerie et des tribunaux. Une centaine de milliers de procès en Europe, 40 000 à 60 000 exécutions, des femmes dans les trois quarts des cas. Le Marteau des sorcières paraît en 1486. Les aveux étaient arrachés sous la torture, puis les juges exigeaient des noms de complices : chaque procès en ouvrait d'autres."},
+    {id:"av6", etage:6, n:"Avenant VI", t:"La langue des anges", txt:"Les mots reçus se dictent à l'envers.", mot:"Dee et Kelley", note:"À partir de 1582, le savant anglais John Dee interroge les anges par l'entremise d'Edward Kelley, qui dit les voir dans une pierre de cristal. Dee note tout. Les anges dictent, lettre par lettre, une langue qu'on appellera l'énochien ; certains appels sont dictés à l'envers, parce que ces mots, dits à l'endroit, passaient pour agir aussitôt. Le miroir d'obsidienne de Dee, d'origine aztèque, est au British Museum."},
+    {id:"av7", etage:7, n:"Avenant VII", t:"Le désenchantement", txt:"Ce qui n'est plus cru est classé.", mot:"Saturne", note:"Au XIXe siècle, Éliphas Lévi (Dogme et rituel de la haute magie, 1854-1856) rassemble kabbale, tarot et grimoires en un seul système : c'est la naissance de l'occultisme moderne. En 1917, le sociologue Max Weber nomme l'autre mouvement du siècle, le « désenchantement du monde » : l'idée que tout peut s'expliquer par le calcul. La magie n'a pas disparu pour autant. Elle a changé de bureau."}];
+  const etat = () => { try{ const s = JSON.parse(localStorage.getItem(CLE) || "{}"); return {lus:s.lus || [], etape:s.etape || 0, fin:!!s.fin, niv:s.niv || 0, visas:s.visas || [], fins:s.fins || []}; }catch(e){ return {lus:[], etape:0, fin:false, niv:0, visas:[], fins:[]}; } };
   const SCEAU = `<svg viewBox="0 0 60 60" width="54" height="54" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="30" cy="30" r="26"/><path d="M12 22h36M18 22v20M42 22v14M18 42c8 6 16 6 24-6M30 8v14M24 14h12M26 34l8 8M34 34l-8 8"/><circle cx="18" cy="22" r="2.4"/><circle cx="42" cy="36" r="2.4"/></svg>`;
   /* le contrat, relisible hors du jeu : seuls les articles déjà lus montrent leur note */
   function contrat(){ const E = etat(); document.querySelectorAll(".bqc").forEach(e => e.remove());
     const d = document.createElement("div"); d.className = "bqc"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Le contrat");
-    d.innerHTML = `<div class="bqc-in"><button type="button" class="bqc-x" aria-label="Fermer">✕</button><p class="bqc-eye">Bureau des demandes · formulaire 12-B</p><h1>Convention n° 73</h1>
+    d.innerHTML = `<div class="bqc-in"><button type="button" class="bqc-x" aria-label="Fermer">✕</button><p class="bqc-eye">Bureau des demandes · formulaire 12-B</p><h1>Convention n° 73</h1>${E.niv || E.visas.length ? `<p class="bq-visas">${[..."☽☿♀☉♂♃♄"].map((g, i) => `<span class="${E.visas.includes(i + 1) ? "on" : ""}">${g}\uFE0E</span>`).join("")}</p>` : ""}
       ${CLAUSES.map(c => E.lus.includes(c.id) ? `<section><h2><small>${c.n}</small>${c.t}</h2><p class="bqc-txt">${c.id === "sceau" ? SCEAU : c.txt}${c.vide ? `<u></u>` : ""}</p><p class="bqc-note"><b>${c.mot}.</b> ${c.note}</p></section>` : `<section class="clos"><h2><small>${c.n}</small>Pas encore lu</h2></section>`).join("")}</div>`;
     document.body.appendChild(d); requestAnimationFrame(() => d.classList.add("on"));
     const ferme = () => { d.classList.remove("on"); setTimeout(() => d.remove(), 300); }; d.querySelector(".bqc-x").onclick = ferme; d.addEventListener("click", e => { if(e.target === d) ferme(); }); }
   const CARTE = () => { const E = etat(), n = E.lus.length;
     return `<div class="m-bureau"><button type="button" class="m-bureau-go" data-bureaujeu><svg viewBox="0 0 60 60" width="64" height="64" aria-hidden="true" fill="none" stroke="#d9b46a" stroke-width="1.3" stroke-linejoin="round"><path d="M22 56V26h4v-8h3V8h2v10h3v8h4v30M12 56V36h6v-5h4M48 56V36h-6v-5h-4M4 56h52M26 32h8M26 38h8M26 44h8M26 50h8"/><path d="M30 8L24 2M30 8l6-6M30 8V1" stroke-width=".9"/></svg>
-      <span><small>Jeu scénarisé · ${E.fin ? "pilote terminé" : E.etape ? "en cours" : "le pilote"}</small><b>Sans suite</b><i>Tu te réveilles dans l'administration qui gère la magie depuis toujours. Tu n'as rien dit, donc tu as signé. Tu as jusqu'à l'aube.</i></span></button>
+      <span><small>Jeu scénarisé · ${E.fins.length ? `${E.fins.length} fin${E.fins.length > 1 ? "s" : ""} sur 4` : E.niv ? `en cours · ${["", "la Lune", "Mercure", "Vénus", "le Soleil", "Mars", "Jupiter", "Saturne"][E.niv]}` : E.etape ? "en cours · le hall" : "sept étages"}</small><b>Sans suite</b><i>Tu te réveilles dans l'administration qui gère la magie depuis toujours. Tu n'as rien dit, donc tu as signé. Tu as jusqu'à l'aube.</i></span></button>
       ${n ? `<button type="button" class="m-bureau-g" data-bureaucontrat>Relire le contrat</button>` : ""}</div>`; };
   let charge = null;
   const rafraichit = () => { const c = document.querySelector(".m-bureau"); if(c) c.outerHTML = CARTE(); };
